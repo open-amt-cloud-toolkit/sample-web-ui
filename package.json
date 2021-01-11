@@ -18,7 +18,7 @@
     "ui-toolkit": "git+https://github.com/open-amt-cloud-toolkit/ui-toolkit.git",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-i18next": "11.3.5",
+    "react-i18next": "11.8.5",
     "react-redux": "5.0.6",
     "react-router-dom": "4.2.2",
     "react-scripts": "^4.0.1",
@@ -29,7 +29,7 @@
     "redux": "4.0.5",
     "redux-observable": "0.17.0",
     "rxjs": "5.5.2",
-    "sass": "^1.27.1"
+    "sass": "^1.32.2"
   },
   "devDependencies": {
     "enzyme": "3.11.0",
