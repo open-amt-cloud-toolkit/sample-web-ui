@@ -4,16 +4,16 @@
 **********************************************************************/
 
 import React from 'react';
-import { CiraEditor, RpsProvider } from 'ui-toolkit'
+import { NetworkEditor , RpsProvider } from 'ui-toolkit'
 import Config from 'app.config'
 
-export class CiraConfigs extends React.Component {
+export class NetworkConfigs extends React.Component {
     render() {
         const data = {
             rpsKey: Config.rpsApiKey
         }
         return(<RpsProvider data={data}>
-               <CiraEditor rpsServer={Config.serviceUrls.rps} mpsServer={Config.serviceUrls.mps} />
+               <NetworkEditor rpsServer={Config.serviceUrls.rps} />
                </RpsProvider>
         )
     }
