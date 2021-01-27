@@ -2,69 +2,79 @@
 * Copyright (c) Intel Corporation 2020
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { DeviceGrid, MpsProvider } from 'ui-toolkit';
 import { options, selectOptions } from './flyouts/options';
 import { FlyoutContainer } from './flyouts/deviceActionsFlyout.container';
 import Config from 'app.config';
 import { mpsConstants } from 'utilities'
+import { useHistory, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux';
+import { epics as deviceEpics, redux as appRedux, getSelectedDevices } from 'store/reducers/deviceReducer';
 
-export class Devices extends React.Component {
-    constructor() {
-        super();
-        this.state = {
-            selectedDevices: '',
-            openFlyout: ''
-        }
+
+export function Devices() {
+    const [openFlyout, setopenFlyout] = useState('')
+    const dispatch = useDispatch()
+    const sendPowerAction = useCallback(
+        requestParams => dispatch(deviceEpics.actions.sendPowerAction(requestParams)),
+        [dispatch]
+    )
+    const setSelectedDevices = useCallback(
+        selectedDevices => dispatch(appRedux.actions.updateSelectedDevices(selectedDevices)),
+        [dispatch]
+    )
+    const selectedDevices = useSelector((state) => getSelectedDevices(state))
+
+    const location = useLocation();
+    const history = useHistory();
+    const data = {
+        mpsKey: Config.mpsApiKey
     }
-    getSelectedDevices = (selectedDevices) => {
-        this.props.setselectedDevies(selectedDevices)
-        this.setState({ selectedDevices: selectedDevices }, () => {
-            this.setState({
-                openFlyout: this.state.selectedDevices && this.state.selectedDevices.length ? 'open' : ''
-            })
-        })
+
+    const getSelected = (selectedDevices) => {
+        setSelectedDevices(selectedDevices)
+        setopenFlyout(selectedDevices?.length > 0 ? 'open' : '')
     }
 
-    closeFlyout = () => this.setState({ openFlyout: '' })
+    const closeFlyout = () => setopenFlyout('')
 
-    handleSelectedAction = (item) => {
+    const handleSelectedAction = (item) => {
         const payload = {
-            guid: this.state.selectedDevices[0].host,
+            guid: selectedDevices[0].host,
             action: item.action
         }
         if (item.action === mpsConstants.kvm || item.action === mpsConstants.sol) {
-            this.props.history.push(`/${payload.action}/${payload.guid}`, payload)
+            history.push(`/${payload.action}/${payload.guid}`, payload)
         } else {
-            this.state.selectedDevices.forEach(selectedDevice => {
-                this.props.sendPowerAction({ guid: selectedDevice.host, action: item.action });
+            selectedDevices.forEach(selectedDevice => {
+                sendPowerAction({ guid: selectedDevice.host, action: item.action });
             })
         }
     }
 
-    handleSelectItem = (item) => {
+    const handleSelectItem = (item) => {
         const payload = {
-            guid: this.state.selectedDevices[0].host,
+            guid:selectedDevices[0].host,
             action: item.action
         }
         if (item.action === mpsConstants.auditlog) {
-            this.props.history.push(`/${payload.action}/${payload.guid}`, payload)
-
+           history.push(`/${payload.action}/${payload.guid}`, payload)
         } else {
-            this.props.sendPowerAction(payload)
+            sendPowerAction(payload)
         }
     }
 
-    getOpenFlyout = () => {
-        switch (this.state.openFlyout) {
+    const getOpenFlyout = () => {
+        switch (openFlyout) {
             case 'open':
                 const flyoutProps = {
                     options,
                     selectOptions,
-                    handleSelectedAction: this.handleSelectedAction,
-                    handleSelectItem: this.handleSelectItem,
-                    onClose: this.closeFlyout,
-                    selectedDevices: this.state.selectedDevices,
+                    handleSelectedAction: handleSelectedAction,
+                    handleSelectItem: handleSelectItem,
+                    onClose: closeFlyout,
+                    selectedDevices: selectedDevices,
                     className: 'rightnavpadding'
                 }
                 return <FlyoutContainer {...flyoutProps} />;
@@ -72,17 +82,18 @@ export class Devices extends React.Component {
                 return null;
         }
     }
-    render() {
-        const data = {
-            mpsKey: Config.mpsApiKey
-        }
-        return (
-            <React.Fragment>
-                <MpsProvider data={data}>
-                    <DeviceGrid mpsServer={Config.mpsServer} getSelectedDevices={(items) => this.getSelectedDevices(items)} filter={this.props.location.filter} selectedDevices={this.props.selectedDevices} />
-                </MpsProvider>
-                {this.getOpenFlyout()}
-            </React.Fragment>
-        )
-    }
+
+
+    return (
+        <React.Fragment>
+            <MpsProvider data={data}>
+                <DeviceGrid mpsServer={Config.mpsServer}
+                    getSelectedDevices={(items) => getSelected(items)}
+                    filter={location.filter}
+                    selectedDevices={selectedDevices} />
+            </MpsProvider>
+            { getOpenFlyout()}
+        </React.Fragment>
+    )
+
 }

@@ -14,10 +14,10 @@ import { Protected } from '../shared'
 import {
   PageNotFoundContainer as PageNotFound,
   LoginContainer as LoginPage,
-  DashboardContainer as DashboardPage,
-  DevicesContainer as DevicesPage,
+  Dashboard as DashboardPage,
+  Devices as DevicesPage,
   UiControlsContainer as UiControlsPage,
-  LandingContainer as LandingPage,
+  Landing as LandingPage,
   CiraConfigsContainer as CiraConfigsPage,
   ProfilesContainer as ProfilesPage,
   DomainsContainer as DomainsPage,

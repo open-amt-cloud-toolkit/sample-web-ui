@@ -1,4 +1,4 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-export * from './protected.container';
+export * from './protected.impl';
 export * from './protectedError';
