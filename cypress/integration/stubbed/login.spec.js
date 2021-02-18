@@ -56,13 +56,7 @@ describe("Test login page", () => {
       }).as("login-request");
 
       //Login
-      cy.get(".login-input")
-        .get("[id=userName]")
-        .type(loginFixtures.default.username);
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.default.password);
-      cy.get(".login-btn").contains("Sign In").click();
+      cy.login(loginFixtures.default.username, loginFixtures.default.password);
 
       //Check that correct post request is made
       cy.wait("@login-request").then((req) => {
@@ -100,14 +94,7 @@ describe("Test login page", () => {
     });
 
     it("invalid username / valid password", () => {
-      cy.get(".login-input")
-        .get("[id=userName]")
-        .type(loginFixtures.wrong.username);
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.default.password);
-
-      cy.get(".login-btn").contains("Sign In").click();
+      cy.login(loginFixtures.wrong.username, loginFixtures.default.password);
       cy.checkInvalidLogin();
 
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
@@ -115,14 +102,7 @@ describe("Test login page", () => {
     });
 
     it("valid username / invalid password", () => {
-      cy.get(".login-input")
-        .get("[id=userName]")
-        .type(loginFixtures.default.username);
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.wrong.password);
-
-      cy.get(".login-btn").contains("Sign In").click();
+      cy.login(loginFixtures.default.username, loginFixtures.wrong.password);
       cy.checkInvalidLogin();
 
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
@@ -132,9 +112,7 @@ describe("Test login page", () => {
 
   context("Failed logins - incomplete", () => {
     it("no username / valid password", () => {
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.default.password);
+      cy.login("EMPTY", loginFixtures.default.password);
 
       cy.get(".login-btn")
         .contains("Sign In")
@@ -143,9 +121,7 @@ describe("Test login page", () => {
     });
 
     it("no username / invalid password", () => {
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.wrong.password);
+      cy.login("EMPTY", loginFixtures.wrong.password);
 
       cy.get(".login-btn")
         .contains("Sign In")
@@ -255,13 +231,7 @@ describe("Test login page", () => {
       }).as("login-request");
 
       //Login
-      cy.get(".login-input")
-        .get("[id=userName]")
-        .type(loginFixtures.default.username);
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.default.password);
-      cy.get(".login-btn").contains("Sign In").click();
+      cy.login(loginFixtures.default.username, loginFixtures.default.password);
 
       //Check that the login was successful
       cy.wait("@login-request").its("response.statusCode").should("eq", 200);
