@@ -1,10 +1,10 @@
 //Tests the creation of a cira-config
 
-const loginFixtures = require("../../fixtures/accounts.json");
-const systemFixtures = require("../../fixtures/system.json");
-const urlFixtures = require("../../fixtures/urls.json");
-const ciraFixtures = require("../../fixtures/cira.json");
-const messageFixtures = require("../../fixtures/stubResponses/Cira/messages.json");
+const loginFixtures = require("../fixtures/accounts.json");
+const systemFixtures = require("../fixtures/system.json");
+const urlFixtures = require("../fixtures/urls.json");
+const ciraFixtures = require("../fixtures/cira.json");
+const messageFixtures = require("../fixtures/stubResponses/Cira/messages.json");
 
 //Toggle switch for subbing the requests of going full stack
 const stubIt = Cypress.env("RUN_E2E") == "true" ? false : true;
@@ -150,9 +150,11 @@ describe("Test CIRA Config Page", () => {
   });
 
   context("attempt to create an invalid config", () => {
-    beforeEach("fills out the config", () => {
+    before("fills out the config", () => {
       cy.get(".btn-create").contains("New").click();
+    });
 
+    beforeEach("fills out the config", () => {
       //Fill out the config
       cy.get("[type=text]")
         .get("[name=configName]")
