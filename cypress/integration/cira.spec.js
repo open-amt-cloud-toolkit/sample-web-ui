@@ -6,42 +6,37 @@ const urlFixtures = require("../../fixtures/urls.json");
 const ciraFixtures = require("../../fixtures/cira.json");
 const messageFixtures = require("../../fixtures/stubResponses/Cira/messages.json");
 
+//Toggle switch for subbing the requests of going full stack
+const stubIt = Cypress.env("RUN_E2E") == "true" ? false : true;
+
 describe("Test CIRA Config Page", () => {
   //This "it" acts as a before to circumvent the
   //lack of overriding interceptors issue. This
   //should be changed after cypress fixes the problem.
   it("before", () => {
-    //Ensure user is logged out
     cy.window().then((win) => {
       win.sessionStorage.clear();
     });
 
-    //Return an empty list for the CIRA configs
-    cy.intercept("GET", "ciraconfigs", {
-      statusCode: 404,
-      body: messageFixtures.empty,
-    }).as("get-configs");
+    if (stubIt) {
+      cy.intercept("POST", "authorize", {
+        statusCode: 200,
+        body: "Request Stubbed!",
+      }).as("login-request");
 
-    cy.intercept("POST", "authorize", {
-      statusCode: 200,
-      body: "Request Stubbed!",
-    }).as("login-request");
+      cy.intercept("GET", "ciraconfigs", {
+        statusCode: 404,
+        body: messageFixtures.empty,
+      }).as("get-configs");
+    } else {
+      cy.intercept("POST", "authorize").as("login-request");
+      cy.intercept("GET", "ciraconfigs").as("get-configs");
+    }
 
-    //Go to web page
+    //Login and Enter RPS
     cy.visit(urlFixtures.base);
-
-    //Login
-    cy.get(".login-input")
-      .get("[id=userName]")
-      .type(loginFixtures.default.username);
-    cy.get(".login-input")
-      .get("[id=password]")
-      .type(loginFixtures.default.password);
-    cy.get(".login-btn").contains("Sign In").click();
-
+    cy.login(loginFixtures.default.username, loginFixtures.default.password);
     cy.wait("@login-request").its("response.statusCode").should("eq", 200);
-
-    //Enter RPS
     cy.get(".rps-button").click();
     cy.url().should("include", urlFixtures.page.rps);
 
@@ -54,15 +49,20 @@ describe("Test CIRA Config Page", () => {
   context("successful run", () => {
     it("creates the default CIRA config", () => {
       //Stub the get and post requests
-      cy.intercept("POST", "create", {
-        statusCode: 200,
-        body: messageFixtures.default.insert.success,
-      }).as("post-config");
+      if (stubIt) {
+        cy.intercept("POST", "create", {
+          statusCode: 200,
+          body: messageFixtures.default.insert.success,
+        }).as("post-config");
 
-      cy.intercept("GET", "ciraconfigs", {
-        statusCode: 200,
-        fixture: "stubResponses/Cira/one-default.json",
-      }).as("get-configs");
+        cy.intercept("GET", "ciraconfigs", {
+          statusCode: 200,
+          fixture: "stubResponses/Cira/one-default.json",
+        }).as("get-configs");
+      } else {
+        cy.intercept("POST", "create").as("post-config");
+        cy.intercept("GET", "ciraconfigs").as("get-configs");
+      }
 
       //Fill out the config
       cy.get("[type=text]")
@@ -91,6 +91,8 @@ describe("Test CIRA Config Page", () => {
           .should("eq", "CIRA Config default-test successfully inserted");
       });
 
+      //TODO: check the response to make sure that it is correct
+      //this is currently difficult because of the format of the response
       cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
       cy.wait(100); //Bad style but necessary to let the page reload
 
@@ -100,17 +102,26 @@ describe("Test CIRA Config Page", () => {
       cy.get("[col-id=username]").contains(loginFixtures.default.username);
     });
 
+    //The delete test relies on the create test above.
+    //This is bad style but these tests seems distict enough to
+    //warrant haveing seperate tests. Consider fixing this style
+    //issue if the tests become finicky or hard to understand
     it("deletes the default cira config", () => {
       //Stub the requests
-      cy.intercept("DELETE", "ciraconfigs", {
-        statusCode: 200,
-        body: messageFixtures.default.delete.success,
-      }).as("delete-config");
+      if (stubIt) {
+        cy.intercept("DELETE", "ciraconfigs", {
+          statusCode: 200,
+          body: messageFixtures.default.delete.success,
+        }).as("delete-config");
 
-      cy.intercept("GET", "ciraconfigs", {
-        statusCode: 404,
-        body: messageFixtures.empty,
-      }).as("get-configs");
+        cy.intercept("GET", "ciraconfigs", {
+          statusCode: 404,
+          body: messageFixtures.empty,
+        }).as("get-configs");
+      } else {
+        cy.intercept("DELETE", "ciraconfigs").as("delete-config");
+        cy.intercept("GET", "ciraconfigs").as("get-configs");
+      }
 
       //Delete CIRA Config (but cancel)
       cy.get(".ag-cell")
@@ -139,25 +150,32 @@ describe("Test CIRA Config Page", () => {
   });
 
   context("attempt to create an invalid config", () => {
-    it("fills out the config", () => {
+    beforeEach("fills out the config", () => {
       cy.get(".btn-create").contains("New").click();
 
       //Fill out the config
       cy.get("[type=text]")
         .get("[name=configName]")
+        .clear()
         .type(ciraFixtures.default.name);
       cy.contains(ciraFixtures.default.format).find("[type=radio]").click();
       cy.get("[type=text]")
         .get("[name=mpsServerAddress]")
+        .clear()
         .type(systemFixtures.ip);
       cy.get("[type=text]").get("[name=mpsPort]").type(systemFixtures.mpsPort);
       cy.get("[type=text]")
         .get("[name=username]")
+        .clear()
         .type(loginFixtures.default.username);
       cy.get("[type=text]")
         .get("[name=password]")
+        .clear()
         .type(loginFixtures.default.password);
-      cy.get("[type=text]").get("[name=commonName]").type(systemFixtures.ip);
+      cy.get("[type=text]")
+        .get("[name=commonName]")
+        .clear()
+        .type(systemFixtures.ip);
     });
 
     it("enters an invalid config name", () => {
@@ -172,11 +190,6 @@ describe("Test CIRA Config Page", () => {
       cy.get("[type=submit]")
         .contains("Create")
         .should("have.attr", "disabled");
-
-      //Repair for next test
-      cy.get("[type=text]")
-        .get("[name=configName]")
-        .type(ciraFixtures.default.name);
     });
 
     it("accidently clicks FQDN", () => {
@@ -189,9 +202,6 @@ describe("Test CIRA Config Page", () => {
       cy.get("[type=submit]")
         .contains("Create")
         .should("have.attr", "disabled");
-
-      //Repair for next test
-      cy.contains(ciraFixtures.default.format).find("[type=radio]").click();
     });
   });
 });

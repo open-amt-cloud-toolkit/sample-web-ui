@@ -190,8 +190,24 @@ describe("Test login page", () => {
 
   context("Logout", () => {
     it("logs in then out", () => {
+      //Prepare request intercepts
+      if (stubIt) {
+        cy.intercept("POST", "authorize", {
+          statusCode: 200,
+          body: "Request Stubbed!",
+        }).as("login-request");
+
+        cy.intercept("GET", "logout", {
+          statusCode: 200,
+        }).as("logout-request");
+      } else {
+        cy.intercept("POST", "authorize").as("login-request");
+        cy.intercept("GET", "logout").as("logout-request");
+      }
+
       //Login
       cy.login(loginFixtures.default.username, loginFixtures.default.password);
+      cy.wait("@login-request");
 
       //Check that the login was successful
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.landing);
