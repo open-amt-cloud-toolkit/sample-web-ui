@@ -2,8 +2,11 @@
 //different combinations of invalid login info.
 //Also tests things like canceling a login and logging out after the login
 
-const loginFixtures = require("../../fixtures/accounts.json");
-const urlFixtures = require("../../fixtures/urls.json");
+const loginFixtures = require("../fixtures/accounts.json");
+const urlFixtures = require("../fixtures/urls.json");
+
+//Toggle switch for subbing the requests of going full stack
+const stubIt = Cypress.env("RUN_E2E") == "true" ? false : true;
 
 describe("Load Site", () => {
   it("loads the login page properly", () => {
@@ -40,9 +43,30 @@ describe("Test login page", () => {
   });
 
   context("Successful login", () => {
-    it("logs in", () => {
+    it.only("logs in", () => {
+      //Prepare to intercept login request
+      if (stubIt) {
+        cy.intercept("POST", "authorize", {
+          statusCode: 200,
+          body: "Request Stubbed!",
+        }).as("login-request");
+      } else {
+        cy.intercept("POST", "authorize").as("login-request");
+      }
+
       //Login
       cy.login(loginFixtures.default.username, loginFixtures.default.password);
+
+      //Check that correct post request is made
+      cy.wait("@login-request").then((req) => {
+        cy.wrap(req).its("response.statusCode").should("eq", 200);
+        cy.wrap(req)
+          .its("request.body.username")
+          .should("eq", loginFixtures.default.username);
+        cy.wrap(req)
+          .its("request.body.password")
+          .should("eq", loginFixtures.default.password);
+      });
 
       //Check that the login was successful
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.landing);
@@ -51,9 +75,6 @@ describe("Test login page", () => {
 
   context("Failed login", () => {
     it("no username / valid password", () => {
-      // cy.get(".login-input")
-      //   .get("[id=password]")
-      //   .type(loginFixtures.default.password);
       cy.login("EMPTY", loginFixtures.default.password);
 
       cy.get(".login-btn")
@@ -105,6 +126,7 @@ describe("Test login page", () => {
   context("Canceled login", () => {
     it("cancels a valid login", () => {
       //Enter info and cancel
+      //Can't use login function as it will sumbit login request
       cy.get(".login-input")
         .get("[id=userName]")
         .type(loginFixtures.default.username);

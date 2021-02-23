@@ -42,9 +42,10 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom --watchAll=false",
     "eject": "react-scripts eject",
-    "cypress-ui": "set RUN_UI=true && cypress open",
-    "cypress-e2e": "set RUN_UI=false && cypress open",
-    "cypress-test-runner": "cypress run --record --key 37a99eb7-49c5-4e5c-be6e-68bccfb5adcb"
+    "cy-ui": "set RUN_E2E=false && cypress open",
+    "cy-e2e": "set RUN_E2E=true && cypress open",
+    "cy-tstrnr-ui": "set RUN_E2E=false && cypress run --record --key 37a99eb7-49c5-4e5c-be6e-68bccfb5adcb",
+    "cy-tstrnr-e2e": "set RUN_E2E=true && cypress run --record --key 37a99eb7-49c5-4e5c-be6e-68bccfb5adcb"
   },
   "browserslist": {
     "production": [
