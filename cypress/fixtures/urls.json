@@ -1,0 +1,14 @@
+{
+  "base": "http://192.168.50.40:3001",
+
+  "page": {
+    "login": "/login",
+    "landing": "/landing",
+    "mps": "/mps",
+    "rps": "/rps"
+  },
+
+  "extension": {
+    "profiles": "/profiles"
+  }
+}
