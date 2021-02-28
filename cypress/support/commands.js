@@ -20,9 +20,7 @@ Cypress.Commands.add("login", (user, pass) => {
   if (pass != "EMPTY") {
     cy.get("[name=Password]").type(pass);
   }
-  if (user != "EMPTY" && pass != "EMPTY") {
-    cy.get("[id=btnLogin]").get("[type=submit]").click();
-  }
+  cy.get("[id=btnLogin]").get("[type=submit]").click();
 });
 
 // -- This is a child command --
