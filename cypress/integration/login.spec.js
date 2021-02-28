@@ -4,9 +4,10 @@
 
 const loginFixtures = require("../fixtures/accounts.json");
 const urlFixtures = require("../fixtures/urls.json");
+const messageFixtures = require("../fixtures/messages.json");
 
-//Toggle switch for subbing the requests of going full stack
-const stubIt = Cypress.env("RUN_E2E") == "true" ? false : true;
+//If isolated is set to true then cypress will stub api requests
+const stubIt = Cypress.env("ISOLATED")
 
 describe("Load Site", () => {
   it("loads the login page properly", () => {
@@ -34,149 +35,105 @@ describe("Test login page", () => {
   });
 
   context("Successful login", () => {
-    it.only("logs in", () => {
-      // //Prepare to intercept login request
-      // if (stubIt) {
-      //   cy.intercept("POST", "authorize", {
-      //     statusCode: 200,
-      //     body: "Request Stubbed!",
-      //   }).as("login-request");
-      // } else {
-      //   cy.intercept("POST", "authorize").as("login-request");
-      // }
+    it("logs in", () => {
+      //Prepare to intercept login request
+      if (stubIt) {
+        cy.intercept("POST", "authorize", {
+          statusCode: 200,
+        }).as("login-request");
+      } else {
+        cy.intercept("POST", "authorize").as("login-request");
+      }
 
       //Login
       cy.login(loginFixtures.default.username, loginFixtures.default.password);
 
-      // //Check that correct post request is made
-      // cy.wait("@login-request").then((req) => {
-      //   cy.wrap(req).its("response.statusCode").should("eq", 200);
-      //   cy.wrap(req)
-      //     .its("request.body.username")
-      //     .should("eq", loginFixtures.default.username);
-      //   cy.wrap(req)
-      //     .its("request.body.password")
-      //     .should("eq", loginFixtures.default.password);
-      // });
+      //Check that correct post request is made
+      cy.wait("@login-request").then((req) => {
+        cy.wrap(req).its("response.statusCode").should("eq", 200);
+        cy.wrap(req)
+          .its("request.body.username")
+          .should("eq", loginFixtures.default.username);
+        cy.wrap(req)
+          .its("request.body.password")
+          .should("eq", loginFixtures.default.password);
+      });
 
       //Check that the login was successful
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.landing);
+      cy.url().should("eq", urlFixtures.base);
     });
   });
 
   context("Failed login", () => {
+    function prepareIntercepts() {
+      if (stubIt) {
+        cy.intercept("POST", "authorize", {
+          statusCode: 403,
+          body: "Incorrect Username and/or Password!"
+        }).as("login-request");
+      } else {
+        cy.intercept("POST", "authorize").as("login-request");
+      }
+    }
+
+    function checkFailState() {
+      cy.wait('@login-request').then((req) => {
+        cy.wrap(req).its("response.statusCode").should("eq", 403);
+        cy.wrap(req)
+          .its("response.body")
+          .should("eq", "Incorrect Username and/or Password!");
+      })
+      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.contains("Error logging in").should("exist") 
+    }
+    
     it("no username / valid password", () => {
+      //Attempt to log in
       cy.login("EMPTY", loginFixtures.default.password);
 
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
+      //Check that to log in fails as expected
+      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.get(".mat-error").should('have.length', 1);
     });
 
     it("invalid username / valid password", () => {
+      prepareIntercepts()
       cy.login(loginFixtures.wrong.username, loginFixtures.default.password);
-
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".error-message").should("be.visible");
+      checkFailState()
     });
 
     it("valid username / no password", () => {
       cy.login(loginFixtures.default.username, "EMPTY");
 
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
+      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.get(".mat-error").should('have.length', 1);
     });
 
     it("valid username / invalid password", () => {
+      prepareIntercepts()
       cy.login(loginFixtures.default.username, loginFixtures.wrong.password);
-
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".error-message").should("be.visible");
+      checkFailState()
     });
 
     it("no username / invalid password", () => {
       cy.login("EMPTY", loginFixtures.wrong.password);
 
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
+      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.get(".mat-error").should('have.length', 1);
     });
 
     it("no username / no password", () => {
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
+      cy.login("EMPTY", "EMPTY")
+
+      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.get(".mat-error").should('have.length', 2);
     });
   });
 
-  context("Canceled login", () => {
-    it("cancels a valid login", () => {
-      //Enter info and cancel
-      //Can't use login function as it will sumbit login request
-      cy.get(".login-input")
-        .get("[id=userName]")
-        .type(loginFixtures.default.username);
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.default.password);
-      cy.get(".login-btn").contains("Cancel").click();
-
-      //Check that the cancel was successful
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".error-message").should("have.length", 2);
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
-    });
-
-    it("cancels a partial login (username only)", () => {
-      //Enter info and cancel
-      cy.get(".login-input")
-        .get("[id=userName]")
-        .type(loginFixtures.default.username)
-        .should("have.value", loginFixtures.default.username);
-      cy.get(".login-btn").contains("Cancel").click();
-
-      //Check that the cancel was successful
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".error-message").should("have.length", 1);
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
-    });
-
-    it("cancels a partial login (password only)", () => {
-      //Enter info and cancel
-      cy.get(".login-input")
-        .get("[id=password]")
-        .type(loginFixtures.default.password)
-        .should("have.value", loginFixtures.default.password);
-      cy.get(".login-btn").contains("Cancel").click();
-
-      //Check that the cancel was successful
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".error-message").should("have.length", 1);
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
-    });
-
-    it("cancels an empty login", () => {
-      cy.get(".login-btn").contains("Cancel").click();
-
-      cy.get(".login-btn")
-        .contains("Sign In")
-        .parent()
-        .should("have.attr", "disabled");
-    });
+  context("Forgot password", () => {
+    it("commment on password recovery", () => {
+      cy.log("Test will be implemented when functionality is added")
+    })
   });
 
   context("Logout", () => {
@@ -185,7 +142,6 @@ describe("Test login page", () => {
       if (stubIt) {
         cy.intercept("POST", "authorize", {
           statusCode: 200,
-          body: "Request Stubbed!",
         }).as("login-request");
 
         cy.intercept("GET", "logout", {
@@ -201,11 +157,11 @@ describe("Test login page", () => {
       cy.wait("@login-request");
 
       //Check that the login was successful
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.landing);
+      cy.url().should("eq", urlFixtures.base);
 
       //Logout
-      cy.get(".item-icon").get(".profile").click();
-      cy.contains("Logout").click();
+      cy.contains("account_circle").click();
+      cy.contains("Log out").click();
 
       //Check that the logout was successful
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
