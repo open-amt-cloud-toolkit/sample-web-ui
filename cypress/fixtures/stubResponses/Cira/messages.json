@@ -11,5 +11,10 @@
       "success": "CIRA Config default-test successfully deleted",
       "notFound": "CIRA Config default-test not found"
     }
+  },
+
+  "login": {
+    "error": "Incorrect Username and/or Password!"
   }
+
 }
