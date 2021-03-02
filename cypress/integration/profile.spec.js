@@ -16,7 +16,7 @@ describe("Test Success", () => {
   })
 });
 
-// describe("Test CIRA Config Page", () => {
+// describe("Test Profile Page", () => {
 //   //This "it" acts as a before to circumvent the
 //   //lack of overriding interceptors issue. This
 //   //should be changed after cypress fixes the problem.
@@ -30,14 +30,14 @@ describe("Test Success", () => {
 //         statusCode: 200,
 //       }).as("login-request");
 
-//       cy.intercept("GET", "ciraconfigs", {
+//       cy.intercept("GET", "profile", {
 //         statusCode: 404,
 //         body: messageFixtures.empty,
 //       }).as("get-configs");
 //       cy.log("stubbed")
 //     } else {
 //       cy.intercept("POST", "authorize").as("login-request");
-//       cy.intercept("GET", "ciraconfigs").as("get-configs");
+//       cy.intercept("GET", "profile").as("get-configs");
 //       cy.log("e2e")
 //     }
 
@@ -46,7 +46,7 @@ describe("Test Success", () => {
 //     cy.login(loginFixtures.default.username, loginFixtures.default.password);
 //     cy.wait("@login-request").its("response.statusCode").should("eq", 200);
     
-//     cy.get(".mat-list-item").contains("CIRA Configs").click();
+//     cy.get(".mat-list-item").contains("Profiles").click();
 //     cy.wait("@get-configs").its("response.statusCode").should("eq", 404);
 //   });
 
@@ -59,33 +59,35 @@ describe("Test Success", () => {
 //           body: messageFixtures.default.insert.success,
 //         }).as("post-config");
 
-//         cy.intercept("GET", "ciraconfigs", {
+//         cy.intercept("GET", "profiles", {
 //           statusCode: 200,
-//           fixture: "stubResponses/Cira/one-default.json",
 //         }).as("get-configs");
 //       } else {
 //         cy.intercept("POST", "create").as("post-config");
-//         cy.intercept("GET", "ciraconfigs").as("get-configs");
+//         cy.intercept("GET", "profiles").as("get-configs");
 //       }
 
 //       cy.get('button').contains('Add New').click()
 
 //       //Fill out the config
 //       cy.get('input')
-//         .get('[name=configName]')
+//         .get('[name=profileName]')
 //         .type(ciraFixtures.default.name);
+//       cy.get('mat-select').get('[formcontrolname=activation]').click()
+//       cy.get('mat-option').contains('Admin Control Mode').click()
+//       cy.get('mat-checkbox').get('[formcontrolname=generateRandomPassword]').click()
 //       cy.get('input')
-//         .get('[name=mpsServerAddress]')
-//         .type(systemFixtures.ip);
+//         .get('[name=passwordLength]')
+//         .type('10');
+//       cy.get('mat-checkbox').get('[formcontrolname=generateRandomMEBxPassword]').click()
 //       cy.get('input')
-//         .get("[name=username]")
-//         .type(loginFixtures.default.username);
-//       cy.get('input')
-//         .get('[name=password]')
-//         .type(loginFixtures.default.password);
+//         .get('[name=mebxPasswordLength]')
+//         .type('10');
+//       cy.get('mat-radio-button[value=dhcp_enabled]').click()
+//       //Add Cira config when that is working
 //       cy.get("[type=submit]").contains("SAVE").click();
 
-//       //Wait for requests to finish and check them their responses
+//       //Wait for requests to finish and check their responses
 //       cy.wait("@post-config").then((req) => {
 //         cy.wrap(req).its("response.statusCode").should("eq", 200);
 //         cy.wrap(req)
