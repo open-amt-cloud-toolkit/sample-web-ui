@@ -30,6 +30,7 @@ jobs:
       name: Upload Coverage Results
       with:
         directory: ./coverage/openamtui
+    - run: npm run start
     - run: npm run cy-tstrnr-ui
     - run: npm run cy-tstrnr-e2e
         
