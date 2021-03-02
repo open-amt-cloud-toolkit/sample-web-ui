@@ -9,7 +9,6 @@ const urlFixtures = require('../fixtures/urls.json')
 //Always succeeds
 describe("Test Success", () => {
   it("succeeds", () => {
-    cy.visit("https://www.google.com/")
     cy.log("success")
   })
 });

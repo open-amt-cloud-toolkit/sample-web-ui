@@ -12,6 +12,10 @@ const stubIt = Cypress.env("ISOLATED")
 //Always succeeds
 describe("Test Success", () => {
   it("succeeds", () => {
+    cy.visit("http://localhost:4200")
+    cy.visit("http://192.168.50.40:4200")
+    cy.visit("http://localhost:3000")
+    cy.visit("http://localhost:3001")
     cy.log("success")
   })
 });
