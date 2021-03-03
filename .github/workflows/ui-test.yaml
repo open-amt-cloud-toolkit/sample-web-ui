@@ -23,11 +23,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm ci
-    - run: npm run lint
-    - run: npm run test-ci
-    - uses: codecov/codecov-action@v1.2.1
-      name: Upload Coverage Results
-      with:
-        directory: ./coverage/openamtui
+    - run: docker build . --file Dockerfile --tag vprodemo.azurecr.ui/samplewebui:latest
+    - run: docker run -d -p 4200:80 vprodemo.azurecr.ui/samplewebui:latest
+    - run: npm run cy-tstrnr-ui
         
