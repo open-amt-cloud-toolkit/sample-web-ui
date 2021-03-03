@@ -86,9 +86,9 @@ describe("Test CIRA Config Page", () => {
       cy.wait(100); //Bad style but necessary to let the page reload
 
       // //Check that the config was successful
-      // cy.get("[col-id=configName]").contains(ciraFixtures.default.name);
-      // cy.get("[col-id=mpsServerAddress]").contains(systemFixtures.ip);
-      // cy.get("[col-id=username]").contains(loginFixtures.default.username);
+      cy.get("mat-cell").contains(ciraFixtures.default.name);
+      cy.get("mat-cell").contains(systemFixtures.ip);
+      cy.get("mat-cell").contains(loginFixtures.default.username);
     });
 
     // //The delete test relies on the create test above.
