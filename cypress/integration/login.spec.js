@@ -7,33 +7,7 @@ const urlFixtures = require("../fixtures/urls.json");
 const messageFixtures = require("../fixtures/messages.json");
 
 //If isolated is set to true then cypress will stub api requests
-const stubIt = Cypress.env("ISOLATED")
-
-
-// describe("Test Success", () => {
-//   it("succeeds", () => {
-//     cy.visit("http://localhost:4200")
-
-//     cy.log("success")
-//   })
-//   it("succeeds", () => {
-
-//     cy.visit("http://192.168.50.40:4200")
-
-//     cy.log("success")
-//   })
-//   it("succeeds", () => {
-
-//     cy.visit("http://localhost:3000")
-
-//     cy.log("success")
-//   })
-//   it("succeeds", () => {
-
-//     cy.visit("http://localhost:3001")
-//     cy.log("success")
-//   })
-// });
+const stubIt = Cypress.env("ISOLATED");
 
 describe("Load Site", () => {
   it("loads the login page properly", () => {
@@ -95,7 +69,7 @@ describe("Test login page", () => {
       if (stubIt) {
         cy.intercept("POST", "authorize", {
           statusCode: 403,
-          body: "Incorrect Username and/or Password!"
+          body: "Incorrect Username and/or Password!",
         }).as("login-request");
       } else {
         cy.intercept("POST", "authorize").as("login-request");
@@ -103,63 +77,63 @@ describe("Test login page", () => {
     }
 
     function checkFailState() {
-      cy.wait('@login-request').then((req) => {
+      cy.wait("@login-request").then((req) => {
         cy.wrap(req).its("response.statusCode").should("eq", 403);
         cy.wrap(req)
           .its("response.body")
           .should("eq", "Incorrect Username and/or Password!");
-      })
+      });
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.contains("Error logging in").should("exist") 
+      cy.contains("Error logging in").should("exist");
     }
-    
+
     it("no username / valid password", () => {
       //Attempt to log in
       cy.login("EMPTY", loginFixtures.default.password);
 
       //Check that to log in fails as expected
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".mat-error").should('have.length', 1);
+      cy.get(".mat-error").should("have.length", 1);
     });
 
     it("invalid username / valid password", () => {
-      prepareIntercepts()
+      prepareIntercepts();
       cy.login(loginFixtures.wrong.username, loginFixtures.default.password);
-      checkFailState()
+      checkFailState();
     });
 
     it("valid username / no password", () => {
       cy.login(loginFixtures.default.username, "EMPTY");
 
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".mat-error").should('have.length', 1);
+      cy.get(".mat-error").should("have.length", 1);
     });
 
     it("valid username / invalid password", () => {
-      prepareIntercepts()
+      prepareIntercepts();
       cy.login(loginFixtures.default.username, loginFixtures.wrong.password);
-      checkFailState()
+      checkFailState();
     });
 
     it("no username / invalid password", () => {
       cy.login("EMPTY", loginFixtures.wrong.password);
 
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".mat-error").should('have.length', 1);
+      cy.get(".mat-error").should("have.length", 1);
     });
 
     it("no username / no password", () => {
-      cy.login("EMPTY", "EMPTY")
+      cy.login("EMPTY", "EMPTY");
 
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.get(".mat-error").should('have.length', 2);
+      cy.get(".mat-error").should("have.length", 2);
     });
   });
 
   context("Forgot password", () => {
     it("commment on password recovery", () => {
-      cy.log("Test will be implemented when functionality is added")
-    })
+      cy.log("Test will be implemented when functionality is added");
+    });
   });
 
   context("Logout", () => {
