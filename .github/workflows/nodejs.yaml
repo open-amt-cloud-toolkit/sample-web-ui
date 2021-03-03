@@ -30,3 +30,6 @@ jobs:
       name: Upload Coverage Results
       with:
         directory: ./coverage/openamtui
+    - run: docker build . --file Dockerfile --tag vprodemo.azurecr.ui/samplewebui:latest
+    - run: docker run -d -p 4200:80 vprodemo.azurecr.ui/samplewebui:latest
+    - run: npm run cy-tstrnr-ui
