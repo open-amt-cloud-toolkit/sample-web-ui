@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "value": "asdf -%^7",
+      "msg": "CIRA profile name accepts letters, numbers, special characters and no spaces",
+      "param": "configName",
+      "location": "body"
+    }
+  ]
+}

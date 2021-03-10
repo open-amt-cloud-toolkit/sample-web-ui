@@ -23,6 +23,13 @@ Cypress.Commands.add("login", (user, pass) => {
   cy.get("[id=btnLogin]").get("[type=submit]").click();
 });
 
+Cypress.Commands.add("enterCiraInfo", (name, ip, user, pass) => {
+  cy.get("input").get("[name=configName]").type(name);
+  cy.get("input").get("[name=mpsServerAddress]").type(ip);
+  cy.get("input").get("[name=username]").type(user);
+  cy.get("input").get("[name=password]").type(pass);
+});
+
 // -- This is a child command --
 // Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
 
