@@ -10,4 +10,10 @@ run:
 runui:
 	npm run cy-tstrnr-ui
 
+container:
+	docker run -d -p 4200:80 vprodemo.azurecr.ui/samplewebui:latest
+
+test-container:
+	docker run -d -p 4201:80 vprodemo.azurecr.ui/samplewebui:latest
+
 
