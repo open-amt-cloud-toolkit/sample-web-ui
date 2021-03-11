@@ -2,7 +2,8 @@
 * Copyright (c) Intel Corporation 2021
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, ViewChild } from '@angular/core'
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, ViewChild } from '@angular/core'
+import { environment } from '../../../environments/environment'
 import { AMTDesktop, ConsoleLogger, ILogger, Protocol, AMTKvmDataRedirector, DataProcessor, IDataProcessor, MouseHelper, KeyBoardHelper } from 'ui-toolkit'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
@@ -16,7 +17,7 @@ import { DevicesService } from '../devices.service'
   templateUrl: './kvm.component.html',
   styleUrls: ['./kvm.component.scss']
 })
-export class KvmComponent implements OnInit {
+export class KvmComponent implements OnInit, AfterViewInit {
   @ViewChild('canvas', { static: false }) canvas: ElementRef | undefined
   public context!: CanvasRenderingContext2D
 
@@ -45,6 +46,14 @@ export class KvmComponent implements OnInit {
 
   ngOnInit (): void {
     this.logger = new ConsoleLogger(1)
+  }
+
+  checkPowerStatus (): boolean {
+    return this.powerState.powerstate === 2
+  }
+
+  ngAfterViewInit (): void {
+    this.logger = new ConsoleLogger(1)
     this.setAmtFeatures()
     this.isLoading = true
     this.devicesService.getPowerState(this.deviceUuid).pipe(
@@ -65,17 +74,15 @@ export class KvmComponent implements OnInit {
           if (result) {
             this.isLoading = true
             this.devicesService.sendPowerAction(this.deviceUuid, 2).pipe().subscribe(data => {
-              console.info('canvas', this.canvas)
               this.instantiate()
               setTimeout(() => {
                 this.isLoading = false
                 this.autoConnect()
-              }, 4000);
+              }, 4000)
             })
           }
         })
       } else {
-        console.info('canvas', this.canvas)
         this.instantiate()
         this.isLoading = false
         this.autoConnect()
@@ -83,13 +90,10 @@ export class KvmComponent implements OnInit {
     })
   }
 
-  checkPowerStatus (): boolean {
-    return this.powerState.powerstate === 2
-  }
-
   instantiate (): void {
     this.context = this.canvas?.nativeElement.getContext('2d')
-    this.redirector = new AMTKvmDataRedirector(this.logger, Protocol.KVM, new FileReader(), this.deviceUuid, 16994, '', '', 0, 0, '13.76.223.84:3000/relay')
+    const url = `${environment.mpsServer.substring(environment.mpsServer.indexOf('://') + 3)}/relay`
+    this.redirector = new AMTKvmDataRedirector(this.logger, Protocol.KVM, new FileReader(), this.deviceUuid, 16994, '', '', 0, 0, url)
     this.module = new AMTDesktop(this.logger as any, this.context)
     this.dataProcessor = new DataProcessor(this.logger, this.redirector, this.module)
     this.mouseHelper = new MouseHelper(this.module, this.redirector, 200)
@@ -114,7 +118,7 @@ export class KvmComponent implements OnInit {
   }
 
   setAmtFeatures (): void {
-    this.devicesService.SetAmtFeatures(this.deviceUuid).pipe(
+    this.devicesService.setAmtFeatures(this.deviceUuid).pipe(
       catchError((err: any) => {
         // TODO: handle error better
         console.log(err)
