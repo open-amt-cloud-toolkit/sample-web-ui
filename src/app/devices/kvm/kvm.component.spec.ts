@@ -3,12 +3,13 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 import { ComponentFixture, TestBed } from '@angular/core/testing'
-
+import { RouterTestingModule } from '@angular/router/testing'
 import { KvmComponent } from './kvm.component'
 
 import { DevicesService } from '../devices.service'
 import { of } from 'rxjs'
 import { SharedModule } from 'src/app/shared/shared.module'
+import { ActivatedRoute } from '@angular/router'
 
 describe('KvmComponent', () => {
   let component: KvmComponent
@@ -17,13 +18,18 @@ describe('KvmComponent', () => {
   let powerStateSpy: jasmine.Spy
 
   beforeEach(async () => {
-    const devicesService = jasmine.createSpyObj('DevicesService', ['setAmtFeatures', 'getPowerState'])
+    const devicesService = jasmine.createSpyObj('DevicesService', ['setAmtFeatures', 'getPowerState', 'startwebSocket', 'stopwebSocket'])
     setAmtFeaturesSpy = devicesService.setAmtFeatures.and.returnValue(of({}))
     powerStateSpy = devicesService.getPowerState.and.returnValue(of({ powerstate: 2 }))
     await TestBed.configureTestingModule({
-      imports: [SharedModule],
+      imports: [SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [KvmComponent],
-      providers: [{ provide: DevicesService, useValue: devicesService }]
+      providers: [{ provide: DevicesService, useValue: devicesService }, {
+        provide: ActivatedRoute,
+        useValue: {
+          params: of({ id: 'guid' })
+        }
+      }]
     })
       .compileComponents()
   })

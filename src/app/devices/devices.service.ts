@@ -3,7 +3,7 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 import { HttpClient } from '@angular/common/http'
-import { Injectable } from '@angular/core'
+import { EventEmitter, Injectable } from '@angular/core'
 import { Observable } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
@@ -130,6 +130,9 @@ export class DevicesService {
     112: 'Microsoft Windows Server 2011 64-Bit',
     113: 'Microsoft Windows Server 8'
   }
+
+  stopwebSocket: EventEmitter<boolean> = new EventEmitter<boolean>(false)
+  startwebSocket: EventEmitter<boolean> = new EventEmitter<boolean>(false)
 
   constructor (private readonly authService: AuthService, private readonly http: HttpClient) {
 
