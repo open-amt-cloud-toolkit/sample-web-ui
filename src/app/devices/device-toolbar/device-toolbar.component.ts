@@ -13,7 +13,7 @@ import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 })
 export class DeviceToolbarComponent implements OnInit {
   @Input() deviceState: number = 0
-  public isLoading = false
+  @Input() public isLoading = false
   public deviceId: string = ''
   public powerOptions = [
     {

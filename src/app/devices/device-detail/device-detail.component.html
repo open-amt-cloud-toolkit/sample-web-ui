@@ -1,6 +1,4 @@
-<app-device-toolbar></app-device-toolbar>
-<mat-progress-bar mode=indeterminate [fxShow]="isLoading"></mat-progress-bar>
-
+<app-device-toolbar [isLoading]="isLoading"></app-device-toolbar>
 <mat-sidenav-container autosize>
     <mat-sidenav class="example-sidenav" mode="side" position="end" opened>
         <h3 class="mat-h3">Device Audit Log ({{auditLogData.totalCnt}} entries)</h3>
@@ -59,10 +57,13 @@
                 </mat-card-header>
                 <mat-card-content>
                     <p></p>
-                    <p>Manufacturer: <span class="mat-h3"> {{hwInfo?.CIM_BIOSElement?.response?.Manufacturer}}</span></p>
+                    <p>Manufacturer: <span class="mat-h3"> {{hwInfo?.CIM_BIOSElement?.response?.Manufacturer}}</span>
+                    </p>
                     <p>Version: <span class="mat-h3"> {{hwInfo?.CIM_BIOSElement?.response?.Version}}</span></p>
-                    <p>Release Date: <span class="mat-h3"> {{hwInfo?.CIM_BIOSElement?.response?.ReleaseDate.Datetime | amDateFormat:'LLL'}}</span></p>
-                    <p>Target OS: <span class="mat-h3"> {{ targetOS[hwInfo?.CIM_BIOSElement?.response?.TargetOperatingSystem || 0] }}</span></p>
+                    <p>Release Date: <span class="mat-h3"> {{hwInfo?.CIM_BIOSElement?.response?.ReleaseDate.Datetime |
+                            amDateFormat:'LLL'}}</span></p>
+                    <p>Target OS: <span class="mat-h3"> {{
+                            targetOS[hwInfo?.CIM_BIOSElement?.response?.TargetOperatingSystem || 0] }}</span></p>
                 </mat-card-content>
             </mat-card>
             <mat-card fxFlex="calc(50% - 24px)" fxFlex.lt-lg="100">
@@ -81,7 +82,8 @@
                                 <br />
                                 <p>Slot: <span class="mat-h3"> {{bank.BankLabel}}</span></p>
                                 <p>Capacity: <span class="mat-h3"> {{bank.Capacity / 1024 / 1024 / 1024 }} GB</span></p>
-                                <p>Clock Speed(Max): <span class="mat-h3"> {{bank.ConfiguredMemoryClockSpeed}} ({{bank.MaxMemorySpeed}}) Mhz</span></p>
+                                <p>Clock Speed(Max): <span class="mat-h3"> {{bank.ConfiguredMemoryClockSpeed}}
+                                        ({{bank.MaxMemorySpeed}}) Mhz</span></p>
                                 <p>Serial No.: <span class="mat-h3"> {{bank.SerialNumber}}</span></p>
                             </div>
                             <div fxFlex=10 fxLayoutAlign="center center">

@@ -56,6 +56,7 @@ export class DeviceDetailComponent implements OnInit {
   ]
 
   public showSol: boolean = false
+  public selectedAction: string = ''
   public deviceState: number = 0
   constructor (public snackBar: MatSnackBar, public readonly activatedRoute: ActivatedRoute, public readonly router: Router, private readonly devicesService: DevicesService) {
     this.targetOS = this.devicesService.TargetOSMap
@@ -95,5 +96,9 @@ export class DeviceDetailComponent implements OnInit {
 
   deviceStatus = (state: number): void => {
     this.deviceState = state
+  }
+
+  onSelectedAction = (selectedAction: string): void => {
+    this.selectedAction = selectedAction
   }
 }

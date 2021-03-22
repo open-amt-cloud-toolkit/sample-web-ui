@@ -27,6 +27,7 @@ import { MomentModule } from 'ngx-moment'
 import { KvmComponent } from './devices/kvm/kvm.component'
 import { SolComponent } from './devices/sol/sol.component'
 import { AuditLogComponent } from './devices/audit-log/audit-log.component'
+import { PowerAlertComponent } from './devices/sol/poweralert/poweralert.component'
 import { DeviceToolbarComponent } from './devices/device-toolbar/device-toolbar.component'
 
 @NgModule({
@@ -45,6 +46,7 @@ import { DeviceToolbarComponent } from './devices/device-toolbar/device-toolbar.
     KvmComponent,
     SolComponent,
     AuditLogComponent,
+    PowerAlertComponent,
     DeviceToolbarComponent
   ],
   imports: [

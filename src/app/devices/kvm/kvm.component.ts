@@ -3,7 +3,6 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild, EventEmitter, Output, OnDestroy } from '@angular/core'
-import { environment } from '../../../environments/environment'
 import { AMTDesktop, ConsoleLogger, ILogger, Protocol, AMTKvmDataRedirector, DataProcessor, IDataProcessor, MouseHelper, KeyBoardHelper } from 'ui-toolkit'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
@@ -13,6 +12,7 @@ import { PowerUpAlertComponent } from 'src/app/shared/power-up-alert/power-up-al
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { DevicesService } from '../devices.service'
 import { ActivatedRoute, Router } from '@angular/router'
+import { environment } from 'src/environments/environment'
 @Component({
   selector: 'app-kvm',
   templateUrl: './kvm.component.html',
@@ -40,6 +40,9 @@ export class KvmComponent implements OnInit, AfterViewInit, OnDestroy {
   deviceId: string = ''
   selected: number = 2
   timeInterval!: any
+  server: string = environment.mpsServer.replace('https://', '')
+  previousAction: string = 'kvm'
+  selectedAction: string = ''
 
   constructor (public snackBar: MatSnackBar, public dialog: MatDialog, private readonly devicesService: DevicesService, public readonly activatedRoute: ActivatedRoute, public readonly router: Router) {
 
@@ -60,6 +63,12 @@ export class KvmComponent implements OnInit, AfterViewInit, OnDestroy {
     })
   }
 
+  ngDoCheck (): void {
+    if (this.selectedAction !== this.previousAction) {
+      this.previousAction = this.selectedAction
+    }
+  }
+
   checkPowerStatus (): boolean {
     return this.powerState.powerstate === 2
   }
@@ -70,9 +79,8 @@ export class KvmComponent implements OnInit, AfterViewInit, OnDestroy {
 
   instantiate (): void {
     this.context = this.canvas?.nativeElement.getContext('2d')
-    const url = `${environment.mpsServer.substring(environment.mpsServer.indexOf('://') + 3)}/relay`
+    this.redirector = new AMTKvmDataRedirector(this.logger, Protocol.KVM, new FileReader(), this.deviceId, 16994, '', '', 0, 0, `${this.server}/relay`)
     this.module = new AMTDesktop(this.logger as any, this.context)
-    this.redirector = new AMTKvmDataRedirector(this.logger, Protocol.KVM, new FileReader(), this.deviceId, 16994, '', '', 0, 0, url)
     this.dataProcessor = new DataProcessor(this.logger, this.redirector, this.module)
     this.mouseHelper = new MouseHelper(this.module, this.redirector, 200)
     this.keyboardHelper = new KeyBoardHelper(this.module, this.redirector)
