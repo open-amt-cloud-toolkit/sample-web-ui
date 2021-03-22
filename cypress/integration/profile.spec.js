@@ -134,24 +134,29 @@ describe("Test Profile Page", () => {
   });
 
   context("failed runs", () => {
-    beforeEach("navigate to page", () => {
-      cy.get("button").contains("Add New").click();
-    });
-
     afterEach("cancel the config", () => {
       cy.get("button").contains("CANCEL").click({ timeout: 50000 });
     });
 
     it("invalid profile name", () => {
       if (stubIt) {
+        cy.intercept("GET", "ciraconfigs", {
+          statusCode: 200,
+          fixture: "stubResponses/Cira/one-default.json",
+        }).as("get-configs");
+
         cy.intercept("POST", "profiles", {
           statusCode: 400,
           //Add fixture back if it becomes important
           // fixture: somthing.json,
         }).as("post-profile");
       } else {
+        cy.intercept("GET", "ciraconfigs").as("get-configs");
         cy.intercept("POST", "profiles").as("post-profile");
       }
+
+      cy.get("button").contains("Add New").click();
+      cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
 
       //Fill out the profile
       cy.enterProfileInfo(
@@ -181,14 +186,23 @@ describe("Test Profile Page", () => {
 
     it("invalid amt password", () => {
       if (stubIt) {
+        cy.intercept("GET", "ciraconfigs", {
+          statusCode: 200,
+          fixture: "stubResponses/Cira/one-default.json",
+        }).as("get-configs");
+
         cy.intercept("POST", "profiles", {
           statusCode: 400,
           //Add fixture back if it becomes important
           // fixture: somthing.json,
         }).as("post-profile");
       } else {
+        cy.intercept("GET", "ciraconfigs").as("get-configs");
         cy.intercept("POST", "profiles").as("post-profile");
       }
+
+      cy.get("button").contains("Add New").click();
+      cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
 
       //Fill out the profile
       cy.enterProfileInfo(
@@ -202,9 +216,7 @@ describe("Test Profile Page", () => {
       cy.get("button[type=submit]").click();
 
       //Wait for requests to finish and check them their responses
-      cy.wait("@post-profile").then((req) => {
-        cy.wrap(req).its("response.statusCode").should("eq", 400);
-      });
+      cy.wait("@post-profile").its("response.statusCode").should("eq", 400);
 
       //Check that the profile creation failed
       cy.url().should(
@@ -218,14 +230,23 @@ describe("Test Profile Page", () => {
 
     it("invalid mebx password", () => {
       if (stubIt) {
+        cy.intercept("GET", "ciraconfigs", {
+          statusCode: 200,
+          fixture: "stubResponses/Cira/one-default.json",
+        }).as("get-configs");
+
         cy.intercept("POST", "profiles", {
           statusCode: 400,
           //Add fixture back if it becomes important
           // fixture: somthing.json,
         }).as("post-profile");
       } else {
+        cy.intercept("GET", "ciraconfigs").as("get-configs");
         cy.intercept("POST", "profiles").as("post-profile");
       }
+
+      cy.get("button").contains("Add New").click();
+      cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
 
       //Fill out the profile
       cy.enterProfileInfo(
