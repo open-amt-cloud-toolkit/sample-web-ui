@@ -23,7 +23,6 @@ export class DeviceDetailComponent implements OnInit {
   public amtFeatures?: AmtFeaturesResponse
   public isLoading = false
   public deviceId: string = ''
-  public showKvm: boolean = false
   public targetOS: any
   public powerOptions = [
     {

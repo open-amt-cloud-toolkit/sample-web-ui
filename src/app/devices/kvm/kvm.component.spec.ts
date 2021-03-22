@@ -10,6 +10,7 @@ import { DevicesService } from '../devices.service'
 import { of } from 'rxjs'
 import { SharedModule } from 'src/app/shared/shared.module'
 import { ActivatedRoute } from '@angular/router'
+import { EventEmitter } from '@angular/core'
 
 describe('KvmComponent', () => {
   let component: KvmComponent
@@ -19,12 +20,16 @@ describe('KvmComponent', () => {
 
   beforeEach(async () => {
     const devicesService = jasmine.createSpyObj('DevicesService', ['setAmtFeatures', 'getPowerState', 'startwebSocket', 'stopwebSocket'])
+    const websocketStub = {
+      stopwebSocket: new EventEmitter<boolean>(false),
+      startwebSocket: new EventEmitter<boolean>(false)
+    }
     setAmtFeaturesSpy = devicesService.setAmtFeatures.and.returnValue(of({}))
     powerStateSpy = devicesService.getPowerState.and.returnValue(of({ powerstate: 2 }))
     await TestBed.configureTestingModule({
       imports: [SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [KvmComponent],
-      providers: [{ provide: DevicesService, useValue: devicesService }, {
+      providers: [{ provide: DevicesService, useValue: { ...devicesService, ...websocketStub } }, {
         provide: ActivatedRoute,
         useValue: {
           params: of({ id: 'guid' })
@@ -37,7 +42,7 @@ describe('KvmComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(KvmComponent)
     component = fixture.componentInstance
-    fixture.detectChanges()
+    fixture.detectChanges() 
   })
 
   it('should create', () => {
