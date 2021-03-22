@@ -42,7 +42,7 @@ describe('KvmComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(KvmComponent)
     component = fixture.componentInstance
-    fixture.detectChanges() 
+    fixture.detectChanges()
   })
 
   it('should create', () => {

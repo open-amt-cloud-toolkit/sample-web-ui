@@ -65,7 +65,7 @@ export class KvmComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit (): void {
-     this.init()
+    this.init()
   }
 
   instantiate (): void {
@@ -107,7 +107,7 @@ export class KvmComponent implements OnInit, AfterViewInit, OnDestroy {
     this.setAmtFeatures()
     this.isLoading = true
     this.devicesService.getPowerState(this.deviceId).pipe(
-      catchError(err => {
+      catchError(() => {
         this.snackBar.open($localize`Error retrieving power status`, undefined, SnackbarDefaults.defaultError)
         return of()
       }), finalize(() => {
@@ -135,8 +135,7 @@ export class KvmComponent implements OnInit, AfterViewInit, OnDestroy {
         setTimeout(() => {
           this.isLoading = false
           this.autoConnect()
-        }, 0);
-        
+        }, 0)
       }
     })
     this.timeInterval = setInterval(() => this.devicesService.getPowerState(this.deviceId).pipe().subscribe(), 15000)
@@ -144,7 +143,7 @@ export class KvmComponent implements OnInit, AfterViewInit, OnDestroy {
 
   setAmtFeatures (): void {
     this.devicesService.setAmtFeatures(this.deviceId).pipe(
-      catchError((err: any) => {
+      catchError(() => {
         this.snackBar.open($localize`Error enabling kvm`, undefined, SnackbarDefaults.defaultError)
         return of()
       }), finalize(() => {

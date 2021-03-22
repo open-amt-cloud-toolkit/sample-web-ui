@@ -9,19 +9,18 @@ import { DevicesService } from '../devices.service'
 describe('DeviceToolbarComponent', () => {
   let component: DeviceToolbarComponent
   let fixture: ComponentFixture<DeviceToolbarComponent>
-  let sendPowerActionSpy: jasmine.Spy
 
   beforeEach(async () => {
-  const devicesService = jasmine.createSpyObj('DevicesService', ['sendPowerAction'])
-  sendPowerActionSpy = devicesService.sendPowerAction.and.returnValue(of({}))
+    const devicesService = jasmine.createSpyObj('DevicesService', ['sendPowerAction'])
     await TestBed.configureTestingModule({
-    imports: [SharedModule,  RouterTestingModule.withRoutes([])],
+      imports: [SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [DeviceToolbarComponent],
       providers: [{ provide: DevicesService, useValue: devicesService }, {
         provide: ActivatedRoute,
         useValue: {
           params: of({ id: 'guid' })
-        } }]
+        }
+      }]
     })
       .compileComponents()
   })
