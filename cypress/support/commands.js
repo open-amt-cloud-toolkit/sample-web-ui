@@ -30,6 +30,26 @@ Cypress.Commands.add("enterCiraInfo", (name, ip, user, pass) => {
   cy.get("input").get("[name=password]").type(pass);
 });
 
+Cypress.Commands.add(
+  "enterProfileInfo",
+  (name, admin, amtPass, mebxPass, network, cira) => {
+    cy.get("input").get("[name=profileName]").type(name);
+    if (!admin) {
+      //change to client control mode
+    }
+    cy.get("input").get("[name=amtPassword]").type(amtPass);
+    cy.get("input").get("[name=mebxPassword]").type(mebxPass);
+    cy.contains(network).click();
+    cy.get("mat-select[formcontrolname=ciraConfigName]").click();
+    cy.contains(cira).click();
+  }
+);
+
+Cypress.Commands.add("enterDomainInfo", (name, domain, file, pass) => {
+  cy.get("input[name=name]").type(name);
+  cy.get("input[name=domainName]").type(domain);
+});
+
 // -- This is a child command --
 // Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
 

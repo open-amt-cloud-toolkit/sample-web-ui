@@ -1,0 +1,13 @@
+[
+  {
+    "profileName": "default",
+    "generateRandomPassword": false,
+    "passwordLength": null,
+    "configurationScript": null,
+    "activation": "acmactivate",
+    "ciraConfigName": "default",
+    "networkConfigName": "dhcp_enabled",
+    "generateRandomMEBxPassword": false,
+    "mebxPasswordLength": null
+  }
+]

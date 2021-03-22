@@ -129,7 +129,7 @@ describe("Test CIRA Config Page", () => {
     });
   });
 
-  context("attempt to create an invalid config", () => {
+  context("failed runs", () => {
     beforeEach("fills out the config", () => {
       cy.get("button").contains("Add New").click();
     });
@@ -138,7 +138,7 @@ describe("Test CIRA Config Page", () => {
       cy.get("button").contains("CANCEL").click({ timeout: 50000 });
     });
 
-    it("enters an invalid config name", () => {
+    it("invalid config name", () => {
       if (stubIt) {
         cy.intercept("POST", /admin$/, {
           statusCode: 200,
@@ -171,7 +171,7 @@ describe("Test CIRA Config Page", () => {
       cy.wait("@post-config").its("response.statusCode").should("eq", 400);
     });
 
-    it("enters an invalid username", () => {
+    it("invalid username", () => {
       if (stubIt) {
         cy.intercept("POST", /admin$/, {
           statusCode: 200,
@@ -204,7 +204,7 @@ describe("Test CIRA Config Page", () => {
       cy.wait("@post-config").its("response.statusCode").should("eq", 400);
     });
 
-    it("enters an invalid password", () => {
+    it("invalid password", () => {
       if (stubIt) {
         cy.intercept("POST", /admin$/, {
           statusCode: 200,
