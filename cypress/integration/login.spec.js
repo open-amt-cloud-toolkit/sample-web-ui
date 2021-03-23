@@ -4,7 +4,7 @@
 
 const loginFixtures = require("../fixtures/accounts.json");
 const urlFixtures = require("../fixtures/urls.json");
-const messageFixtures = require("../fixtures/messages.json");
+const apiResponses = require("../fixtures/apiResponses.json");
 
 //If isolated is set to true then cypress will stub api requests
 const stubIt = Cypress.env("ISOLATED");
@@ -39,7 +39,7 @@ describe("Test login page", () => {
       //Prepare to intercept login request
       if (stubIt) {
         cy.intercept("POST", "authorize", {
-          statusCode: 200,
+          statusCode: apiResponses.login.success.code,
         }).as("login-request");
       } else {
         cy.intercept("POST", "authorize").as("login-request");
@@ -50,7 +50,9 @@ describe("Test login page", () => {
 
       //Check that correct post request is made
       cy.wait("@login-request").then((req) => {
-        cy.wrap(req).its("response.statusCode").should("eq", 200);
+        cy.wrap(req)
+          .its("response.statusCode")
+          .should("eq", apiResponses.login.success.code);
         cy.wrap(req)
           .its("request.body.username")
           .should("eq", loginFixtures.default.username);
@@ -68,8 +70,8 @@ describe("Test login page", () => {
     function prepareIntercepts() {
       if (stubIt) {
         cy.intercept("POST", "authorize", {
-          statusCode: 403,
-          body: "Incorrect Username and/or Password!",
+          statusCode: apiResponses.login.fail.code,
+          body: apiResponses.login.fail.response,
         }).as("login-request");
       } else {
         cy.intercept("POST", "authorize").as("login-request");
@@ -78,13 +80,15 @@ describe("Test login page", () => {
 
     function checkFailState() {
       cy.wait("@login-request").then((req) => {
-        cy.wrap(req).its("response.statusCode").should("eq", 403);
+        cy.wrap(req)
+          .its("response.statusCode")
+          .should("eq", apiResponses.login.fail.code);
         cy.wrap(req)
           .its("response.body")
-          .should("eq", "Incorrect Username and/or Password!");
+          .should("deep.eq", apiResponses.login.fail.response);
       });
       cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
-      cy.contains("Error logging in").should("exist");
+      cy.contains("Error logging in").should("exist"); //add the fail message to a fixture
     }
 
     it("no username / valid password", () => {
@@ -141,11 +145,11 @@ describe("Test login page", () => {
       //Prepare request intercepts
       if (stubIt) {
         cy.intercept("POST", "authorize", {
-          statusCode: 200,
+          statusCode: apiResponses.login.success.code,
         }).as("login-request");
 
         cy.intercept("GET", "logout", {
-          statusCode: 200,
+          statusCode: apiResponses.logout.success.code,
         }).as("logout-request");
       } else {
         cy.intercept("POST", "authorize").as("login-request");

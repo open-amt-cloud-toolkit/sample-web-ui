@@ -1,10 +1,9 @@
 //Tests the creation of a profile
 const loginFixtures = require("../fixtures/accounts.json");
-const systemFixtures = require("../fixtures/system.json");
 const urlFixtures = require("../fixtures/urls.json");
 const ciraFixtures = require("../fixtures/cira.json");
 const profileFixtures = require("../fixtures/profile.json");
-const messageFixtures = require("../fixtures/stubResponses/Cira/messages.json");
+const apiResponses = require("../fixtures/apiResponses.json");
 
 //If isolated is set to true then cypress will stub api requests
 const stubIt = Cypress.env("ISOLATED");
@@ -20,12 +19,12 @@ describe("Test Profile Page", () => {
 
     if (stubIt) {
       cy.intercept("POST", "authorize", {
-        statusCode: 200,
+        statusCode: apiResponses.login.success.code,
       }).as("login-request");
 
       cy.intercept("GET", "profiles", {
-        statusCode: 200,
-        body: "[]",
+        statusCode: apiResponses.profiles.getAll.empty.code,
+        body: apiResponses.profiles.getAll.empty.response,
       }).as("get-profiles");
     } else {
       cy.intercept("POST", "authorize").as("login-request");
@@ -35,10 +34,14 @@ describe("Test Profile Page", () => {
     //Login and navigate to profile page
     cy.visit(urlFixtures.base);
     cy.login(loginFixtures.default.username, loginFixtures.default.password);
-    cy.wait("@login-request").its("response.statusCode").should("eq", 200);
+    cy.wait("@login-request")
+      .its("response.statusCode")
+      .should("eq", apiResponses.login.success.code);
 
     cy.get(".mat-list-item").contains("Profiles").click();
-    cy.wait("@get-profiles").its("response.statusCode").should("eq", 200);
+    cy.wait("@get-profiles")
+      .its("response.statusCode")
+      .should("eq", apiResponses.profiles.getAll.empty.code);
   });
 
   context("successful run", () => {
@@ -46,18 +49,18 @@ describe("Test Profile Page", () => {
       //Stub the get and post requests
       if (stubIt) {
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          fixture: "stubResponses/Cira/one-default.json",
+          statusCode: apiResponses.ciraConfigs.getAll.forProfile.code,
+          body: apiResponses.ciraConfigs.getAll.forProfile.response,
         }).as("get-configs");
 
         cy.intercept("POST", "profiles", {
-          statusCode: 201,
-          fixture: "stubResponses/Profile/post-success.json",
+          statusCode: apiResponses.profiles.create.success.code,
+          body: apiResponses.profiles.create.success.response,
         }).as("post-profile");
 
         cy.intercept("GET", "profiles", {
-          statusCode: 200,
-          fixture: "stubResponses/Profile/one-default.json",
+          statusCode: apiResponses.profiles.getAll.success.code,
+          body: apiResponses.profiles.getAll.success.response,
         }).as("get-profiles");
       } else {
         cy.intercept("GET", "ciraconfigs").as("get-configs");
@@ -67,29 +70,34 @@ describe("Test Profile Page", () => {
 
       //Fill out the profile
       cy.get("button").contains("Add New").click();
+      cy.wait("@get-configs");
       cy.enterProfileInfo(
-        profileFixtures.default.name,
-        profileFixtures.default.admin,
-        profileFixtures.default.amtPassword,
-        profileFixtures.default.mebxPassword,
-        profileFixtures.default.netConfig,
-        profileFixtures.default.ciraConfig
+        profileFixtures.happyPath.name,
+        profileFixtures.happyPath.admin,
+        profileFixtures.happyPath.amtPassword,
+        profileFixtures.happyPath.mebxPassword,
+        profileFixtures.happyPath.netConfig,
+        profileFixtures.happyPath.ciraConfig
       );
       cy.get("button[type=submit]").click();
 
       //Wait for requests to finish and check them their responses
       cy.wait("@post-profile").then((req) => {
-        cy.wrap(req).its("response.statusCode").should("eq", 201);
+        cy.wrap(req)
+          .its("response.statusCode")
+          .should("eq", apiResponses.profiles.create.success.code);
       });
 
       //TODO: check the response to make sure that it is correct
       //this is currently difficult because of the format of the response
-      cy.wait("@get-profiles").its("response.statusCode").should("eq", 200);
+      cy.wait("@get-profiles")
+        .its("response.statusCode")
+        .should("eq", apiResponses.profiles.getAll.success.code);
 
       //Check that the config was successful
-      cy.get("mat-cell").contains(profileFixtures.default.name);
+      cy.get("mat-cell").contains(profileFixtures.happyPath.name);
       cy.get("mat-cell").contains(profileFixtures.check.network.dhcp);
-      cy.get("mat-cell").contains(ciraFixtures.default.name);
+      cy.get("mat-cell").contains(profileFixtures.happyPath.ciraConfig);
       cy.get("mat-cell").contains(profileFixtures.check.mode.acm);
     });
 
@@ -101,12 +109,12 @@ describe("Test Profile Page", () => {
       //Stub the requests
       if (stubIt) {
         cy.intercept("DELETE", "profiles", {
-          statusCode: 204,
+          statusCode: apiResponses.profiles.delete.success.code,
         }).as("delete-profile");
 
         cy.intercept("GET", "profiles", {
-          statusCode: 200,
-          body: "[]",
+          statusCode: apiResponses.profiles.getAll.empty.code,
+          body: apiResponses.profiles.getAll.empty.response,
         }).as("get-profiles");
       } else {
         cy.intercept("DELETE", "profiles").as("delete-profile");
@@ -118,9 +126,9 @@ describe("Test Profile Page", () => {
       cy.get("button").contains("No").click();
 
       //Check that the profile was not deleted
-      cy.get("mat-cell").contains(profileFixtures.default.name);
+      cy.get("mat-cell").contains(profileFixtures.happyPath.name);
       cy.get("mat-cell").contains(profileFixtures.check.network.dhcp);
-      cy.get("mat-cell").contains(ciraFixtures.default.name);
+      cy.get("mat-cell").contains(profileFixtures.happyPath.ciraConfig);
       cy.get("mat-cell").contains(profileFixtures.check.mode.acm);
 
       //Delete profile
@@ -129,7 +137,7 @@ describe("Test Profile Page", () => {
       cy.wait("@delete-profile");
 
       //Check that the config was deleted properly
-      cy.contains(profileFixtures.default.name).should("not.exist");
+      cy.contains(profileFixtures.happyPath.name).should("not.exist");
     });
   });
 
@@ -141,14 +149,13 @@ describe("Test Profile Page", () => {
     it("invalid profile name", () => {
       if (stubIt) {
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          fixture: "stubResponses/Cira/one-default.json",
+          statusCode: apiResponses.ciraConfigs.getAll.forProfile.code,
+          body: apiResponses.ciraConfigs.getAll.forProfile.response,
         }).as("get-configs");
 
         cy.intercept("POST", "profiles", {
-          statusCode: 400,
-          //Add fixture back if it becomes important
-          // fixture: somthing.json,
+          statusCode: apiResponses.profiles.create.badRequest.code,
+          body: apiResponses.profiles.create.badRequest.response,
         }).as("post-profile");
       } else {
         cy.intercept("GET", "ciraconfigs").as("get-configs");
@@ -156,22 +163,26 @@ describe("Test Profile Page", () => {
       }
 
       cy.get("button").contains("Add New").click();
-      cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
+      cy.wait("@get-configs")
+        .its("response.statusCode")
+        .should("eq", apiResponses.ciraConfigs.getAll.forProfile.code);
 
       //Fill out the profile
       cy.enterProfileInfo(
         profileFixtures.wrong.name,
-        profileFixtures.default.admin,
-        profileFixtures.default.amtPassword,
-        profileFixtures.default.mebxPassword,
-        profileFixtures.default.netConfig,
-        profileFixtures.default.ciraConfig
+        profileFixtures.happyPath.admin,
+        profileFixtures.happyPath.amtPassword,
+        profileFixtures.happyPath.mebxPassword,
+        profileFixtures.happyPath.netConfig,
+        profileFixtures.happyPath.ciraConfig
       );
       cy.get("button[type=submit]").click();
 
       //Wait for requests to finish and check them their responses
       cy.wait("@post-profile").then((req) => {
-        cy.wrap(req).its("response.statusCode").should("eq", 400);
+        cy.wrap(req)
+          .its("response.statusCode")
+          .should("eq", apiResponses.profiles.create.badRequest.code);
       });
 
       //Check that the profile creation failed
@@ -187,14 +198,13 @@ describe("Test Profile Page", () => {
     it("invalid amt password", () => {
       if (stubIt) {
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          fixture: "stubResponses/Cira/one-default.json",
+          statusCode: apiResponses.ciraConfigs.getAll.forProfile.code,
+          body: apiResponses.ciraConfigs.getAll.forProfile.response,
         }).as("get-configs");
 
         cy.intercept("POST", "profiles", {
-          statusCode: 400,
-          //Add fixture back if it becomes important
-          // fixture: somthing.json,
+          statusCode: apiResponses.profiles.create.badRequest.code,
+          body: apiResponses.profiles.create.badRequest.response,
         }).as("post-profile");
       } else {
         cy.intercept("GET", "ciraconfigs").as("get-configs");
@@ -202,21 +212,25 @@ describe("Test Profile Page", () => {
       }
 
       cy.get("button").contains("Add New").click();
-      cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
+      cy.wait("@get-configs")
+        .its("response.statusCode")
+        .should("eq", apiResponses.ciraConfigs.getAll.forProfile.code);
 
       //Fill out the profile
       cy.enterProfileInfo(
-        profileFixtures.default.name,
-        profileFixtures.default.admin,
+        profileFixtures.happyPath.name,
+        profileFixtures.happyPath.admin,
         profileFixtures.wrong.amtPassword,
-        profileFixtures.default.mebxPassword,
-        profileFixtures.default.netConfig,
-        profileFixtures.default.ciraConfig
+        profileFixtures.happyPath.mebxPassword,
+        profileFixtures.happyPath.netConfig,
+        profileFixtures.happyPath.ciraConfig
       );
       cy.get("button[type=submit]").click();
 
       //Wait for requests to finish and check them their responses
-      cy.wait("@post-profile").its("response.statusCode").should("eq", 400);
+      cy.wait("@post-profile")
+        .its("response.statusCode")
+        .should("eq", apiResponses.profiles.create.badRequest.code);
 
       //Check that the profile creation failed
       cy.url().should(
@@ -231,14 +245,13 @@ describe("Test Profile Page", () => {
     it("invalid mebx password", () => {
       if (stubIt) {
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          fixture: "stubResponses/Cira/one-default.json",
+          statusCode: apiResponses.ciraConfigs.getAll.forProfile.code,
+          body: apiResponses.ciraConfigs.getAll.forProfile.response,
         }).as("get-configs");
 
         cy.intercept("POST", "profiles", {
-          statusCode: 400,
-          //Add fixture back if it becomes important
-          // fixture: somthing.json,
+          statusCode: apiResponses.profiles.create.badRequest.code,
+          body: apiResponses.profiles.create.badRequest.response,
         }).as("post-profile");
       } else {
         cy.intercept("GET", "ciraconfigs").as("get-configs");
@@ -246,22 +259,26 @@ describe("Test Profile Page", () => {
       }
 
       cy.get("button").contains("Add New").click();
-      cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
+      cy.wait("@get-configs")
+        .its("response.statusCode")
+        .should("eq", apiResponses.ciraConfigs.getAll.forProfile.code);
 
       //Fill out the profile
       cy.enterProfileInfo(
-        profileFixtures.default.name,
-        profileFixtures.default.admin,
-        profileFixtures.default.amtPassword,
+        profileFixtures.happyPath.name,
+        profileFixtures.happyPath.admin,
+        profileFixtures.happyPath.amtPassword,
         profileFixtures.wrong.mebxPassword,
-        profileFixtures.default.netConfig,
-        profileFixtures.default.ciraConfig
+        profileFixtures.happyPath.netConfig,
+        profileFixtures.happyPath.ciraConfig
       );
       cy.get("button[type=submit]").click();
 
       //Wait for requests to finish and check them their responses
       cy.wait("@post-profile").then((req) => {
-        cy.wrap(req).its("response.statusCode").should("eq", 400);
+        cy.wrap(req)
+          .its("response.statusCode")
+          .should("eq", apiResponses.profiles.create.badRequest.code);
       });
 
       //Check that the profile creation failed

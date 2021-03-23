@@ -1,14 +1,12 @@
 //Tests the creation of a profile
 const loginFixtures = require("../fixtures/accounts.json");
-const systemFixtures = require("../fixtures/system.json");
 const urlFixtures = require("../fixtures/urls.json");
-const domainFixtures = require("../fixtures/domain.json");
-const messageFixtures = require("../fixtures/stubResponses/Cira/messages.json");
+const apiResponses = require("../fixtures/apiResponses.json");
 
 //If isolated is set to true then cypress will stub api requests
 const stubIt = Cypress.env("ISOLATED");
 
-describe("Test Profile Page", () => {
+describe("Test Device Page", () => {
   //This "it" acts as a before to circumvent the
   //lack of overriding interceptors issue. This
   //should be changed after cypress fixes the problem.
@@ -19,7 +17,7 @@ describe("Test Profile Page", () => {
 
     if (stubIt) {
       cy.intercept("POST", "authorize", {
-        statusCode: 200,
+        statusCode: apiResponses.login.success.code,
       }).as("login-request");
 
       cy.intercept("POST", /admin$/, {

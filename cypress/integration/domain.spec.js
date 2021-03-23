@@ -2,15 +2,14 @@
 
 //Tests the creation of a profile
 const loginFixtures = require("../fixtures/accounts.json");
-const systemFixtures = require("../fixtures/system.json");
 const urlFixtures = require("../fixtures/urls.json");
 const domainFixtures = require("../fixtures/domain.json");
-const messageFixtures = require("../fixtures/stubResponses/Cira/messages.json");
+const apiResponses = require("../fixtures/apiResponses.json");
 
 //If isolated is set to true then cypress will stub api requests
 const stubIt = Cypress.env("ISOLATED");
 
-describe("Test Profile Page", () => {
+describe("Test Domain Page", () => {
   //This "it" acts as a before to circumvent the
   //lack of overriding interceptors issue. This
   //should be changed after cypress fixes the problem.
@@ -21,12 +20,12 @@ describe("Test Profile Page", () => {
 
     if (stubIt) {
       cy.intercept("POST", "authorize", {
-        statusCode: 200,
+        statusCode: apiResponses.login.success.code,
       }).as("login-request");
 
       cy.intercept("GET", "domains", {
-        statusCode: 200,
-        body: "[]",
+        statusCode: apiResponses.domains.getAll.empty.code,
+        body: apiResponses.domains.getAll.empty.response,
       }).as("get-domains");
     } else {
       cy.intercept("POST", "authorize").as("login-request");
@@ -36,10 +35,14 @@ describe("Test Profile Page", () => {
     //Login and navigate to profile page
     cy.visit(urlFixtures.base);
     cy.login(loginFixtures.default.username, loginFixtures.default.password);
-    cy.wait("@login-request").its("response.statusCode").should("eq", 200);
+    cy.wait("@login-request")
+      .its("response.statusCode")
+      .should("eq", apiResponses.login.success.code);
 
     cy.get(".mat-list-item").contains("Domains").click();
-    cy.wait("@get-domains").its("response.statusCode").should("eq", 200);
+    cy.wait("@get-domains")
+      .its("response.statusCode")
+      .should("eq", apiResponses.domains.getAll.empty.code);
   });
 
   context("successful run", () => {
@@ -47,19 +50,86 @@ describe("Test Profile Page", () => {
       //Stub the get and post requests
       if (stubIt) {
         cy.intercept("POST", "domains", {
-          statusCode: 201,
-          fixture: "stubResponses/Profile/post-success.json",
-        }).as("post-profile");
+          statusCode: apiResponses.domains.create.success.code,
+          body: apiResponses.domains.create.success.response,
+        }).as("post-domain");
+
+        cy.intercept("GET", "domains", {
+          statusCode: apiResponses.domains.getAll.success.code,
+          body: apiResponses.domains.getAll.success.response,
+        }).as("get-domains");
       } else {
         cy.intercept("POST", "domains").as("post-domains");
+        cy.intercept("GET", "domains").as("get-domains");
       }
 
       //Fill out the profile
       cy.get("button").contains("Add New").click();
+      //TODO: add file path and password once cypress-upload-file is added
+      //and a spoof pfx file is created
       cy.enterDomainInfo(
         domainFixtures.default.name,
         domainFixtures.default.domain
       );
+      //TODO: delete cancel and click save button once page can be filled out
+      cy.get("button").contains("CANCEL").click();
+
+      //Wait for requests to finish and check them their responses
+      //TODO: add this code back when page can be submitted
+      // cy.wait("@post-domain").then((req) => {
+      //   cy.wrap(req)
+      //     .its("response.statusCode")
+      //     .should("eq", apiResponses.domains.create.success.code);
+      // });
+
+      //TODO: check the response to make sure that it is correct
+      //this is currently difficult because of the format of the response
+      cy.wait("@get-domains")
+        .its("response.statusCode")
+        .should("eq", apiResponses.domains.getAll.success.code);
+
+      // //Check that the config was successful
+      cy.get("mat-cell").contains(domainFixtures.default.name);
+      cy.get("mat-cell").contains(domainFixtures.default.domain);
+    });
+
+    //The delete test relies on the create test above.
+    //This is bad style but these tests seems distict enough to
+    //warrant haveing seperate tests. Consider fixing this style
+    //issue if the tests become finicky or hard to understand
+    it("deletes the default domain", () => {
+      //Stub requests
+      if (stubIt) {
+        cy.intercept("DELETE", "domains", {
+          statusCode: apiResponses.domains.delete.success.code,
+          body: apiResponses.domains.delete.success.response,
+        }).as("delete-domain");
+
+        cy.intercept("GET", "domains", {
+          statusCode: apiResponses.domains.getAll.empty.code,
+          body: apiResponses.domains.getAll.empty.response,
+        }).as("get-domains");
+      } else {
+        cy.intercept("DELETE", "domains").as("post-domains");
+        cy.intercept("GET", "domains").as("get-domains");
+      }
+
+      //Delete Domain (but cancel)
+      cy.get("mat-cell").contains("delete").click();
+      cy.get("button").contains("No").click();
+
+      //Check that the domain was not deleted
+      cy.get("mat-cell").contains(domainFixtures.default.name);
+      cy.get("mat-cell").contains(domainFixtures.default.domain);
+
+      //Delete Domain
+      cy.get("mat-cell").contains("delete").click();
+      cy.get("button").contains("Yes").click();
+      cy.wait("@delete-domain");
+
+      //Check that the Domain was deleted properly
+      cy.contains(domainFixtures.default.name).should("not.exist");
+      cy.contains(domainFixtures.default.domain).should("not.exist");
     });
   });
 });

@@ -1,6 +1,8 @@
 {
   "default": {
-    "name": "default",
-    "domain": "default.com"
+    "name": "happyPath",
+    "domain": "happyPath.com",
+    "file": "",
+    "password": ""
   }
 }

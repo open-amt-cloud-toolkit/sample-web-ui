@@ -1,10 +1,9 @@
 //Tests the creation of a cira-config
 
 const loginFixtures = require("../fixtures/accounts.json");
-const systemFixtures = require("../fixtures/system.json");
 const urlFixtures = require("../fixtures/urls.json");
 const ciraFixtures = require("../fixtures/cira.json");
-const messageFixtures = require("../fixtures/stubResponses/Cira/messages.json");
+const apiResponses = require("../fixtures/apiResponses.json");
 
 //If isolated is set to true then cypress will stub api requests
 const stubIt = Cypress.env("ISOLATED");
@@ -20,12 +19,12 @@ describe("Test CIRA Config Page", () => {
 
     if (stubIt) {
       cy.intercept("POST", "authorize", {
-        statusCode: 200,
+        statusCode: apiResponses.login.success.code,
       }).as("login-request");
 
       cy.intercept("GET", "ciraconfigs", {
-        statusCode: 200,
-        body: "[]",
+        statusCode: apiResponses.ciraConfigs.getAll.empty.code,
+        body: apiResponses.ciraConfigs.getAll.empty.response,
       }).as("get-configs");
     } else {
       cy.intercept("POST", "authorize").as("login-request");
@@ -35,10 +34,14 @@ describe("Test CIRA Config Page", () => {
     //Login and navigate to CIRA page
     cy.visit(urlFixtures.base);
     cy.login(loginFixtures.default.username, loginFixtures.default.password);
-    cy.wait("@login-request").its("response.statusCode").should("eq", 200);
+    cy.wait("@login-request")
+      .its("response.statusCode")
+      .should("eq", apiResponses.login.success.code);
 
     cy.get(".mat-list-item").contains("CIRA Configs").click();
-    cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
+    cy.wait("@get-configs")
+      .its("response.statusCode")
+      .should("eq", apiResponses.ciraConfigs.getAll.empty.code);
   });
 
   context("successful run", () => {
@@ -47,17 +50,17 @@ describe("Test CIRA Config Page", () => {
       if (stubIt) {
         cy.intercept("POST", /admin$/, {
           statusCode: 200,
-          body: messageFixtures.MpsCertificate,
+          body: ciraFixtures.MpsCertificate,
         }).as("certificate");
 
         cy.intercept("POST", "ciraconfigs", {
-          statusCode: 201,
-          fixture: "stubResponses/Cira/post-success.json",
+          statusCode: apiResponses.ciraConfigs.create.success.code,
+          body: apiResponses.ciraConfigs.create.success.response,
         }).as("post-config");
 
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          fixture: "stubResponses/Cira/one-default.json",
+          statusCode: apiResponses.ciraConfigs.getAll.success.code,
+          body: apiResponses.ciraConfigs.getAll.success.response,
         }).as("get-configs");
       } else {
         cy.intercept("POST", /admin$/).as("certificate");
@@ -69,25 +72,29 @@ describe("Test CIRA Config Page", () => {
       cy.get("button").contains("Add New").click();
       cy.enterCiraInfo(
         ciraFixtures.default.name,
-        systemFixtures.ip,
-        loginFixtures.default.username,
-        loginFixtures.default.password
+        ciraFixtures.default.ip,
+        ciraFixtures.default.username,
+        ciraFixtures.default.password
       );
-      cy.get("button[type=submit]").click();
+      cy.get("button[type=submit]").click({ timeout: 50000 });
 
       //Wait for requests to finish and check them their responses
       cy.wait("@post-config").then((req) => {
-        cy.wrap(req).its("response.statusCode").should("eq", 201);
+        cy.wrap(req)
+          .its("response.statusCode")
+          .should("eq", apiResponses.ciraConfigs.create.success.code);
       });
 
       //TODO: check the response to make sure that it is correct
       //this is currently difficult because of the format of the response
-      cy.wait("@get-configs").its("response.statusCode").should("eq", 200);
+      cy.wait("@get-configs")
+        .its("response.statusCode")
+        .should("eq", apiResponses.ciraConfigs.getAll.success.code);
 
       // //Check that the config was successful
       cy.get("mat-cell").contains(ciraFixtures.default.name);
-      cy.get("mat-cell").contains(systemFixtures.ip);
-      cy.get("mat-cell").contains(loginFixtures.default.username);
+      cy.get("mat-cell").contains(ciraFixtures.default.ip);
+      cy.get("mat-cell").contains(ciraFixtures.default.username);
     });
 
     //The delete test relies on the create test above.
@@ -98,12 +105,12 @@ describe("Test CIRA Config Page", () => {
       //Stub the requests
       if (stubIt) {
         cy.intercept("DELETE", "ciraconfigs", {
-          statusCode: 204,
+          statusCode: apiResponses.ciraConfigs.delete.success.code,
         }).as("delete-config");
 
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          body: messageFixtures.empty,
+          statusCode: apiResponses.ciraConfigs.getAll.empty.code,
+          body: apiResponses.ciraConfigs.getAll.empty.response,
         }).as("get-configs");
       } else {
         cy.intercept("DELETE", "ciraconfigs").as("delete-config");
@@ -116,8 +123,8 @@ describe("Test CIRA Config Page", () => {
 
       //Check that the config was not deleted
       cy.get("mat-cell").contains(ciraFixtures.default.name);
-      cy.get("mat-cell").contains(systemFixtures.ip);
-      cy.get("mat-cell").contains(loginFixtures.default.username);
+      cy.get("mat-cell").contains(ciraFixtures.default.ip);
+      cy.get("mat-cell").contains(ciraFixtures.default.username);
 
       //Delete CIRA Config
       cy.get("mat-cell").contains("delete").click();
@@ -142,17 +149,17 @@ describe("Test CIRA Config Page", () => {
       if (stubIt) {
         cy.intercept("POST", /admin$/, {
           statusCode: 200,
-          body: messageFixtures.MpsCertificate,
+          body: ciraFixtures.MpsCertificate,
         }).as("certificate");
 
         cy.intercept("POST", "ciraconfigs", {
-          statusCode: 400,
-          fixture: "stubResponses/Cira/post-invalid-name.json",
+          statusCode: apiResponses.ciraConfigs.create.badRequest.code,
+          body: apiResponses.ciraConfigs.create.badRequest.response,
         }).as("post-config");
 
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          body: "[]",
+          statusCode: apiResponses.ciraConfigs.getAll.empty.code,
+          body: apiResponses.ciraConfigs.getAll.empty.response,
         }).as("get-configs");
       } else {
         cy.intercept("POST", /admin$/).as("certificate");
@@ -162,30 +169,32 @@ describe("Test CIRA Config Page", () => {
 
       cy.enterCiraInfo(
         ciraFixtures.wrong.name,
-        systemFixtures.ip,
-        loginFixtures.default.username,
-        loginFixtures.default.password
+        ciraFixtures.default.ip,
+        ciraFixtures.default.username,
+        ciraFixtures.default.password
       );
       cy.get("button[type=submit]").click({ timeout: 50000 });
 
-      cy.wait("@post-config").its("response.statusCode").should("eq", 400);
+      cy.wait("@post-config")
+        .its("response.statusCode")
+        .should("eq", apiResponses.ciraConfigs.create.badRequest.code);
     });
 
     it("invalid username", () => {
       if (stubIt) {
         cy.intercept("POST", /admin$/, {
           statusCode: 200,
-          body: messageFixtures.MpsCertificate,
+          body: ciraFixtures.MpsCertificate,
         }).as("certificate");
 
         cy.intercept("POST", "ciraconfigs", {
-          statusCode: 400,
-          fixture: "stubResponses/Cira/post-invalid-name.json",
+          statusCode: apiResponses.ciraConfigs.create.badRequest.code,
+          body: apiResponses.ciraConfigs.create.badRequest.response,
         }).as("post-config");
 
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          body: "[]",
+          statusCode: apiResponses.ciraConfigs.getAll.empty.code,
+          body: apiResponses.ciraConfigs.getAll.empty.response,
         }).as("get-configs");
       } else {
         cy.intercept("POST", /admin$/).as("certificate");
@@ -194,10 +203,10 @@ describe("Test CIRA Config Page", () => {
       }
 
       cy.enterCiraInfo(
-        ciraFixtures.default.name,
-        systemFixtures.ip,
+        ciraFixtures.wrong.name,
+        ciraFixtures.default.ip,
         ciraFixtures.wrong.username,
-        loginFixtures.default.password
+        ciraFixtures.default.password
       );
       cy.get("button[type=submit]").click();
 
@@ -208,17 +217,17 @@ describe("Test CIRA Config Page", () => {
       if (stubIt) {
         cy.intercept("POST", /admin$/, {
           statusCode: 200,
-          body: messageFixtures.MpsCertificate,
+          body: ciraFixtures.MpsCertificate,
         }).as("certificate");
 
         cy.intercept("POST", "ciraconfigs", {
-          statusCode: 400,
-          fixture: "stubResponses/Cira/post-invalid-name.json",
+          statusCode: apiResponses.ciraConfigs.create.badRequest.code,
+          body: apiResponses.ciraConfigs.create.badRequest.response,
         }).as("post-config");
 
         cy.intercept("GET", "ciraconfigs", {
-          statusCode: 200,
-          body: "[]",
+          statusCode: apiResponses.ciraConfigs.getAll.empty.code,
+          body: apiResponses.ciraConfigs.getAll.empty.response,
         }).as("get-configs");
       } else {
         cy.intercept("POST", /admin$/).as("certificate");
@@ -227,9 +236,9 @@ describe("Test CIRA Config Page", () => {
       }
 
       cy.enterCiraInfo(
-        ciraFixtures.default.name,
-        systemFixtures.ip,
-        loginFixtures.default.username,
+        ciraFixtures.wrong.name,
+        ciraFixtures.default.ip,
+        ciraFixtures.default.username,
         ciraFixtures.wrong.password
       );
       cy.get("button[type=submit]").click();
