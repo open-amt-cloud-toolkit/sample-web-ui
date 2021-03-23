@@ -1,3 +1,6 @@
+#To run the cypress tests first run "make container" and then "make ui"
+#This will open up cypress and allow you to test any of the individual test cases
+
 endtoend:
 	npm run cy-e2e
 
@@ -16,4 +19,4 @@ container:
 test-container:
 	docker run -d -p 4201:80 vprodemo.azurecr.ui/samplewebui:latest
 
-
+#npm run start
