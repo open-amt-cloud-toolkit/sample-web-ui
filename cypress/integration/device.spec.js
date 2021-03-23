@@ -21,8 +21,8 @@ describe("Test Device Page", () => {
       }).as("login-request");
 
       cy.intercept("POST", /admin$/, {
-        statusCode: 200,
-        body: "[]",
+        statusCode: apiResponses.devices.getAll.empty.code,
+        body: apiResponses.devices.getAll.empty.response,
       }).as("get-devices");
     } else {
       cy.intercept("POST", "authorize").as("login-request");
@@ -36,5 +36,22 @@ describe("Test Device Page", () => {
 
     cy.get(".mat-list-item").contains("Devices").click();
     cy.wait("@get-devices").its("response.statusCode").should("eq", 200);
+  });
+
+  context("test filtering funciton", () => {
+    it("loads all the elements to be filtered", () => {
+      if (stubIt) {
+        cy.intercept("POST", /admin$/, {
+          statusCode: apiResponses.devices.getAll.success.code,
+          body: apiResponses.devices.getAll.success.response,
+        }).as("get-devices");
+      } else {
+        cy.intercept("GET", /admin$/).as("get-devices");
+      }
+
+      cy.get(".mat-list-item").contains("Dashboard").click();
+      cy.get(".mat-list-item").contains("Devices").click();
+      cy.wait("@get-devices");
+    });
   });
 });

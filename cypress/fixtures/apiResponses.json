@@ -507,6 +507,53 @@
     }
   },
 
+  "devices": {
+    "getAll": {
+      "success": {
+        "code": 200,
+        "response": [
+          {
+            "name": "Win7-machine",
+            "mpsuser": "standalone",
+            "amtuser": "admin",
+            "host": "8dad96cb-c3db-11e6-9c43-bc0000d20000",
+            "icon": 1,
+            "conn": 1
+          },
+          {
+            "name": "Ubuntu-machine",
+            "mpsuser": "xenial",
+            "amtuser": "admin",
+            "host": "bf49cf00-9164-11e4-952b-b8aeed7ec594",
+            "icon": 1,
+            "conn": 0
+          }
+        ]
+      },
+
+      "empty": {
+        "code": 200,
+        "response": []
+      },
+
+      "notFound": {
+        "code": 404,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      },
+
+      "error": {
+        "code": 500,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      }
+    }
+  },
+
   "networkConfigs": {
     "getAll": {
       "success": {
