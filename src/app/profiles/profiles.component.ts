@@ -6,8 +6,7 @@ import { Component, OnInit } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
-import { of, throwError } from 'rxjs'
-import { catchError, finalize } from 'rxjs/operators'
+import { finalize } from 'rxjs/operators'
 import { Profile } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
@@ -21,7 +20,6 @@ import { ProfilesService } from './profiles.service'
 export class ProfilesComponent implements OnInit {
   public profiles: Profile[] = []
   public isLoading = true
-
   displayedColumns: string[] = ['name', 'networkConfig', 'ciraConfig', 'activation', 'remove']
 
   constructor (public snackBar: MatSnackBar, public dialog: MatDialog, public readonly router: Router, private readonly profilesService: ProfilesService) { }
@@ -32,13 +30,13 @@ export class ProfilesComponent implements OnInit {
 
   getData (): void {
     this.profilesService.getData().pipe(
-      catchError(() => {
-        return of([])
-      }), finalize(() => {
+      finalize(() => {
         this.isLoading = false
       })
     ).subscribe(data => {
       this.profiles = data
+    }, () => {
+      this.snackBar.open($localize`Unable to load profiles`, undefined, SnackbarDefaults.defaultError)
     })
   }
 
@@ -53,16 +51,15 @@ export class ProfilesComponent implements OnInit {
       if (result === true) {
         this.isLoading = true
         this.profilesService.delete(name).pipe(
-          catchError(err => {
-            this.snackBar.open($localize`Error deleting profile`, undefined, SnackbarDefaults.defaultError)
-            return throwError(err)
-          }),
           finalize(() => {
             this.isLoading = false
           })
         ).subscribe(data => {
           this.getData()
           this.snackBar.open($localize`Profile deleted successfully`, undefined, SnackbarDefaults.defaultSuccess)
+        },
+        () => {
+          this.snackBar.open($localize`Unable to delete profile`, undefined, SnackbarDefaults.defaultError)
         })
       }
     })

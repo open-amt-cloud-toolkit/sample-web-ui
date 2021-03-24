@@ -6,9 +6,8 @@ import { Component, OnInit } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
-import { throwError, of } from 'rxjs'
 
-import { catchError, finalize } from 'rxjs/operators'
+import { finalize } from 'rxjs/operators'
 import { Domain } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
@@ -33,14 +32,13 @@ export class DomainsComponent implements OnInit {
   getData (): void {
     this.domainsService.getData()
       .pipe(
-        catchError(() => {
-          this.snackBar.open($localize`Error loading domains`, undefined, SnackbarDefaults.defaultError)
-          return of([])
-        }), finalize(() => {
+        finalize(() => {
           this.isLoading = false
         })
       ).subscribe(data => {
         this.domains = data
+      }, () => {
+        this.snackBar.open($localize`Unable to load domains`, undefined, SnackbarDefaults.defaultError)
       })
   }
 
@@ -55,16 +53,15 @@ export class DomainsComponent implements OnInit {
       if (result === true) {
         this.isLoading = true
         this.domainsService.delete(name).pipe(
-          catchError(err => {
-            this.snackBar.open($localize`Error deleting domain`, undefined, SnackbarDefaults.defaultError)
-            return throwError(err)
-          }),
           finalize(() => {
             this.isLoading = false
           })
         ).subscribe(data => {
           this.getData()
           this.snackBar.open($localize`Domain deleted successfully`, undefined, SnackbarDefaults.defaultSuccess)
+        },
+        () => {
+          this.snackBar.open($localize`Unable to delete domain`, undefined, SnackbarDefaults.defaultError)
         })
       }
     })

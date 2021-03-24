@@ -2,13 +2,14 @@
 * Copyright (c) Intel Corporation 2021
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
-import { Component, Input, OnInit } from '@angular/core'
+import { Component, OnInit } from '@angular/core'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { ActivatedRoute, Router } from '@angular/router'
-import { of } from 'rxjs'
+import { forkJoin, throwError } from 'rxjs'
+
 import { catchError, finalize } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
-import { AuditLogResponse } from 'src/models/models'
+import { AmtFeaturesResponse, AuditLogResponse, HardwareInformation } from 'src/models/models'
 import { DevicesService } from '../devices.service'
 
 @Component({
@@ -17,11 +18,12 @@ import { DevicesService } from '../devices.service'
   styleUrls: ['./device-detail.component.scss']
 })
 export class DeviceDetailComponent implements OnInit {
-  @Input() public deviceUuid = null
   public auditLogData: AuditLogResponse = { totalCnt: 0, records: [] }
+  public hwInfo?: HardwareInformation
+  public amtFeatures?: AmtFeaturesResponse
   public isLoading = false
   public deviceId: string = ''
-  public showKvm: boolean = false
+  public targetOS: any
   public powerOptions = [
     {
       label: 'Hibernate',
@@ -53,52 +55,50 @@ export class DeviceDetailComponent implements OnInit {
     }
   ]
 
+  public showSol: boolean = false
+  public selectedAction: string = ''
+  public deviceState: number = 0
   constructor (public snackBar: MatSnackBar, public readonly activatedRoute: ActivatedRoute, public readonly router: Router, private readonly devicesService: DevicesService) {
-
+    this.targetOS = this.devicesService.TargetOSMap
   }
 
   ngOnInit (): void {
     this.activatedRoute.params.subscribe(params => {
       this.isLoading = true
       this.deviceId = params.id
-      this.devicesService.getAuditLog(this.deviceId).pipe(
+      const hwInfo = this.devicesService.getHardwareInformation(this.deviceId)
+      const auditInfo = this.devicesService.getAuditLog(this.deviceId)
+      const amtFeatures = this.devicesService.getAMTFeatures(this.deviceId)
+      return forkJoin({ hwInfo, auditInfo, amtFeatures }).pipe(
         catchError(err => {
-        // TODO: handle error better
+          // TODO: handle error better
           console.log(err)
           this.snackBar.open($localize`Error retrieving audit log`, undefined, SnackbarDefaults.defaultError)
-          return of(this.auditLogData)
+          return throwError(err)
         }), finalize(() => {
           this.isLoading = false
         })
-      ).subscribe(data => {
-        this.auditLogData = data
+      ).subscribe((results) => {
+        this.hwInfo = results.hwInfo
+        this.auditLogData = results.auditInfo
+        this.amtFeatures = results.amtFeatures
       })
     })
-  }
-
-  sendPowerAction (action: number): void {
-    this.isLoading = true
-    this.devicesService.sendPowerAction(this.deviceId, action).pipe(
-      catchError(err => {
-        // TODO: handle error better
-        console.log(err)
-        this.snackBar.open($localize`Error sending power action`, undefined, SnackbarDefaults.defaultError)
-        return of(null)
-      }),
-      finalize(() => {
-        this.isLoading = false
-      })
-    ).subscribe(data => {
-      this.snackBar.open($localize`Power action sent successfully`, undefined, SnackbarDefaults.defaultSuccess)
-      console.log(data)
-    })
-  }
-
-  showKVMScreen (): void {
-    this.showKvm = true
   }
 
   async navigateTo (path: string): Promise<void> {
     await this.router.navigate([`/devices/${this.deviceId}/${path}`])
+  }
+
+  onSelectAction = (): void => {
+    this.showSol = !this.showSol
+  }
+
+  deviceStatus = (state: number): void => {
+    this.deviceState = state
+  }
+
+  onSelectedAction = (selectedAction: string): void => {
+    this.selectedAction = selectedAction
   }
 }
