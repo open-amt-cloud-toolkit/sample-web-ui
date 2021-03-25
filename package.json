@@ -33,7 +33,7 @@
     "tslib": "^2.0.0",
     "ui-toolkit": "git+https://github.com/open-amt-cloud-toolkit/ui-toolkit.git",
     "xterm": "^4.11.0",
-    "zone.js": "~0.10.2"
+    "zone.js": "~0.11.4"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.1102.5",
