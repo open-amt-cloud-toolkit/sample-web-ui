@@ -11,8 +11,8 @@ export const environment = {
   mpsServer: 'https://192.168.50.40:3000',
   rpsServer: 'https://192.168.50.40:8081',
   mpsAPIKey: 'APIKEYFORMPS123!',
-  rpsAPIKey: 'APIKEYFORRPS123!',
-};
+  rpsAPIKey: 'APIKEYFORRPS123!'
+}
 
 /*
  * For easier debugging in development mode, you can import the following file
