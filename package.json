@@ -10,7 +10,7 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "cypress": "cypress open",
-    "cy-runner": "cypress run --record --key 2a235400-a9bf-4f8a-b6cf-bfb71d875828"
+    "cy-runner": "cypress run"
   },
   "private": true,
   "dependencies": {
