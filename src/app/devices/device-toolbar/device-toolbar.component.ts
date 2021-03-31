@@ -50,14 +50,17 @@ export class DeviceToolbarComponent implements OnInit {
 
   ngOnInit (): void {
     this.activatedRoute.params.subscribe(params => {
-      // this.isLoading = true
       this.deviceId = params.id
     })
   }
 
   sendPowerAction (action: number): void {
     this.isLoading = true
-    this.devicesService.sendPowerAction(this.deviceId, action).pipe(
+    let useSOL = false
+    if (this.router.url.toString().includes('sol') && action === 101) {
+      useSOL = true
+    }
+    this.devicesService.sendPowerAction(this.deviceId, action, useSOL).pipe(
       catchError(err => {
         // TODO: handle error better
         console.log(err)
@@ -82,7 +85,12 @@ export class DeviceToolbarComponent implements OnInit {
   }
 
   async navigateTo (path: string): Promise<void> {
-    this.devicesService.startwebSocket.next(true)
-    await this.router.navigate([`/devices/${this.deviceId}/${path}`])
+    if (this.router.url === `/devices/${this.deviceId}/kvm` && path === 'kvm') {
+      this.devicesService.connectKVMSocket.next(true)
+    } else if (this.router.url === `/devices/${this.deviceId}/sol` && path === 'sol') {
+      this.devicesService.startwebSocket.next(true)
+    } else {
+      await this.router.navigate([`/devices/${this.deviceId}/${path}`])
+    }
   }
 }
