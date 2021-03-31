@@ -12,7 +12,7 @@
 // -- This is a parent command --
 // Cypress.Commands.add("login", (email, password) => { ... })
 
-//Login to the sample-web-ui
+//Enter info into a form
 Cypress.Commands.add("login", (user, pass) => {
   if (user != "EMPTY") {
     cy.get("[name=userId]").type(user);
@@ -23,9 +23,12 @@ Cypress.Commands.add("login", (user, pass) => {
   cy.get("[id=btnLogin]").get("[type=submit]").click();
 });
 
-Cypress.Commands.add("enterCiraInfo", (name, ip, user, pass) => {
+Cypress.Commands.add("enterCiraInfo", (name, format, addr, user, pass) => {
   cy.get("input").get("[name=configName]").type(name);
-  cy.get("input").get("[name=mpsServerAddress]").type(ip);
+  if (format == "FQDN") {
+    cy.contains("FQDN").click();
+  }
+  cy.get("input").get("[name=mpsServerAddress]").type(addr);
   cy.get("input").get("[name=username]").type(user);
   cy.get("input").get("[name=password]").type(pass);
 });
@@ -35,7 +38,8 @@ Cypress.Commands.add(
   (name, admin, amtPass, mebxPass, network, cira) => {
     cy.get("input").get("[name=profileName]").type(name);
     if (!admin) {
-      //change to client control mode
+      cy.get("mat-select[formcontrolname=activation").click();
+      cy.contains("Client Control Mode").click();
     }
     cy.get("input").get("[name=amtPassword]").type(amtPass);
     cy.get("input").get("[name=mebxPassword]").type(mebxPass);

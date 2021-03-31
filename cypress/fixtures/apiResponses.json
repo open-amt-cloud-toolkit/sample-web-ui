@@ -176,8 +176,8 @@
             "configName": "happyPath",
             "mpsServerAddress": "192.168.8.50",
             "mpsPort": 4433,
-            "username": "admin",
-            "password": "Intel123!",
+            "username": "standalone",
+            "password": "G@ppm0ym",
             "commonName": "192.168.8.50",
             "serverAddressFormat": 3,
             "authMethod": 2,
@@ -212,7 +212,7 @@
         "code": 200,
         "response": [
           {
-            "configName": "default",
+            "configName": "happyPath",
             "mpsServerAddress": "192.168.8.50",
             "mpsPort": 1000,
             "username": "admin",

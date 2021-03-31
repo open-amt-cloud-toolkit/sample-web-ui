@@ -5,8 +5,19 @@ const ciraFixtures = require("../fixtures/cira.json");
 const profileFixtures = require("../fixtures/profile.json");
 const apiResponses = require("../fixtures/apiResponses.json");
 
-//If isolated is set to true then cypress will stub api requests
-const stubIt = Cypress.env("ISOLATED");
+//Default behavior (no input) is to stub responses
+//and use the base url saved in the url fixture
+const stubIt = Cypress.env("ISOLATED") != "n";
+const baseUrl =
+  Cypress.env("BASEURL") == "" ? urlFixtures.base : Cypress.env("BASEURL");
+
+describe("Test Information", () => {
+  it("display any important test info", () => {
+    stubIt ? cy.log("stubbing") : cy.log("end to end");
+  });
+});
+
+//---------------------------- Test section ----------------------------
 
 describe("Test Profile Page", () => {
   //This "it" acts as a before to circumvent the
@@ -32,7 +43,7 @@ describe("Test Profile Page", () => {
     }
 
     //Login and navigate to profile page
-    cy.visit(urlFixtures.base);
+    cy.visit(baseUrl);
     cy.login(loginFixtures.default.username, loginFixtures.default.password);
     cy.wait("@login-request")
       .its("response.statusCode")
@@ -188,7 +199,7 @@ describe("Test Profile Page", () => {
       //Check that the profile creation failed
       cy.url().should(
         "eq",
-        urlFixtures.base +
+        baseUrl +
           urlFixtures.page.profiles +
           "/" +
           urlFixtures.extensions.creation
@@ -235,7 +246,7 @@ describe("Test Profile Page", () => {
       //Check that the profile creation failed
       cy.url().should(
         "eq",
-        urlFixtures.base +
+        baseUrl +
           urlFixtures.page.profiles +
           "/" +
           urlFixtures.extensions.creation
@@ -284,7 +295,7 @@ describe("Test Profile Page", () => {
       //Check that the profile creation failed
       cy.url().should(
         "eq",
-        urlFixtures.base +
+        baseUrl +
           urlFixtures.page.profiles +
           "/" +
           urlFixtures.extensions.creation

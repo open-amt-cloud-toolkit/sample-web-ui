@@ -5,8 +5,19 @@ const urlFixtures = require("../fixtures/urls.json");
 const ciraFixtures = require("../fixtures/cira.json");
 const apiResponses = require("../fixtures/apiResponses.json");
 
-//If isolated is set to true then cypress will stub api requests
-const stubIt = Cypress.env("ISOLATED");
+//Default behavior (no input) is to stub responses
+//and use the base url saved in the url fixture
+const stubIt = Cypress.env("ISOLATED") != "n";
+const baseUrl =
+  Cypress.env("BASEURL") == "" ? urlFixtures.base : Cypress.env("BASEURL");
+
+describe("Test Information", () => {
+  it("display any important test info", () => {
+    stubIt ? cy.log("stubbing") : cy.log("end to end");
+  });
+});
+
+//---------------------------- Test section ----------------------------
 
 describe("Test CIRA Config Page", () => {
   //This "it" acts as a before to circumvent the
@@ -32,7 +43,7 @@ describe("Test CIRA Config Page", () => {
     }
 
     //Login and navigate to CIRA page
-    cy.visit(urlFixtures.base);
+    cy.visit(baseUrl);
     cy.login(loginFixtures.default.username, loginFixtures.default.password);
     cy.wait("@login-request")
       .its("response.statusCode")
@@ -72,7 +83,8 @@ describe("Test CIRA Config Page", () => {
       cy.get("button").contains("Add New").click();
       cy.enterCiraInfo(
         ciraFixtures.default.name,
-        ciraFixtures.default.ip,
+        ciraFixtures.default.format,
+        ciraFixtures.default.addr,
         ciraFixtures.default.username,
         ciraFixtures.default.password
       );
@@ -93,7 +105,7 @@ describe("Test CIRA Config Page", () => {
 
       // //Check that the config was successful
       cy.get("mat-cell").contains(ciraFixtures.default.name);
-      cy.get("mat-cell").contains(ciraFixtures.default.ip);
+      cy.get("mat-cell").contains(ciraFixtures.default.addr);
       cy.get("mat-cell").contains(ciraFixtures.default.username);
     });
 
@@ -123,7 +135,7 @@ describe("Test CIRA Config Page", () => {
 
       //Check that the config was not deleted
       cy.get("mat-cell").contains(ciraFixtures.default.name);
-      cy.get("mat-cell").contains(ciraFixtures.default.ip);
+      cy.get("mat-cell").contains(ciraFixtures.default.addr);
       cy.get("mat-cell").contains(ciraFixtures.default.username);
 
       //Delete CIRA Config
@@ -169,7 +181,8 @@ describe("Test CIRA Config Page", () => {
 
       cy.enterCiraInfo(
         ciraFixtures.wrong.name,
-        ciraFixtures.default.ip,
+        ciraFixtures.default.format,
+        ciraFixtures.default.addr,
         ciraFixtures.default.username,
         ciraFixtures.default.password
       );
@@ -204,7 +217,8 @@ describe("Test CIRA Config Page", () => {
 
       cy.enterCiraInfo(
         ciraFixtures.wrong.name,
-        ciraFixtures.default.ip,
+        ciraFixtures.default.format,
+        ciraFixtures.default.addr,
         ciraFixtures.wrong.username,
         ciraFixtures.default.password
       );
@@ -237,7 +251,8 @@ describe("Test CIRA Config Page", () => {
 
       cy.enterCiraInfo(
         ciraFixtures.wrong.name,
-        ciraFixtures.default.ip,
+        ciraFixtures.default.format,
+        ciraFixtures.default.addr,
         ciraFixtures.default.username,
         ciraFixtures.wrong.password
       );

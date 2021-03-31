@@ -6,11 +6,24 @@ const loginFixtures = require("../fixtures/accounts.json");
 const urlFixtures = require("../fixtures/urls.json");
 const apiResponses = require("../fixtures/apiResponses.json");
 
-//If isolated is set to true then cypress will stub api requests
-const stubIt = Cypress.env("ISOLATED");
+//Default behavior (no input) is to stub responses
+//and use the base url saved in the url fixture
+const stubIt = Cypress.env("ISOLATED") != "n";
+const baseUrl =
+  Cypress.env("BASEURL") == "" ? urlFixtures.base : Cypress.env("BASEURL");
+
+describe("Test Information", () => {
+  it("display any important test info", () => {
+    stubIt ? cy.log("stubbing") : cy.log("end to end");
+  });
+});
+
+//---------------------------- Test section ----------------------------
 
 describe("Load Site", () => {
   it("loads the login page properly", () => {
+    stubIt ? cy.log("stubbing") : cy.log("end to end");
+
     //Make sure the test always starts at the login page
     //and is never able to autologin
     cy.window().then((win) => {
@@ -18,10 +31,10 @@ describe("Load Site", () => {
     });
 
     //Go to base site
-    cy.visit(urlFixtures.base);
+    cy.visit(baseUrl);
 
     //Make sure the login page was hit
-    cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+    cy.url().should("eq", baseUrl + urlFixtures.page.login);
   });
 });
 
@@ -30,8 +43,8 @@ describe("Test login page", () => {
     cy.window().then((win) => {
       win.sessionStorage.clear();
     });
-    cy.visit(urlFixtures.base);
-    cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+    cy.visit(baseUrl);
+    cy.url().should("eq", baseUrl + urlFixtures.page.login);
   });
 
   context("Successful login", () => {
@@ -62,7 +75,7 @@ describe("Test login page", () => {
       });
 
       //Check that the login was successful
-      cy.url().should("eq", urlFixtures.base);
+      cy.url().should("eq", baseUrl);
     });
   });
 
@@ -87,7 +100,7 @@ describe("Test login page", () => {
         //breaks e2e
         //.should("deep.eq", apiResponses.login.fail.response);
       });
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.url().should("eq", baseUrl + urlFixtures.page.login);
       cy.contains("Error logging in").should("exist"); //add the fail message to a fixture
     }
 
@@ -96,7 +109,7 @@ describe("Test login page", () => {
       cy.login("EMPTY", loginFixtures.default.password);
 
       //Check that to log in fails as expected
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.url().should("eq", baseUrl + urlFixtures.page.login);
       cy.get(".mat-error").should("have.length", 1);
     });
 
@@ -109,7 +122,7 @@ describe("Test login page", () => {
     it("valid username / no password", () => {
       cy.login(loginFixtures.default.username, "EMPTY");
 
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.url().should("eq", baseUrl + urlFixtures.page.login);
       cy.get(".mat-error").should("have.length", 1);
     });
 
@@ -122,14 +135,14 @@ describe("Test login page", () => {
     it("no username / invalid password", () => {
       cy.login("EMPTY", loginFixtures.wrong.password);
 
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.url().should("eq", baseUrl + urlFixtures.page.login);
       cy.get(".mat-error").should("have.length", 1);
     });
 
     it("no username / no password", () => {
       cy.login("EMPTY", "EMPTY");
 
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.url().should("eq", baseUrl + urlFixtures.page.login);
       cy.get(".mat-error").should("have.length", 2);
     });
   });
@@ -161,14 +174,14 @@ describe("Test login page", () => {
       cy.wait("@login-request");
 
       //Check that the login was successful
-      cy.url().should("eq", urlFixtures.base);
+      cy.url().should("eq", baseUrl);
 
       //Logout
       cy.contains("account_circle").click();
       cy.contains("Log out").click();
 
       //Check that the logout was successful
-      cy.url().should("eq", urlFixtures.base + urlFixtures.page.login);
+      cy.url().should("eq", baseUrl + urlFixtures.page.login);
     });
   });
 });
