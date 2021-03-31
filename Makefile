@@ -1,22 +1,17 @@
-#To run the cypress tests first run "make container" and then "make ui"
-#This will open up cypress and allow you to test any of the individual test cases
+cy:
+	@read -r -p "Isolate the front end? (y/n): " isolate;\
+	read -r -p "Enter the target url: " targetUrl;\
+	npm run cypress -- --env ISOLATE=$$isolate,BASEURL=$$targetUrl
 
-endtoend:
-	npm run cy-e2e
+runner:
+	@read -r -p "Isolate the front end? (y/n): " isolate;\
+	read -r -p "Enter the target url: " targetUrl;\
+	npm run cy-runner -- --env ISOLATE=$$isolate,BASEURL=$$targetUrl
 
-ui:
-	npm run cy-ui
+# container:
+# 	docker run -d -p 4200:80 vprodemo.azurecr.ui/samplewebui:latest
 
-run:
-	npm run cy-tstrnr-e2e
-
-runui:
-	npm run cy-tstrnr-ui
-
-container:
-	docker run -d -p 4200:80 vprodemo.azurecr.ui/samplewebui:latest
-
-test-container:
-	docker run -d -p 4201:80 vprodemo.azurecr.ui/samplewebui:latest
+# test-container:
+# 	docker run -d -p 4201:80 vprodemo.azurecr.ui/samplewebui:latest
 
 #npm run start
