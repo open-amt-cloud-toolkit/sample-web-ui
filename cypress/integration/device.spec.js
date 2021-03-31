@@ -49,8 +49,8 @@ describe("Test Device Page", () => {
     cy.wait("@get-devices").its("response.statusCode").should("eq", 200);
   });
 
-  context("test filtering funciton", () => {
-    it("loads all the elements to be filtered", () => {
+  context("basic functionality check", () => {
+    it("loads all the devices", () => {
       if (stubIt) {
         cy.intercept("GET", "devices", {
           statusCode: apiResponses.devices.getAll.success.code,
@@ -63,6 +63,44 @@ describe("Test Device Page", () => {
       cy.get(".mat-list-item").contains("Dashboard").click();
       cy.get(".mat-list-item").contains("Devices").click();
       cy.wait("@get-devices");
+    });
+  });
+
+  context("test filtering function", () => {
+    it("filters for windows devices", () => {
+      if (stubIt) {
+        cy.intercept("GET", /tags$/, {
+          statusCode: apiResponses.tags.getAll.success.code,
+          body: apiResponses.tags.getAll.success.response,
+        }).as("get-tags");
+
+        cy.intercept("GET", /devices$/, {
+          statusCode: apiResponses.devices.getAll.tags.code,
+          body: apiResponses.devices.getAll.tags.response,
+        }).as("get-devices");
+
+        cy.intercept("GET", "**/devices?tags=Windows", {
+          statusCode: apiResponses.devices.getAll.windows.code,
+          body: apiResponses.devices.getAll.windows.response,
+        }).as("get-windows");
+      } else {
+        cy.intercept("GET", /tags$/).as("get-tags");
+        cy.intercept("GET", /devices$/).as("get-devices");
+        cy.intercept("GET", "**/devices?tags=Windows").as("get-windows");
+      }
+
+      //refresh page
+      cy.get(".mat-list-item").contains("Dashboard").click();
+      cy.get(".mat-list-item").contains("Devices").click();
+      cy.wait("@get-tags");
+      cy.wait("@get-devices");
+
+      //Filter for Windows devices
+      cy.contains("Filter Tags").click({ force: true });
+      cy.contains(".mat-option-text", "Windows").click();
+
+      //TODO: find a way to click off the tags table
+      //TODO: find a good way to check if this test worked
     });
   });
 });
