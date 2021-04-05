@@ -1,5 +1,5 @@
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="v1.2.0"></a>
+## v1.2.0
 
 ### Build
 - fix scripts for docker
