@@ -167,16 +167,16 @@ export class DevicesService {
   }
 
   sendPowerAction (deviceId: string, action: number, useSOL?: boolean): Observable<any> {
+    if (useSOL != null && useSOL) {
+      useSOL = true
+    } else {
+      useSOL = false
+    }
+
     const payload = {
       method: 'PowerAction',
-      payload: useSOL
-        ? {
-            action,
-            useSOL
-          }
-        : {
-            action
-          }
+      action,
+      useSOL
     }
     return this.http.post<any>(`${environment.mpsServer}/api/v1/amt/power/action/${deviceId}`, payload)
       .pipe(
