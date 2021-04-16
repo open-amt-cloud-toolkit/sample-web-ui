@@ -140,14 +140,7 @@ export class DevicesService {
   }
 
   getAuditLog (deviceId: string, startIndex: number = 0): Observable<AuditLogResponse> {
-    const payload = {
-      method: 'AuditLog',
-      payload: {
-        guid: deviceId,
-        startIndex: startIndex
-      }
-    }
-    return this.http.post<AuditLogResponse>(`${environment.mpsServer}/amt`, payload)
+    return this.http.get<AuditLogResponse>(`${environment.mpsServer}/api/v1/amt/log/audit/${deviceId}?startIndex=${startIndex}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -156,11 +149,7 @@ export class DevicesService {
   }
 
   getHardwareInformation (guid: string): Observable<HardwareInformation> {
-    const payload = {
-      method: 'HardwareInformation',
-      payload: { guid }
-    }
-    return this.http.post<HardwareInformation>(`${environment.mpsServer}/amt`, payload)
+    return this.http.get<HardwareInformation>(`${environment.mpsServer}/api/v1/amt/hardwareInfo/${guid}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -169,11 +158,7 @@ export class DevicesService {
   }
 
   getAMTFeatures (guid: string): Observable<AmtFeaturesResponse> {
-    const payload = {
-      method: 'GetAMTFeatures',
-      payload: { guid }
-    }
-    return this.http.post<AmtFeaturesResponse>(`${environment.mpsServer}/amt`, payload)
+    return this.http.get<AmtFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${guid}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -186,16 +171,14 @@ export class DevicesService {
       method: 'PowerAction',
       payload: useSOL
         ? {
-            guid: deviceId,
             action,
             useSOL
           }
         : {
-            guid: deviceId,
             action
           }
     }
-    return this.http.post<any>(`${environment.mpsServer}/amt`, payload)
+    return this.http.post<any>(`${environment.mpsServer}/api/v1/amt/power/action/${deviceId}`, payload)
       .pipe(
         catchError((err) => {
           throw err
@@ -205,7 +188,7 @@ export class DevicesService {
 
   getData (): Observable<Device[]> {
     const payload = { method: 'AllDevices', payload: {} }
-    return this.http.post<Device[]>(`${environment.mpsServer}/admin`, payload)
+    return this.http.post<Device[]>(`${environment.mpsServer}/api/v1/devices`, payload)
       .pipe(
         catchError((err) => {
           throw err
@@ -214,7 +197,7 @@ export class DevicesService {
   }
 
   getTags (): Observable<string[]> {
-    return this.http.get<string[]>(`${environment.mpsServer}/metadata/tags`)
+    return this.http.get<string[]>(`${environment.mpsServer}/api/v1/metadata/tags`)
       .pipe(
         catchError((err) => {
           throw err
@@ -223,7 +206,7 @@ export class DevicesService {
   }
 
   getDevices (tags: string[] = []): Observable<Device[]> {
-    let query = `${environment.mpsServer}/devices`
+    let query = `${environment.mpsServer}/api/v1/devices`
     if (tags.length > 0) {
       query += `?tags=${tags.join(',')}`
     }
@@ -237,7 +220,7 @@ export class DevicesService {
 
   setAmtFeatures (deviceId: string): Observable<AmtFeaturesResponse> {
     const payload = { method: 'SetAMTFeatures', payload: { guid: deviceId, userConsent: 'none', enableKVM: true, enableSOL: true, enableIDER: true } }
-    return this.http.post<AmtFeaturesResponse>(`${environment.mpsServer}/amt`, payload)
+    return this.http.post<AmtFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features`, payload)
       .pipe(
         catchError((err) => {
           throw err
@@ -246,8 +229,7 @@ export class DevicesService {
   }
 
   getPowerState (deviceId: string): Observable<PowerState> {
-    const payload = { method: 'PowerState', payload: { guid: deviceId } }
-    return this.http.post<PowerState>(`${environment.mpsServer}/amt`, payload)
+    return this.http.get<PowerState>(`${environment.mpsServer}/api/v1/amt/power/state/${deviceId}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -256,7 +238,7 @@ export class DevicesService {
   }
 
   getStats (): Observable<DeviceStats> {
-    return this.http.get<DeviceStats>(`${environment.mpsServer}/devices/stats`)
+    return this.http.get<DeviceStats>(`${environment.mpsServer}/api/v1/devices/stats`)
       .pipe(
         catchError((err) => {
           throw err
