@@ -166,13 +166,7 @@ export class DevicesService {
       )
   }
 
-  sendPowerAction (deviceId: string, action: number, useSOL?: boolean): Observable<any> {
-    if (useSOL != null && useSOL) {
-      useSOL = true
-    } else {
-      useSOL = false
-    }
-
+  sendPowerAction (deviceId: string, action: number, useSOL: boolean = false): Observable<any> {
     const payload = {
       method: 'PowerAction',
       action,
