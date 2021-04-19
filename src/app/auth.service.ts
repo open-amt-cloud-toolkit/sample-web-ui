@@ -15,7 +15,7 @@ import { Router } from '@angular/router'
 export class AuthService {
   loggedInSubject: EventEmitter<boolean> = new EventEmitter<boolean>(false)
   isLoggedIn = false
-  url: string = `${environment.mpsServer}/authorize`
+  url: string = `${environment.mpsServer}/api/v1/authorize`
   constructor (private readonly http: HttpClient, public router: Router) {
     if (localStorage.loggedInUser != null) {
       this.isLoggedIn = true
