@@ -22,7 +22,7 @@ export class AuthService {
       this.loggedInSubject.next(this.isLoggedIn)
     }
     if (environment.mpsServer.includes('/mps')) { // handles kong route
-      this.url = `${environment.mpsServer}/login/authorize`
+      this.url = `${environment.mpsServer}/login/api/v1/authorize`
     }
   }
 
