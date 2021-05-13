@@ -8,8 +8,10 @@
 
 export const environment = {
   production: false,
-  mpsServer: 'http://localhost:3000',
-  rpsServer: 'http://localhost:8081'
+  // mpsServer: 'http://localhost:3000',
+  // rpsServer: 'http://localhost:8081'
+  mpsServer: 'https://localhost/mps',
+  rpsServer: 'https://localhost/rps'
 }
 
 /*
