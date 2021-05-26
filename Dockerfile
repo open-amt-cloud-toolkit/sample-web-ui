@@ -11,7 +11,7 @@ COPY . .
 RUN npm run build -- --prod
 
 ### STAGE 2: Run ###
-FROM nginx:latest
+FROM nginx:1.21
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2021: Intel'
