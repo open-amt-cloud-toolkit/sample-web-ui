@@ -31,6 +31,8 @@ import { PowerAlertComponent } from './devices/sol/poweralert/poweralert.compone
 import { DeviceToolbarComponent } from './devices/device-toolbar/device-toolbar.component'
 import { AuthorizeInterceptor } from './authorize.interceptor'
 import { DialogContentComponent } from './shared/dialog-content/dialog-content.component'
+import { KvmModule } from '@open-amt-cloud-toolkit/ui-toolkit/angular/kvm'
+import { environment } from 'src/environments/environment'
 
 @NgModule({
   declarations: [
@@ -72,7 +74,8 @@ import { DialogContentComponent } from './shared/dialog-content/dialog-content.c
         path: 'login',
         component: LoginComponent
       }
-    ])
+    ]),
+    KvmModule.forRoot(environment)
   ],
   providers: [
     {
