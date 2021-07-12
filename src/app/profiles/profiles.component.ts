@@ -25,6 +25,7 @@ export class ProfilesComponent implements OnInit {
   constructor (public snackBar: MatSnackBar, public dialog: MatDialog, public readonly router: Router, private readonly profilesService: ProfilesService) { }
 
   ngOnInit (): void {
+    console.log('testing')
     this.getData()
   }
 
