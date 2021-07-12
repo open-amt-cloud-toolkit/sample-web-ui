@@ -2,37 +2,36 @@
  * Copyright (c) Intel Corporation 2021
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
-
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { SharedModule } from './shared/shared.module';
-import { CoreModule } from './core/core.module';
-import { DevicesComponent } from './devices/devices.component';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import { DomainsComponent } from './domains/domains.component';
-import { ProfilesComponent } from './profiles/profiles.component';
-import { ConfigsComponent } from './configs/configs.component';
-import { LoginComponent } from './login/login.component';
-import { RouterModule } from '@angular/router';
-import { DashboardComponent } from './dashboard/dashboard.component';
-import { ProfileDetailComponent } from './profiles/profile-detail/profile-detail.component';
-import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
-import { ConfigDetailComponent } from './configs/config-detail/config-detail.component';
-import { DeviceDetailComponent } from './devices/device-detail/device-detail.component';
-import { MomentModule } from 'ngx-moment';
-import { KvmComponent } from './devices/kvm/kvm.component';
-import { SolComponent } from './devices/sol/sol.component';
-import { AuditLogComponent } from './devices/audit-log/audit-log.component';
-import { PowerAlertComponent } from './devices/sol/poweralert/poweralert.component';
-import { DeviceToolbarComponent } from './devices/device-toolbar/device-toolbar.component';
-import { AuthorizeInterceptor } from './authorize.interceptor';
-import { DialogContentComponent } from './shared/dialog-content/dialog-content.component';
-import { KvmModule } from '@open-amt-cloud-toolkit/ui-toolkit/dist/angular/kvm';
-import { environment } from 'src/environments/environment';
+import { BrowserModule } from '@angular/platform-browser'
+import { NgModule } from '@angular/core'
+import { AppRoutingModule } from './app-routing.module'
+import { AppComponent } from './app.component'
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
+import { SharedModule } from './shared/shared.module'
+import { CoreModule } from './core/core.module'
+import { DevicesComponent } from './devices/devices.component'
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
+import { FlexLayoutModule } from '@angular/flex-layout'
+import { DomainsComponent } from './domains/domains.component'
+import { ProfilesComponent } from './profiles/profiles.component'
+import { ConfigsComponent } from './configs/configs.component'
+import { LoginComponent } from './login/login.component'
+import { RouterModule } from '@angular/router'
+import { DashboardComponent } from './dashboard/dashboard.component'
+import { ProfileDetailComponent } from './profiles/profile-detail/profile-detail.component'
+import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component'
+import { ConfigDetailComponent } from './configs/config-detail/config-detail.component'
+import { DeviceDetailComponent } from './devices/device-detail/device-detail.component'
+import { MomentModule } from 'ngx-moment'
+import { KvmComponent } from './devices/kvm/kvm.component'
+import { SolComponent } from './devices/sol/sol.component'
+import { AuditLogComponent } from './devices/audit-log/audit-log.component'
+import { PowerAlertComponent } from './devices/sol/poweralert/poweralert.component'
+import { DeviceToolbarComponent } from './devices/device-toolbar/device-toolbar.component'
+import { AuthorizeInterceptor } from './authorize.interceptor'
+import { DialogContentComponent } from './shared/dialog-content/dialog-content.component'
+import { KvmModule } from '@open-amt-cloud-toolkit/ui-toolkit/dist/angular/kvm'
+import { environment } from 'src/environments/environment'
 
 @NgModule({
   declarations: [
@@ -51,7 +50,7 @@ import { environment } from 'src/environments/environment';
     SolComponent,
     AuditLogComponent,
     PowerAlertComponent,
-    DeviceToolbarComponent,
+    DeviceToolbarComponent
   ],
   entryComponents: [DialogContentComponent],
   imports: [
@@ -66,12 +65,12 @@ import { environment } from 'src/environments/environment';
     RouterModule.forRoot([
       {
         path: '',
-        component: DashboardComponent,
+        component: DashboardComponent
       },
       {
         path: 'login',
-        component: LoginComponent,
-      },
+        component: LoginComponent
+      }
     ]),
     KvmModule.forRoot(environment)
   ],
@@ -79,9 +78,9 @@ import { environment } from 'src/environments/environment';
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthorizeInterceptor,
-      multi: true,
-    },
+      multi: true
+    }
   ],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}
