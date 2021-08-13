@@ -3,17 +3,18 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 import { SelectionModel } from '@angular/cdk/collections'
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, ViewChild } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSelectChange } from '@angular/material/select'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 import { BehaviorSubject, forkJoin, Observable, throwError } from 'rxjs'
 import { catchError, finalize, mergeMap } from 'rxjs/operators'
-import { Device } from 'src/models/models'
+import { DeviceResponse, Device, PageEventOptions } from 'src/models/models'
 import { AddDeviceComponent } from '../shared/add-device/add-device.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { DevicesService } from './devices.service'
+import { MatPaginator, PageEvent } from '@angular/material/paginator'
 
 @Component({
   selector: 'app-devices',
@@ -21,13 +22,19 @@ import { DevicesService } from './devices.service'
   styleUrls: ['./devices.component.scss']
 })
 export class DevicesComponent implements OnInit {
-  public devices: Device[] = []
+  public devices: DeviceResponse = { data: [], totalCount: 0 }
   public isLoading = true
   public tags: string[] = []
   public selectedTags = new BehaviorSubject<string[]>([])
   public selection: SelectionModel<Device>
+  pageEvent: PageEventOptions = {
+    pageSize: 5,
+    startsFrom: 0,
+    count: 'true'
+  }
 
   displayedColumns: string[] = ['select', 'hostname', 'guid', 'status', 'tags', 'actions']
+  @ViewChild(MatPaginator) paginator!: MatPaginator
 
   constructor (public snackBar: MatSnackBar, public dialog: MatDialog, public readonly router: Router, private readonly devicesService: DevicesService) {
     const initialSelection: Device[] = []
@@ -36,6 +43,10 @@ export class DevicesComponent implements OnInit {
   }
 
   ngOnInit (): void {
+    this.getData(this.pageEvent)
+  }
+
+  getData (pageEvent: PageEventOptions): void {
     const tags = this.devicesService.getTags()
     forkJoin({ tags }).pipe(
       catchError((err) => {
@@ -52,7 +63,7 @@ export class DevicesComponent implements OnInit {
     this.selectedTags.pipe(
       mergeMap(tags => {
         this.isLoading = true
-        return this.devicesService.getDevices(tags)
+        return this.devicesService.getDevices({ ...pageEvent, tags })
       }),
       finalize(() => {
       })
@@ -68,7 +79,7 @@ export class DevicesComponent implements OnInit {
 
   isAllSelected (): boolean {
     const numSelected = this.selection.selected.length
-    const numRows = this.devices.length
+    const numRows = this.devices.data.length
     return numSelected === numRows
   }
 
@@ -76,11 +87,21 @@ export class DevicesComponent implements OnInit {
   masterToggle (): void {
     this.isAllSelected()
       ? this.selection.clear()
-      : this.devices.forEach(row => this.selection.select(row))
+      : this.devices.data.forEach(row => this.selection.select(row))
   }
 
   isNoData (): boolean {
-    return !this.isLoading && this.devices.length === 0
+    return !this.isLoading && this.devices.data.length === 0
+  }
+
+  pageChanged (event: PageEvent): void {
+    this.pageEvent = {
+      ...this.pageEvent,
+      pageSize: event.pageSize,
+      startsFrom: event.pageIndex * event.pageSize
+    }
+
+    this.getData(this.pageEvent)
   }
 
   async navigateTo (path: string): Promise<void> {

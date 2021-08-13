@@ -11,17 +11,22 @@ describe("Test Profile Page", () => {
 
   it("creates the default profile", () => {
     //Stub the get and post requests
-    cy.myIntercept("GET", "ciraconfigs", {
+    cy.myIntercept("GET", "ciraconfigs?$count=true", {
       statusCode: apiResponses.ciraConfigs.getAll.forProfile.code,
       body: apiResponses.ciraConfigs.getAll.forProfile.response,
     }).as("get-configs")
+
+    cy.myIntercept("GET", "wirelessconfigs?$count=true", {
+      statusCode: apiResponses.wifiConfigs.getAll.forProfile.code,
+      body: apiResponses.wifiConfigs.getAll.forProfile.response,
+    }).as("get-wifiConfigs")
 
     cy.myIntercept("POST", "profiles", {
       statusCode: apiResponses.profiles.create.success.code,
       body: apiResponses.profiles.create.success.response,
     }).as("post-profile")
 
-    cy.myIntercept("GET", "profiles", {
+    cy.myIntercept("GET", "profiles?$top=5&$skip=0&$count=true", {
       statusCode: apiResponses.profiles.getAll.empty.code,
       body: apiResponses.profiles.getAll.empty.response,
     }).as("get-profiles")
@@ -30,7 +35,7 @@ describe("Test Profile Page", () => {
     cy.wait("@get-profiles")
 
     //change api response
-    cy.myIntercept("GET", "profiles", {
+    cy.myIntercept("GET", "profiles?$top=5&$skip=0&$count=true", {
       statusCode: apiResponses.profiles.getAll.success.code,
       body: apiResponses.profiles.getAll.success.response,
     }).as("get-profiles2")
@@ -38,6 +43,7 @@ describe("Test Profile Page", () => {
     //Fill out the profile
     cy.get("button").contains("Add New").click()
     cy.wait("@get-configs")
+    cy.wait("@get-wifiConfigs")
     cy.enterProfileInfo(
       profileFixtures.happyPath.name,
       profileFixtures.happyPath.admin,

@@ -23,7 +23,8 @@
     "getAll": {
       "success": {
         "code": 200,
-        "response": [
+        "response": {
+          "data": [
           {
             "profileName": "happyPath",
             "domainSuffix": "happyPath.com",
@@ -31,12 +32,16 @@
             "provisioningCertStorageFormat": "raw",
             "provisioningCertPassword": "P@ssw0rd"
           }
-        ]
+        ],
+        "totalCount": 1}
       },
 
       "empty": {
         "code": 200,
-        "response": []
+        "response": {
+          "data": [],
+          "totalCount": null
+        }
       },
 
       "notFound": {
@@ -52,6 +57,50 @@
         "response": {
           "error": "string",
           "message": "string"
+        }
+      },
+
+      "forPaging": {
+        "code":200,
+        "response": {
+          "data": [
+            {
+            "profileName": "happyPath",
+            "domainSuffix": "happyPath.com",
+            "provisioningCert": "test",
+            "provisioningCertStorageFormat": "raw",
+            "provisioningCertPassword": "P@ssw0rd"
+            },
+            {
+            "profileName": "happyPath",
+            "domainSuffix": "happyPath.com",
+            "provisioningCert": "test",
+            "provisioningCertStorageFormat": "raw",
+            "provisioningCertPassword": "P@ssw0rd"
+            },
+            {
+            "profileName": "happyPath",
+            "domainSuffix": "happyPath.com",
+            "provisioningCert": "test",
+            "provisioningCertStorageFormat": "raw",
+            "provisioningCertPassword": "P@ssw0rd"
+            },
+            {
+            "profileName": "happyPath",
+            "domainSuffix": "happyPath.com",
+            "provisioningCert": "test",
+            "provisioningCertStorageFormat": "raw",
+            "provisioningCertPassword": "P@ssw0rd"
+            },
+            {
+            "profileName": "happyPath",
+            "domainSuffix": "happyPath.com",
+            "provisioningCert": "test",
+            "provisioningCertStorageFormat": "raw",
+            "provisioningCertPassword": "P@ssw0rd"
+            }
+          ],
+          "totalCount": 20
         }
       }
     },
@@ -171,7 +220,8 @@
     "getAll": {
       "success": {
         "code": 200,
-        "response": [
+        "response": {
+          "data": [
           {
             "configName": "happyPath",
             "mpsServerAddress": "192.168.8.50",
@@ -184,12 +234,17 @@
             "mpsRootCertificate": "rootcert",
             "proxyDetails": ""
           }
-        ]
+        ],
+        "totalCount": 1
+      }
       },
 
       "empty": {
         "code": 200,
-        "response": []
+        "response": {
+          "data": [],
+          "totalCount": null
+        }
       },
 
       "notFound": {
@@ -210,7 +265,8 @@
 
       "forProfile": {
         "code": 200,
-        "response": [
+        "response": {
+          "data": [
           {
             "configName": "happyPath",
             "mpsServerAddress": "192.168.8.50",
@@ -223,7 +279,74 @@
             "mpsRootCertificate": "rootcert",
             "proxyDetails": ""
           }
-        ]
+        ],
+          "totalCount": 1
+       }
+      },
+
+      "forPaging": {
+        "code": 200,
+        "response": {
+          "data": [
+            {
+            "configName": "happyPath",
+            "mpsServerAddress": "192.168.8.50",
+            "mpsPort": 1000,
+            "username": "admin",
+            "password": "Intel123!",
+            "commonName": "192.168.8.50",
+            "serverAddressFormat": 3,
+            "authMethod": 2,
+            "mpsRootCertificate": "rootcert",
+            "proxyDetails": ""
+            }, {
+            "configName": "happyPath",
+            "mpsServerAddress": "192.168.8.50",
+            "mpsPort": 1000,
+            "username": "admin",
+            "password": "Intel123!",
+            "commonName": "192.168.8.50",
+            "serverAddressFormat": 3,
+            "authMethod": 2,
+            "mpsRootCertificate": "rootcert",
+            "proxyDetails": ""
+            }, {
+            "configName": "happyPath",
+            "mpsServerAddress": "192.168.8.50",
+            "mpsPort": 1000,
+            "username": "admin",
+            "password": "Intel123!",
+            "commonName": "192.168.8.50",
+            "serverAddressFormat": 3,
+            "authMethod": 2,
+            "mpsRootCertificate": "rootcert",
+            "proxyDetails": ""
+            }, {
+            "configName": "happyPath",
+            "mpsServerAddress": "192.168.8.50",
+            "mpsPort": 1000,
+            "username": "admin",
+            "password": "Intel123!",
+            "commonName": "192.168.8.50",
+            "serverAddressFormat": 3,
+            "authMethod": 2,
+            "mpsRootCertificate": "rootcert",
+            "proxyDetails": ""
+            }, {
+            "configName": "happyPath",
+            "mpsServerAddress": "192.168.8.50",
+            "mpsPort": 1000,
+            "username": "admin",
+            "password": "Intel123!",
+            "commonName": "192.168.8.50",
+            "serverAddressFormat": 3,
+            "authMethod": 2,
+            "mpsRootCertificate": "rootcert",
+            "proxyDetails": ""
+            }
+          ],
+          "totalCount": 20
+        }
       }
     },
 
@@ -357,7 +480,8 @@
     "getAll": {
       "success": {
         "code": 200,
-        "response": [
+        "response": {
+          "data":[
           {
             "profileName": "happyPath",
             "generateRandomPassword": false,
@@ -369,12 +493,17 @@
             "generateRandomMEBxPassword": false,
             "mebxPasswordLength": null
           }
-        ]
+        ],
+        "totalCount": 1
+        }
       },
 
       "empty": {
         "code": 200,
-        "response": []
+        "response": {
+          "data": [],
+          "totalCount": null
+        }
       },
 
       "notFound": {
@@ -390,6 +519,70 @@
         "response": {
           "error": "string",
           "message": "string"
+        }
+      },
+
+      "forPaging": {
+        "code": 200,
+        "response": {
+          "data": [
+            {
+              "profileName": "happyPath",
+              "generateRandomPassword": false,
+              "passwordLength": null,
+              "configurationScript": null,
+              "activation": "ccmactivate",
+              "ciraConfigName": "default",
+              "dhcpEnabled": "true",
+              "generateRandomMEBxPassword": false,
+              "mebxPasswordLength": null
+            },
+            {
+              "profileName": "happyPath",
+              "generateRandomPassword": false,
+              "passwordLength": null,
+              "configurationScript": null,
+              "activation": "ccmactivate",
+              "ciraConfigName": "default",
+              "dhcpEnabled": "true",
+              "generateRandomMEBxPassword": false,
+              "mebxPasswordLength": null
+            },
+            {
+              "profileName": "happyPath",
+              "generateRandomPassword": false,
+              "passwordLength": null,
+              "configurationScript": null,
+              "activation": "ccmactivate",
+              "ciraConfigName": "default",
+              "dhcpEnabled": "true",
+              "generateRandomMEBxPassword": false,
+              "mebxPasswordLength": null
+            },
+            {
+              "profileName": "happyPath",
+              "generateRandomPassword": false,
+              "passwordLength": null,
+              "configurationScript": null,
+              "activation": "ccmactivate",
+              "ciraConfigName": "default",
+              "dhcpEnabled": "true",
+              "generateRandomMEBxPassword": false,
+              "mebxPasswordLength": null
+            },
+            {
+              "profileName": "happyPath",
+              "generateRandomPassword": false,
+              "passwordLength": null,
+              "configurationScript": null,
+              "activation": "ccmactivate",
+              "ciraConfigName": "default",
+              "dhcpEnabled": "true",
+              "generateRandomMEBxPassword": false,
+              "mebxPasswordLength": null
+            }
+          ],
+          "totalCount": 20
         }
       }
     },
@@ -511,7 +704,8 @@
     "getAll": {
       "success": {
         "code": 200,
-        "response": [
+        "response": {
+          "data":[
           {
             "name": "Win7-machine",
             "mpsuser": "standalone",
@@ -544,12 +738,17 @@
               ]
             }
           }
-        ]
+        ],
+      "totalCount": 2
+    }
       },
 
       "empty": {
         "code": 200,
-        "response": []
+        "response": {
+          "data":[],
+        "totalCount":null
+      }
       },
 
       "notFound": {
@@ -570,7 +769,8 @@
 
       "tags": {
         "code": 200,
-        "response": [
+        "response": {
+          "data": [
           {
             "name": "Win7-machine1",
             "mpsuser": "standalone",
@@ -623,12 +823,14 @@
               "tags": ["Linux", "DELL", "Store #456"]
             }
           }
-        ]
+        ],
+      "totalCount":4
+    }
       },
 
       "windows": {
         "code": 200,
-        "response": [
+        "response": {"data": [
           {
             "name": "Win7-machine1",
             "mpsuser": "standalone",
@@ -655,7 +857,98 @@
               "tags": ["Windows", "DELL", "Store #123"]
             }
           }
-        ]
+        ],
+      "totalCount": 2
+    }
+      },
+
+      "forPaging": {
+        "code": 200,
+        "response":{
+          "data": [
+            {
+              "name": "Win7-machine",
+              "mpsuser": "standalone",
+              "amtuser": "admin",
+              "hostname": "8dad96cb-c3db-11e6-9c43-bc0000d20000",
+              "icon": 1,
+              "conn": 1,
+              "metadata": {
+                "guid": 12345,
+                "hostname": "AMTDEVICENUC1",
+                "tags": [
+                  "pick",
+                  "me"
+                ]
+              }
+            },
+            {
+              "name": "Ubuntu-machine",
+              "mpsuser": "xenial",
+              "amtuser": "admin",
+              "hostname": "bf49cf00-9164-11e4-952b-b8aeed7ec594",
+              "icon": 1,
+              "conn": 0,
+              "metadata": {
+                "guid": 67890,
+                "hostname": "AMTDEVICENUC2",
+                "tags": [
+                  "not",
+                  "me"
+                ]
+              }
+            },
+            {
+              "name": "Win7-machine",
+              "mpsuser": "standalone",
+              "amtuser": "admin",
+              "hostname": "8dad96cb-c3db-11e6-9c43-bc0000d20000",
+              "icon": 1,
+              "conn": 1,
+              "metadata": {
+                "guid": 12345,
+                "hostname": "AMTDEVICENUC1",
+                "tags": [
+                  "pick",
+                  "me"
+                ]
+              }
+            },
+            {
+              "name": "Ubuntu-machine",
+              "mpsuser": "xenial",
+              "amtuser": "admin",
+              "hostname": "bf49cf00-9164-11e4-952b-b8aeed7ec594",
+              "icon": 1,
+              "conn": 0,
+              "metadata": {
+                "guid": 67890,
+                "hostname": "AMTDEVICENUC2",
+                "tags": [
+                  "not",
+                  "me"
+                ]
+              }
+            },
+            {
+              "name": "Win7-machine",
+              "mpsuser": "standalone",
+              "amtuser": "admin",
+              "hostname": "8dad96cb-c3db-11e6-9c43-bc0000d20000",
+              "icon": 1,
+              "conn": 1,
+              "metadata": {
+                "guid": 12345,
+                "hostname": "AMTDEVICENUC1",
+                "tags": [
+                  "pick",
+                  "me"
+                ]
+              }
+            }
+          ],
+          "totalCount":20
+        }
       }
     }
   },
@@ -810,5 +1103,178 @@
         }
       }
     }
+  },
+
+  "wifiConfigs": {
+    "getAll": {
+      "success": {
+        "code": 200,
+        "response": {
+          "data": [
+          {
+            "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16]
+          }
+        ],
+        "totalCount": 1
+      }
+      },
+
+      "empty": {
+        "code": 200,
+        "response": {
+          "data": [],
+          "totalCount": null
+        }
+      },
+
+      "notFound": {
+        "code": 404,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      },
+
+      "error": {
+        "code": 500,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      },
+
+      "forProfile": {
+        "code": 200,
+        "response": [
+          {
+            "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16]
+          }
+        ]
+      }
+    },
+
+    "create": {
+      "success": {
+        "code": 201,
+        "response": {
+          "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16]
+        }
+      },
+
+      "badRequest": {
+        "code": 400,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      },
+
+      "error": {
+        "code": 500,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      }
+    },
+
+    "update": {
+      "success": {
+        "code": 200,
+        "response": {
+          "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16]
+        }
+      },
+
+      "badRequest": {
+        "code": 400,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      },
+
+      "error": {
+        "code": 500,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      }
+    },
+
+    "get": {
+      "success": {
+        "code": 200,
+        "response": {
+          "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16]
+        }
+      },
+
+      "notFound": {
+        "code": 404,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      },
+
+      "error": {
+        "code": 500,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      }
+    },
+
+    "delete": {
+      "success": {
+        "code": 204,
+        "response": {}
+      },
+
+      "notFound": {
+        "code": 404,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      },
+
+      "error": {
+        "code": 500,
+        "response": {
+          "error": "string",
+          "message": "string"
+        }
+      }
+    }
   }
+
 }
