@@ -1,4 +1,4 @@
-//Tests the creation of a device
+//Tests the creation of a profile
 const apiResponses = require("../../fixtures/apiResponses.json")
 const profileFixtures = require("../../fixtures/profile.json")
 
