@@ -484,14 +484,10 @@
           "data":[
           {
             "profileName": "happyPath",
-            "generateRandomPassword": false,
-            "passwordLength": null,
             "configurationScript": null,
             "activation": "ccmactivate",
             "ciraConfigName": "default",
-            "dhcpEnabled": "true",
-            "generateRandomMEBxPassword": false,
-            "mebxPasswordLength": null
+            "dhcpEnabled": "true"
           }
         ],
         "totalCount": 1
@@ -592,14 +588,10 @@
         "code": 201,
         "response": {
           "profileName": "happyPath",
-          "generateRandomPassword": false,
-          "passwordLength": null,
           "configurationScript": null,
           "activation": "ccmactivate",
           "ciraConfigName": "default",
-          "dhcpEnabled": true,
-          "generateRandomMEBxPassword": false,
-          "mebxPasswordLength": null
+          "dhcpEnabled": true
         }
       },
 
@@ -1105,7 +1097,7 @@
     }
   },
 
-  "wifiConfigs": {
+  "wirelessConfigs": {
     "getAll": {
       "success": {
         "code": 200,
@@ -1117,7 +1109,8 @@
             "encryptionMethod": 4,
             "ssid": "test",
             "pskPassphrase": "Intel@123",
-            "linkPolicy": [14,16]
+            "linkPolicy": [14,16],
+            "pskValue": "pskValue"
           }
         ],
         "totalCount": 1
@@ -1160,6 +1153,57 @@
             "linkPolicy": [14,16]
           }
         ]
+      },
+
+      "forPaging": {
+        "code": 200,
+        "response": {
+          "data": [{
+            "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16],
+            "pskValue": "pskValue"
+          },
+          {
+            "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16],
+            "pskValue": "pskValue"
+          },
+          {
+            "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16],
+            "pskValue": "pskValue"
+          },
+          {
+            "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16],
+            "pskValue": "pskValue"
+          },{
+            "profileName": "happyPath",
+            "authenticationMethod": 4,
+            "encryptionMethod": 4,
+            "ssid": "test",
+            "pskPassphrase": "Intel@123",
+            "linkPolicy": [14,16],
+            "pskValue": "pskValue"
+          }],
+          "totalCount":20
+        }
       }
     },
 

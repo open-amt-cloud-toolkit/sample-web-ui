@@ -17,9 +17,9 @@ describe("Test Profile Page", () => {
     }).as("get-configs")
 
     cy.myIntercept("GET", "wirelessconfigs?$count=true", {
-      statusCode: apiResponses.wifiConfigs.getAll.forProfile.code,
-      body: apiResponses.wifiConfigs.getAll.forProfile.response,
-    }).as("get-wifiConfigs")
+      statusCode: apiResponses.wirelessConfigs.getAll.forProfile.code,
+      body: apiResponses.wirelessConfigs.getAll.forProfile.response,
+    }).as("get-wirelessConfigs")
 
     cy.myIntercept("POST", "profiles", {
       statusCode: apiResponses.profiles.create.success.code,
@@ -43,7 +43,7 @@ describe("Test Profile Page", () => {
     //Fill out the profile
     cy.get("button").contains("Add New").click()
     cy.wait("@get-configs")
-    cy.wait("@get-wifiConfigs")
+    cy.wait("@get-wirelessConfigs")
     cy.enterProfileInfo(
       profileFixtures.happyPath.name,
       profileFixtures.happyPath.admin,
