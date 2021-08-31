@@ -3,14 +3,15 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 import { SelectionModel } from '@angular/cdk/collections'
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, ViewChild } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
+import { MatPaginator, PageEvent } from '@angular/material/paginator'
 import { MatSelectChange } from '@angular/material/select'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
-import { BehaviorSubject, forkJoin, from, Observable, throwError } from 'rxjs'
-import { catchError, delay, finalize, map, mergeMap } from 'rxjs/operators'
-import { Device } from 'src/models/models'
+import { catchError, finalize, delay, map, mergeMap } from 'rxjs/operators'
+import { BehaviorSubject, forkJoin, from, Observable, of, throwError } from 'rxjs'
+import { Device, DeviceResponse, PageEventOptions } from 'src/models/models'
 import { AddDeviceComponent } from '../shared/add-device/add-device.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { DevicesService } from './devices.service'
@@ -21,13 +22,22 @@ import { DevicesService } from './devices.service'
   styleUrls: ['./devices.component.scss']
 })
 export class DevicesComponent implements OnInit {
-  public devices: Device[] = []
+  public devices: DeviceResponse = { data: [], totalCount: 0 }
   public isLoading = true
   public tags: string[] = []
   public selectedTags = new BehaviorSubject<string[]>([])
   public selection: SelectionModel<Device>
+  public bulkActionResponses: any[] = []
+  public isTrue: boolean = false
   public powerStates: any
-  displayedColumns: string[] = ['select', 'hostname', 'guid', 'status', 'tags', 'actions']
+  displayedColumns: string[] = ['select', 'hostname', 'guid', 'status', 'tags', 'actions', 'notification']
+  pageEvent: PageEventOptions = {
+    pageSize: 25,
+    startsFrom: 0,
+    count: 'true'
+  }
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator
 
   constructor (public snackBar: MatSnackBar, public dialog: MatDialog, public readonly router: Router, private readonly devicesService: DevicesService) {
     const initialSelection: Device[] = []
@@ -37,6 +47,10 @@ export class DevicesComponent implements OnInit {
   }
 
   ngOnInit (): void {
+    this.getData(this.pageEvent)
+  }
+
+  getData (pageEvent: PageEventOptions): void {
     const tags = this.devicesService.getTags()
     forkJoin({ tags }).pipe(
       catchError((err) => {
@@ -53,11 +67,11 @@ export class DevicesComponent implements OnInit {
     this.selectedTags.pipe(
       mergeMap(tags => {
         this.isLoading = true
-        return this.devicesService.getDevices(tags)
+        return this.devicesService.getDevices({ ...pageEvent, tags })
       })
     ).subscribe(devices => {
       this.devices = devices
-      const deviceIds = this.devices.filter(z => z.connectionStatus).map(x => x.guid)
+      const deviceIds = this.devices.data.filter(z => z.connectionStatus).map(x => x.guid)
       from(deviceIds).pipe(
         map(id => {
           return this.devicesService.getPowerState(id).pipe(map(result => {
@@ -66,7 +80,7 @@ export class DevicesComponent implements OnInit {
         })
       ).subscribe(results => {
         results.subscribe(x => {
-          (devices.find(y => y.guid === x.guid) as any).powerstate = x.powerstate
+          (devices.data.find(y => y.guid === x.guid) as any).powerstate = x.powerstate
         })
       })
       this.isLoading = false
@@ -79,7 +93,7 @@ export class DevicesComponent implements OnInit {
 
   isAllSelected (): boolean {
     const numSelected = this.selection.selected.length
-    const numRows = this.devices.length
+    const numRows = this.devices.data.length
     return numSelected === numRows
   }
 
@@ -87,11 +101,11 @@ export class DevicesComponent implements OnInit {
   masterToggle (): void {
     this.isAllSelected()
       ? this.selection.clear()
-      : this.devices.forEach(row => this.selection.select(row))
+      : this.devices.data.forEach(row => this.selection.select(row))
   }
 
   isNoData (): boolean {
-    return !this.isLoading && this.devices.length === 0
+    return !this.isLoading && this.devices.data.length === 0
   }
 
   async navigateTo (path: string): Promise<void> {
@@ -111,33 +125,51 @@ export class DevicesComponent implements OnInit {
 
   bulkPowerAction (action: number): void {
     const requests: Array<Observable<any>> = []
+    this.isLoading = true
     this.selection.selected.forEach(z => {
-      requests.push(this.devicesService.sendPowerAction(z.guid, action))
+      requests.push(this.devicesService.sendPowerAction(z.guid, action).pipe(
+        catchError(err => of({ err })),
+        map(i => ({
+          StatusMessage: i?.Body && i.Body.ReturnValueStr ? i.Body.ReturnValueStr : 'ERROR',
+          StatusType: i?.Body && i.Body.ReturnValue !== undefined ? i.Body.ReturnValue : -1,
+          guid: z.guid
+        }))
+      ))
     })
 
     forkJoin(requests).subscribe(result => {
-      this.snackBar.open($localize`Power action sent successfully`, undefined, SnackbarDefaults.defaultSuccess)
+      this.isLoading = false
+      result.forEach(res => {
+        (this.devices.data.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
+      })
+      this.resetResponse()
     })
   }
 
   sendPowerAction (deviceId: string, action: number): void {
     this.isLoading = true
     this.devicesService.sendPowerAction(deviceId, action).pipe(
-      catchError(err => {
-        // TODO: handle error better
-        this.snackBar.open($localize`Error sending power action`, undefined, SnackbarDefaults.defaultError)
-        return throwError(err)
+      catchError((): any => {
+        (this.devices.data.find(x => x.guid === deviceId) as any).StatusMessage = 'ERROR'
       }),
       finalize(() => {
         this.isLoading = false
       })
     ).subscribe(data => {
-      this.snackBar.open($localize`Power action sent successfully`, undefined, SnackbarDefaults.defaultSuccess)
+      (this.devices.data.find(x => x.guid === deviceId) as any).StatusMessage = data.Body.ReturnValueStr
+      this.resetResponse()
       this.devicesService.getPowerState(deviceId).pipe(delay(2000)).subscribe(z => {
-        (this.devices.find(y => y.guid === deviceId) as any).powerstate = z.powerstate
+        (this.devices.data.find(y => y.guid === deviceId) as any).powerstate = z.powerstate
       })
-      console.log(data)
+    }, err => {
+      console.log(err)
     })
+  }
+
+  resetResponse (): void {
+    setTimeout(() => {
+      (this.devices.data.find((items: any) => items.StatusMessage === 'SUCCESS') as any).StatusMessage = ''
+    }, 5000)
   }
 
   addDevice (): void {
@@ -145,5 +177,15 @@ export class DevicesComponent implements OnInit {
       height: '400px',
       width: '600px'
     })
+  }
+
+  pageChanged (event: PageEvent): void {
+    this.pageEvent = {
+      ...this.pageEvent,
+      pageSize: event.pageSize,
+      startsFrom: event.pageIndex * event.pageSize
+    }
+
+    this.getData(this.pageEvent)
   }
 }

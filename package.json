@@ -45,17 +45,17 @@
     "@angular/localize": "^11.2.14",
     "@types/jasmine": "~3.8.2",
     "@types/node": "^14.17.4",
-    "@typescript-eslint/eslint-plugin": "4.29.1",
-    "@typescript-eslint/parser": "4.29.1",
+    "@typescript-eslint/eslint-plugin": "4.30.0",
+    "@typescript-eslint/parser": "4.29.3",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-config-standard-with-typescript": "^20.0.0",
-    "eslint-plugin-import": "2.24.0",
+    "eslint-plugin-import": "2.24.2",
     "eslint-plugin-jsdoc": "36.0.7",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "eslint-plugin-promise": "^5.1.0",
-    "jasmine-core": "~3.8.0",
+    "jasmine-core": "~3.9.0",
     "jasmine-spec-reporter": "~7.0.0",
     "karma": "~6.3.4",
     "karma-chrome-launcher": "~3.1.0",
@@ -63,11 +63,11 @@
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.7.0",
     "protractor": "~7.0.0",
-    "ts-node": "~10.1.0",
+    "ts-node": "~10.2.1",
     "typescript": "~4.1.6"
   },
   "optionalDependencies": {
-    "cypress": "^7.6.0",
+    "cypress": "^8.3.1",
     "cypress-file-upload": "^5.0.8"
   }
 }
