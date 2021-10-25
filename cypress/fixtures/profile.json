@@ -5,6 +5,7 @@
     "amtPassword": "P@ssw0rd",
     "mebxPassword": "P@ssw0rd",
     "netConfig": "DHCP",
+    "connectionMode":"CIRA (Cloud)",
     "ciraConfig": "happyPath"
   },
 
@@ -34,5 +35,14 @@
     }
   },
 
-  "totalCount": 100
+  "totalCount": 100,
+  "happyPathTls": {
+    "name": "happyPath",
+    "admin": false,
+    "amtPassword": "P@ssw0rd",
+    "mebxPassword": "P@ssw0rd",
+    "netConfig": "DHCP",
+    "connectionMode":"TLS (Enterprise)",
+    "tlsConfig": "Server Authentication Only"
+  }
 }

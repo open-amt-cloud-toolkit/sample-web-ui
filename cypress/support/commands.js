@@ -53,7 +53,7 @@ Cypress.Commands.add("enterCiraInfo", (name, format, addr, user) => {
 
 Cypress.Commands.add(
   "enterProfileInfo",
-  (name, admin, randAmt, randMebx, network, cira) => {
+  (name, admin, randAmt, randMebx, network, connectionMode, cira) => {
     cy.get("input").get("[name=profileName]").type(name);
     if (!admin) {
       cy.get("mat-select[formcontrolname=activation").click();
@@ -71,7 +71,15 @@ Cypress.Commands.add(
     }
     
     cy.contains(network).click();
-    cy.get("mat-select[formcontrolname=ciraConfigName]").click();
+    cy.contains(connectionMode).click()
+    if(connectionMode === "CIRA (Cloud)"){
+      cy.get("mat-select[formcontrolname=ciraConfigName]").click();
+    }
+    else if(connectionMode === "TLS (Enterprise)"){
+      cy.get("mat-select[formControlName=tlsMode]").click()
+    }
+    
+    
     cy.contains(cira).click();
   }
 );

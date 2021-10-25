@@ -48,6 +48,7 @@ describe("Test Profile Page", () => {
         true,
         true,
         profileFixtures.happyPath.netConfig,
+        profileFixtures.happyPath.connectionMode,
         profileFixtures.happyPath.ciraConfig
       )
     })
