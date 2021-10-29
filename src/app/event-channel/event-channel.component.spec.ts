@@ -1,20 +1,28 @@
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { RouterTestingModule } from '@angular/router/testing'
 import { SharedModule } from '../shared/shared.module'
 import { EventChannelComponent } from './event-channel.component'
 import { MomentModule } from 'ngx-moment'
+import { MQTTService } from './event-channel.service'
+import { of } from 'rxjs'
 
 describe('EventChannelComponent', () => {
   let component: EventChannelComponent
   let fixture: ComponentFixture<EventChannelComponent>
-
+  const eventChannelStub = {
+    mqttConfig: { hostname: 'test', port: '', path: 'test' },
+    connect: jasmine.createSpy('connect'),
+    subscribeToTopic: jasmine.createSpy('connect'),
+    messageSource: of(),
+    connectionStatusSubject: of(),
+    changeConnection: jasmine.createSpy('changeConnection')
+  }
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, SharedModule, RouterTestingModule.withRoutes([]), MomentModule],
       declarations: [EventChannelComponent],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
+      providers: [{ provide: MQTTService, useValue: eventChannelStub }]
     }).compileComponents()
   })
 
@@ -29,7 +37,6 @@ describe('EventChannelComponent', () => {
   })
 
   it('should call onSubmit', async () => {
-    spyOn(component.eventChannelService, 'changeConnection').and.callThrough()
     component.onSubmit()
     component.eventChannelService.changeConnection(component.eventChannelForm.value)
     expect(component.eventChannelService.changeConnection).toHaveBeenCalled()
