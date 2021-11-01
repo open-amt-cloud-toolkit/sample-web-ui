@@ -59,7 +59,7 @@ export class MQTTService {
     this.mqttEvents = []
     this.messageSource.next(this.mqttEvents)
     this.clearData = false
-    this.subscriptions.forEach(x => x.unsubscribe())
+    this.destroy()
     this.subscribeToTopic('mps/#')
     this.subscribeToTopic('rps/#')
   }
@@ -73,5 +73,10 @@ export class MQTTService {
       this.processMessage(message)
     })
     this.subscriptions.push(sub)
+  }
+
+  destroy (): void {
+    this.subscriptions.forEach(x => x.unsubscribe())
+    this.subscriptions = []
   }
 }

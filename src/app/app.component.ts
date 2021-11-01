@@ -5,7 +5,6 @@
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core'
 import { NavigationStart, Router } from '@angular/router'
 import { AuthService } from './auth.service'
-import { Subscription } from 'rxjs'
 import { MQTTService } from './event-channel/event-channel.service'
 
 @Component({
@@ -15,8 +14,6 @@ import { MQTTService } from './event-channel/event-channel.service'
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoggedIn = false
-  public mpsSubscription!: Subscription
-  public rpsSubscription!: Subscription
 
   constructor (public router: Router, public authService: AuthService, public mqttService: MQTTService
   ) {
@@ -45,7 +42,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy (): void {
-    this.mpsSubscription.unsubscribe()
-    this.rpsSubscription.unsubscribe()
+    this.mqttService.destroy()
   }
 }
