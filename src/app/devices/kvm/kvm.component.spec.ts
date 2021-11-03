@@ -75,4 +75,116 @@ describe('KvmComponent', () => {
     expect(getAMTFeaturesSpy).toHaveBeenCalled()
     expect(reqUserConsentCodeSpy).toHaveBeenCalled()
   })
+
+  it('should call userConsentDialog', () => {
+    component.userConsentDialog()
+  })
+
+  it('should call cancelOptInCodeResponse with return value 0', () => {
+    const response = {
+      Body: { ReturnValue: 0, ReturnValueStr: 'SUCCESS' },
+      Header: {
+        To: 'string',
+        RelatesTo: 'string',
+        Action: 'string',
+        MessageID: 'string',
+        ResourceURI: 'string',
+        Method: 'string'
+      }
+    }
+    component.cancelOptInCodeResponse(response)
+  })
+
+  it('should call cancelOptInCodeResponse with return value non zero', () => {
+    const response = {
+      Body: { ReturnValue: 1, ReturnValueStr: 'SUCCESS' },
+      Header: {
+        To: 'string',
+        RelatesTo: 'string',
+        Action: 'string',
+        MessageID: 'string',
+        ResourceURI: 'string',
+        Method: 'string'
+      }
+    }
+    component.cancelOptInCodeResponse(response)
+  })
+
+  it('should call SendOptInCodeResponse with return value zero', () => {
+    const response = {
+      Body: { ReturnValue: 0, ReturnValueStr: 'SUCCESS' },
+      Header: {
+        To: 'string',
+        RelatesTo: 'string',
+        Action: 'string',
+        MessageID: 'string',
+        ResourceURI: 'string',
+        Method: 'string'
+      }
+    }
+    component.SendOptInCodeResponse(response)
+  })
+
+  it('should call SendOptInCodeResponse with return value 2066', () => {
+    const response = {
+      Body: { ReturnValue: 2066, ReturnValueStr: 'SUCCESS' },
+      Header: {
+        To: 'string',
+        RelatesTo: 'string',
+        Action: 'string',
+        MessageID: 'string',
+        ResourceURI: 'string',
+        Method: 'string'
+      }
+    }
+    component.SendOptInCodeResponse(response)
+  })
+  it('should call SendOptInCodeResponse with return value non zero', () => {
+    const response = {
+      Body: { ReturnValue: 1, ReturnValueStr: 'SUCCESS' },
+      Header: {
+        To: 'string',
+        RelatesTo: 'string',
+        Action: 'string',
+        MessageID: 'string',
+        ResourceURI: 'string',
+        Method: 'string'
+      }
+    }
+    component.SendOptInCodeResponse(response)
+  })
+  it('should call afterUserContentDialogClosed with CancelOptIn', () => {
+    const response = {
+      deviceId: '1234',
+      results: {
+        Header: {
+          Method: 'CancelOptIn'
+        }
+      }
+    }
+    component.afterUserContentDialogClosed(response)
+  })
+
+  it('should call afterUserContentDialogClosed with SendOptInCode', () => {
+    const response = {
+      deviceId: '1234',
+      results: {
+        Header: {
+          Method: 'SendOptInCode'
+        }
+      }
+    }
+    component.afterUserContentDialogClosed(response)
+  })
+
+  it('should call deviceStatus with device status 2', () => {
+    component.deviceStatus(2)
+  })
+
+  it('should call deviceStatus with device status 0', () => {
+    component.deviceStatus(0)
+  })
+  it('should call onEncodingChange', () => {
+    component.onEncodingChange(2)
+  })
 })

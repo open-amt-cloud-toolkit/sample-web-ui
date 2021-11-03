@@ -2,7 +2,6 @@
 * Copyright (c) Intel Corporation 2021
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
-import { NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { MatDialog } from '@angular/material/dialog'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
@@ -19,9 +18,10 @@ describe('DevicesComponent', () => {
   let getDevicesSpy: jasmine.Spy
   let getTagsSpy: jasmine.Spy
   let getPowerStateSpy: jasmine.Spy
+  let sendPowerActionSpy: jasmine.Spy
 
   beforeEach(async () => {
-    const devicesService = jasmine.createSpyObj('DevicesService', ['getDevices', 'getTags', 'getPowerState', 'PowerStates'])
+    const devicesService = jasmine.createSpyObj('DevicesService', ['getDevices', 'getTags', 'getPowerState', 'PowerStates', 'sendPowerAction', 'bulkPowerAction'])
     devicesService.PowerStates.and.returnValue({
       2: 'On',
       3: 'Sleep',
@@ -35,15 +35,13 @@ describe('DevicesComponent', () => {
     getDevicesSpy = devicesService.getDevices.and.returnValue(of({ data: [{ hostname: '', guid: '', connectionStatus: true, tags: [], icon: 1 }], totalCount: 1 }))
     getTagsSpy = devicesService.getTags.and.returnValue(of([]))
     getPowerStateSpy = devicesService.getPowerState.and.returnValue(of({ powerstate: 2 }))
-
+    sendPowerActionSpy = devicesService.sendPowerAction.and.returnValue(of({ Body: { ReturnValueStr: 'SUCCESS' } }))
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [DevicesComponent],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
       providers: [{ provide: DevicesService, useValue: devicesService }]
 
-    })
-      .compileComponents()
+    }).compileComponents()
   })
 
   beforeEach(() => {
@@ -99,5 +97,24 @@ describe('DevicesComponent', () => {
     expect(component.paginator.pageSize).toBe(25)
     expect(component.paginator.pageIndex).toBe(0)
     expect(component.paginator.showFirstLastButtons).toBe(true)
+  })
+  it('should reset response', () => {
+    component.resetResponse()
+  })
+  it('should fire bulk power action', () => {
+    component.bulkPowerAction(8)
+  })
+  it('should fire send power action', () => {
+    component.devices.data = [{
+      hostname: 'localhost',
+      icon: 1,
+      connectionStatus: true,
+      guid: '12324-4243-ewdsd',
+      tags: ['']
+    }]
+    const resetSpy = spyOn(component, 'resetResponse')
+    component.sendPowerAction('12324-4243-ewdsd', 2)
+    expect(sendPowerActionSpy).toHaveBeenCalled()
+    expect(resetSpy).toHaveBeenCalled()
   })
 })

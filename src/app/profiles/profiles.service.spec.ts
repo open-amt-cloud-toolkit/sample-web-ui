@@ -4,7 +4,7 @@
 **********************************************************************/
 import { TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
-import { of } from 'rxjs'
+import { of, throwError } from 'rxjs'
 import { AuthService } from '../auth.service'
 
 import { ProfilesService } from './profiles.service'
@@ -37,7 +37,8 @@ describe('ProfilesService', () => {
         generateRandomPassword: true,
         generateRandomMEBxPassword: true,
         tags: ['acm'],
-        wifiConfigs: []
+        wifiConfigs: [],
+        tlsMode: 1
       }],
       totalCount: 1
     }
@@ -46,6 +47,50 @@ describe('ProfilesService', () => {
 
     service.getData().subscribe(response => {
       expect(response).toEqual(profileResponse)
+      done()
+    })
+
+    expect(httpClientSpy.get.calls.count()).toEqual(1)
+  })
+
+  it('should load first 25 profiles when get all profile request fired', (done: DoneFn) => {
+    const profileResponse = {
+      data: [{
+        profileName: 'profile1',
+        amtPassword: null,
+        configurationScript: null,
+        activation: 'acmactivate',
+        ciraConfigName: 'config1',
+        dhcpEnabled: true,
+        mebxPassword: 'password',
+        generateRandomPassword: true,
+        generateRandomMEBxPassword: true,
+        tags: ['acm'],
+        wifiConfigs: [],
+        tlsMode: 1
+      }],
+      totalCount: 1
+    }
+
+    httpClientSpy.get.and.returnValue(of(profileResponse))
+
+    service.getData({ pageSize: 25, count: 'true', startsFrom: 0 }).subscribe(response => {
+      expect(response).toEqual(profileResponse)
+      done()
+    })
+
+    expect(httpClientSpy.get.calls.count()).toEqual(1)
+  })
+
+  it('should throw errors when get all profile request fired', (done: DoneFn) => {
+    const error = {
+      status: 404,
+      message: 'Not Found'
+    }
+    httpClientSpy.get.and.returnValue(throwError(error))
+
+    service.getData().subscribe(null, err => {
+      expect(error.status).toEqual(err[0].status)
       done()
     })
 
@@ -64,7 +109,8 @@ describe('ProfilesService', () => {
       generateRandomPassword: true,
       generateRandomMEBxPassword: true,
       tags: ['acm'],
-      wifiConfigs: []
+      wifiConfigs: [],
+      tlsMode: 1
     }
 
     httpClientSpy.get.and.returnValue(of(profileResponse))
@@ -75,10 +121,38 @@ describe('ProfilesService', () => {
     })
   })
 
+  it('should return error specific profile when a single profile is requested', (done: DoneFn) => {
+    const error = {
+      status: 404,
+      message: 'Not Found'
+    }
+
+    httpClientSpy.get.and.returnValue(throwError(error))
+
+    service.getRecord('profile1').subscribe(null, err => {
+      expect(error.status).toBe(err[0].status)
+      done()
+    })
+  })
+
   it('should delete the specified profile when a delete request fires', (done: DoneFn) => {
     httpClientSpy.delete.and.returnValue(of({}))
 
     service.delete('profile1').subscribe(() => {
+      done()
+    })
+
+    expect(httpClientSpy.delete.calls.count()).toEqual(1)
+  })
+
+  it('should throw error specified profile when a delete request fires', (done: DoneFn) => {
+    const error = {
+      error: 'Not Found'
+    }
+    httpClientSpy.delete.and.returnValue(throwError(error))
+
+    service.delete('profile1').subscribe(null, (err) => {
+      expect(error.error).toEqual(err[0].error)
       done()
     })
 
@@ -97,13 +171,45 @@ describe('ProfilesService', () => {
       generateRandomPassword: true,
       generateRandomMEBxPassword: true,
       tags: ['acm'],
-      wifiConfigs: []
+      wifiConfigs: [],
+      tlsMode: 1
     }
 
     httpClientSpy.post.and.returnValue(of(profileReq))
 
     service.create(profileReq).subscribe(response => {
       expect(response).toEqual(profileReq)
+      done()
+    })
+
+    expect(httpClientSpy.post.calls.count()).toEqual(1)
+  })
+
+  it('should throw error when post request gets fired', (done: DoneFn) => {
+    const profileReq = {
+      profileName: 'profile1',
+      amtPassword: null,
+      configurationScript: null,
+      activation: 'acmactivate',
+      ciraConfigName: 'config1',
+      dhcpEnabled: true,
+      mebxPassword: 'password',
+      generateRandomPassword: true,
+      generateRandomMEBxPassword: true,
+      tags: ['acm'],
+      wifiConfigs: [],
+      tlsMode: 1
+    }
+
+    const error = {
+      status: 404,
+      message: 'Not Found'
+    }
+
+    httpClientSpy.post.and.returnValue(throwError(error))
+
+    service.create(profileReq).subscribe(null, err => {
+      expect(error.status).toBe(err[0].status)
       done()
     })
 
@@ -122,13 +228,45 @@ describe('ProfilesService', () => {
       generateRandomPassword: true,
       generateRandomMEBxPassword: true,
       tags: ['acm'],
-      wifiConfigs: []
+      wifiConfigs: [],
+      tlsMode: 1
     }
 
     httpClientSpy.patch.and.returnValue(of(profileReq))
 
     service.update(profileReq).subscribe(response => {
       expect(response).toEqual(profileReq)
+      done()
+    })
+
+    expect(httpClientSpy.patch.calls.count()).toEqual(1)
+  })
+
+  it('should throw error when a patch request fired', (done: DoneFn) => {
+    const profileReq = {
+      profileName: 'profile1',
+      amtPassword: null,
+      configurationScript: null,
+      activation: 'acmactivate',
+      ciraConfigName: 'config1',
+      dhcpEnabled: true,
+      mebxPassword: 'password',
+      generateRandomPassword: true,
+      generateRandomMEBxPassword: true,
+      tags: ['acm'],
+      wifiConfigs: [],
+      tlsMode: 1
+    }
+
+    const error = {
+      status: 404,
+      message: 'Not Found'
+    }
+
+    httpClientSpy.patch.and.returnValue(throwError(error))
+
+    service.update(profileReq).subscribe(null, err => {
+      expect(error.status).toBe(err[0].status)
       done()
     })
 

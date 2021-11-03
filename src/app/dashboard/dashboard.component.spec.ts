@@ -12,7 +12,6 @@ describe('DashboardComponent', () => {
   let component: DashboardComponent
   let fixture: ComponentFixture<DashboardComponent>
   let getStatsSpy: jasmine.Spy
-
   beforeEach(async () => {
     const devicesService = jasmine.createSpyObj('DevicesService', ['getStats'])
 
@@ -35,5 +34,11 @@ describe('DashboardComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy()
     expect(getStatsSpy).toHaveBeenCalled()
+  })
+
+  it('should navigate to _blank', async () => {
+    const routerSpy = spyOn(window, 'open')
+    await component.navigateTo('/localhost')
+    expect(routerSpy).toHaveBeenCalledWith('/localhost', '_blank')
   })
 })
