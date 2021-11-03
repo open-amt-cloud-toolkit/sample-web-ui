@@ -13,6 +13,7 @@ import { ActivatedRoute } from '@angular/router'
 import { Component, EventEmitter, Input } from '@angular/core'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { AuthService } from 'src/app/auth.service'
+import { MatDialog } from '@angular/material/dialog'
 
 describe('KvmComponent', () => {
   let component: KvmComponent
@@ -47,7 +48,6 @@ describe('KvmComponent', () => {
     powerStateSpy = devicesService.getPowerState.and.returnValue(of({ powerstate: 2 }))
     const authService = jasmine.createSpyObj('AuthService', ['getLoggedUserToken'])
     tokenSpy = authService.getLoggedUserToken.and.returnValue('123')
-
     await TestBed.configureTestingModule({
       imports: [SharedModule, BrowserAnimationsModule, RouterTestingModule.withRoutes([])],
       declarations: [KvmComponent, TestDeviceToolbarComponent],
@@ -76,8 +76,13 @@ describe('KvmComponent', () => {
     expect(reqUserConsentCodeSpy).toHaveBeenCalled()
   })
 
-  it('should call userConsentDialog', () => {
-    component.userConsentDialog()
+  it('should call userConsentDialog', async () => {
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+    await component.userConsentDialog()
+    expect(dialogSpy).toHaveBeenCalled()
+    fixture.detectChanges()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
   })
 
   it('should call cancelOptInCodeResponse with return value 0', () => {
@@ -92,7 +97,10 @@ describe('KvmComponent', () => {
         Method: 'string'
       }
     }
+    const snackBarSpy = spyOn(component.snackBar, 'open')
     component.cancelOptInCodeResponse(response)
+    fixture.detectChanges()
+    expect(snackBarSpy).toHaveBeenCalled()
   })
 
   it('should call cancelOptInCodeResponse with return value non zero', () => {
@@ -107,7 +115,10 @@ describe('KvmComponent', () => {
         Method: 'string'
       }
     }
+    const snackBarSpy = spyOn(component.snackBar, 'open')
     component.cancelOptInCodeResponse(response)
+    fixture.detectChanges()
+    expect(snackBarSpy).toHaveBeenCalled()
   })
 
   it('should call SendOptInCodeResponse with return value zero', () => {
@@ -123,6 +134,8 @@ describe('KvmComponent', () => {
       }
     }
     component.SendOptInCodeResponse(response)
+    fixture.detectChanges()
+    expect(component.readyToLoadKvm).toBe(true)
   })
 
   it('should call SendOptInCodeResponse with return value 2066', () => {
@@ -137,7 +150,10 @@ describe('KvmComponent', () => {
         Method: 'string'
       }
     }
+    const snackBarSpy = spyOn(component.snackBar, 'open')
     component.SendOptInCodeResponse(response)
+    fixture.detectChanges()
+    expect(snackBarSpy).toHaveBeenCalled()
   })
   it('should call SendOptInCodeResponse with return value non zero', () => {
     const response = {
@@ -151,18 +167,32 @@ describe('KvmComponent', () => {
         Method: 'string'
       }
     }
+    const snackBarSpy = spyOn(component.snackBar, 'open')
     component.SendOptInCodeResponse(response)
+    fixture.detectChanges()
+    expect(snackBarSpy).toHaveBeenCalled()
+    expect(component.isLoading).toBeFalsy()
   })
   it('should call afterUserContentDialogClosed with CancelOptIn', () => {
     const response = {
       deviceId: '1234',
       results: {
         Header: {
+          To: 'string',
+          RelatesTo: 'string',
+          Action: 'string',
+          MessageID: 'string',
+          ResourceURI: 'string',
           Method: 'CancelOptIn'
+        },
+        Body: {
+          ReturnValue: 1, ReturnValueStr: 'SUCCESS'
         }
       }
     }
+    spyOn(component, 'cancelUserConsentCode')
     component.afterUserContentDialogClosed(response)
+    fixture.detectChanges()
   })
 
   it('should call afterUserContentDialogClosed with SendOptInCode', () => {
@@ -179,12 +209,20 @@ describe('KvmComponent', () => {
 
   it('should call deviceStatus with device status 2', () => {
     component.deviceStatus(2)
+    fixture.detectChanges()
+    expect(component.isLoading).toBeFalsy()
+    expect(component.deviceState).toBe(2)
   })
 
   it('should call deviceStatus with device status 0', () => {
     component.deviceStatus(0)
+    fixture.detectChanges()
+    expect(component.deviceState).toBe(0)
   })
   it('should call onEncodingChange', () => {
+    spyOn(component.selectedEncoding, 'emit')
     component.onEncodingChange(2)
+    fixture.detectChanges()
+    expect(component.selectedEncoding.emit).toHaveBeenCalledWith(2)
   })
 })
