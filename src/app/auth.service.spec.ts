@@ -35,7 +35,6 @@ describe('AuthService', () => {
     expect(service).toBeTruthy()
     expect(service.isLoggedIn).toBeFalse()
     expect(loggedInSubjectSpy).not.toHaveBeenCalled()
-    expect(service.url).toBe(`${environment.mpsServer}/api/v1/authorize`)
   })
 
   it('should be created when logged in', () => {
@@ -46,12 +45,16 @@ describe('AuthService', () => {
     expect(testService).toBeTruthy()
     expect(testService.isLoggedIn).toBeTrue()
     // expect(loggedInSubjectSpy2).toHaveBeenCalledWith(true) can't spy on this
-    expect(testService.url).toBe(`${environment.mpsServer}/api/v1/authorize`)
   })
-  it('should be handle kong proxy route', () => {
+  it('should handle kong proxy route', () => {
     environment.mpsServer = './mps'
     const testService = new AuthService(httpClientSpy as any, routerSpy)
     expect(testService.url).toBe('./mps/login/api/v1/authorize')
+  })
+  it('should handle when non kong proxy route', () => {
+    environment.mpsServer = './m'
+    const testService = new AuthService(httpClientSpy as any, routerSpy)
+    expect(testService.url).toBe('./m/api/v1/authorize')
   })
 
   it('should return token from localstorage', () => {
