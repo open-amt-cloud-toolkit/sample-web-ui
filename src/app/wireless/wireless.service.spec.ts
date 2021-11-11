@@ -18,23 +18,32 @@ describe('WirelessService', () => {
     service = new WirelessService(httpClientSpy as any, new AuthService(httpClientSpy as any, routerSpy as Router))
   })
 
+  const wifiResponse = {
+    data: [{
+      profileName: 'wifi1',
+      authenticationMethod: 3,
+      encryptionMethod: 4,
+      ssid: 'ssid',
+      pskValue: 'password',
+      linkPolicy: [14]
+    }],
+    totalCount: 1
+  }
+
+  const wifiReq = {
+    profileName: 'wifi1',
+    authenticationMethod: 3,
+    encryptionMethod: 4,
+    ssid: 'ssid',
+    pskValue: 'password',
+    linkPolicy: [14]
+  }
+
   it('should be created', () => {
     expect(service).toBeTruthy()
   })
 
   it('should load all the wifi configs when get all request fired', () => {
-    const wifiResponse = {
-      data: [{
-        profileName: 'wifi1',
-        authenticationMethod: 3,
-        encryptionMethod: 4,
-        ssid: 'ssid',
-        pskValue: 'password',
-        linkPolicy: [14]
-      }],
-      totalCount: 1
-    }
-
     httpClientSpy.get.and.returnValue(of(wifiResponse))
 
     service.getData().subscribe(response => {
@@ -46,36 +55,24 @@ describe('WirelessService', () => {
 
   it('should load all the wifi configs when get all request fired with pageevent options', () => {
     const pageEvent: PageEventOptions = {
-      count: '',
+      count: 'true',
       pageSize: 20,
       startsFrom: 10,
       tags: []
     }
-
-    const wifiResponse = {
-      data: [{
-        profileName: 'wifi1',
-        authenticationMethod: 3,
-        encryptionMethod: 4,
-        ssid: 'ssid',
-        pskValue: 'password',
-        linkPolicy: [14]
-      }],
-      totalCount: 1
-    }
-
     httpClientSpy.get.and.returnValue(of(wifiResponse))
 
     service.getData(pageEvent).subscribe(response => {
       expect(response).toEqual(wifiResponse)
     })
-
+    const params = httpClientSpy.get.calls.allArgs()[0][0].split('?')[1]
+    expect('$top=20&$skip=10&$count=true').toEqual(params)
     expect(httpClientSpy.get.calls.count()).toEqual(1)
   })
 
   it('should throw errors when get all request fired with pageevent options', () => {
     const pageEvent: PageEventOptions = {
-      count: '',
+      count: 'true',
       pageSize: 20,
       startsFrom: 10,
       tags: []
@@ -88,7 +85,7 @@ describe('WirelessService', () => {
 
     httpClientSpy.get.and.returnValue(throwError(error))
 
-    service.getData(pageEvent).subscribe(null, err => {
+    service.getData(pageEvent).subscribe(() => {}, err => {
       expect(error.status).toBe(err[0].status)
     })
 
@@ -121,7 +118,7 @@ describe('WirelessService', () => {
 
     httpClientSpy.get.and.returnValue(throwError(error))
 
-    service.getRecord('wifi1').subscribe(null, err => {
+    service.getRecord('wifi1').subscribe(() => {}, err => {
       expect(error.status).toBe(err[0].status)
     })
 
@@ -141,7 +138,7 @@ describe('WirelessService', () => {
     const error = { error: 'Not Found' }
     httpClientSpy.delete.and.returnValue(throwError(error))
 
-    service.delete('wifi1').subscribe(null, (err) => {
+    service.delete('wifi1').subscribe(() => {}, (err) => {
       expect(error.error).toEqual(err)
     })
 
@@ -149,15 +146,6 @@ describe('WirelessService', () => {
   })
 
   it('should create the wireless config when create request gets fired', () => {
-    const wifiReq = {
-      profileName: 'wifi1',
-      authenticationMethod: 3,
-      encryptionMethod: 4,
-      ssid: 'ssid',
-      pskValue: 'password',
-      linkPolicy: [14]
-    }
-
     httpClientSpy.post.and.returnValue(of(wifiReq))
 
     service.create(wifiReq).subscribe(response => {
@@ -167,37 +155,19 @@ describe('WirelessService', () => {
     expect(httpClientSpy.post.calls.count()).toEqual(1)
   })
   it('should throw error when create request gets fired', () => {
-    const wifiReq = {
-      profileName: 'wifi1',
-      authenticationMethod: 3,
-      encryptionMethod: 4,
-      ssid: 'ssid',
-      pskValue: 'password',
-      linkPolicy: [14]
-    }
-
     const error = {
       status: 404,
       message: 'Not Found'
     }
     httpClientSpy.post.and.returnValue(throwError(error))
 
-    service.create(wifiReq).subscribe(null, err => {
+    service.create(wifiReq).subscribe(() => {}, err => {
       expect(error.status).toBe(err[0].status)
     })
 
     expect(httpClientSpy.post.calls.count()).toEqual(1)
   })
   it('should update the wireless config when update request gets fired', () => {
-    const wifiReq = {
-      profileName: 'wifi1',
-      authenticationMethod: 3,
-      encryptionMethod: 4,
-      ssid: 'ssid',
-      pskValue: 'password',
-      linkPolicy: [14]
-    }
-
     httpClientSpy.patch.and.returnValue(of(wifiReq))
 
     service.update(wifiReq).subscribe(response => {
@@ -208,15 +178,6 @@ describe('WirelessService', () => {
   })
 
   it('should throw error when update request gets fired', () => {
-    const wifiReq = {
-      profileName: 'wifi1',
-      authenticationMethod: 3,
-      encryptionMethod: 4,
-      ssid: 'ssid',
-      pskValue: 'password',
-      linkPolicy: [14]
-    }
-
     const error = {
       status: 404,
       message: 'Not Found'
@@ -224,7 +185,7 @@ describe('WirelessService', () => {
 
     httpClientSpy.patch.and.returnValue(throwError(error))
 
-    service.update(wifiReq).subscribe(null, err => {
+    service.update(wifiReq).subscribe(() => {}, err => {
       expect(error.status).toBe(err[0].status)
     })
 
