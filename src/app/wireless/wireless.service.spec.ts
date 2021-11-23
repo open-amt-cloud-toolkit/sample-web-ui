@@ -139,7 +139,7 @@ describe('WirelessService', () => {
     httpClientSpy.delete.and.returnValue(throwError(error))
 
     service.delete('wifi1').subscribe(() => {}, (err) => {
-      expect(error.error).toEqual(err)
+      expect(err).toEqual([error])
     })
 
     expect(httpClientSpy.delete.calls.count()).toEqual(1)
