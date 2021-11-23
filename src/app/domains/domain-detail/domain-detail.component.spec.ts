@@ -89,6 +89,7 @@ describe('DomainDetailComponent', () => {
   })
 
   it('should read the domain certificate file contents on file upload', () => {
+    const fileSelectedSpy = spyOn(component, 'onFileSelected')
     const obj = {
       data: 'application/x-pkcs12;base64;domaincertdata'
     }
@@ -99,5 +100,7 @@ describe('DomainDetailComponent', () => {
     }
 
     component.onFileSelected(event)
+    fixture.detectChanges()
+    expect(fileSelectedSpy).toHaveBeenCalled()
   })
 })
