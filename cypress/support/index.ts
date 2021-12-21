@@ -58,6 +58,9 @@ Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEn
   if (admin === 'ccmactivate') {
     cy.get('mat-select[formcontrolname=activation').click()
     cy.contains('Client Control Mode').click()
+  } else {
+    cy.get('mat-select[formcontrolname=activation').click()
+    cy.get('mat-option').contains('Admin Control Mode').click()
   }
 
   if (!randAmt) {

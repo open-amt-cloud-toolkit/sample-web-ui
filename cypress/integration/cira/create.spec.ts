@@ -48,6 +48,7 @@ describe('Test CIRA Config Page', () => {
       Cypress.env('FQDN'),
       Cypress.env('MPSUSERNAME')
     )
+    cy.get('input').get('[name=commonName]').should('not.be.visible')
     cy.get('button[type=submit]').click({ timeout: 50000 })
 
     // Wait for requests to finish and check them their responses

@@ -463,6 +463,69 @@ const apiResponses = {
           totalCount: 2
         }
       },
+      static: {
+        code: 200,
+        response: {
+          data: [
+            profileFixtures.happyPathStaticNetwork
+          ],
+          totalCount: 1
+        }
+      },
+      staticpwd: {
+        code: 200,
+        response: {
+          data: [
+            profileFixtures.happyPathStaticNetworkPwd
+          ],
+          totalCount: 1
+        }
+      },
+      admin: {
+        code: 200,
+        response: {
+          data: [
+            profileFixtures.happyPathTlsAdmin
+          ],
+          totalCount: 1
+        }
+      },
+      admincira: {
+        code: 200,
+        response: {
+          data: [
+            profileFixtures.happyPathAdmin
+          ],
+          totalCount: 1
+        }
+      },
+      randompwdcira: {
+        code: 200,
+        response: {
+          data: [
+            profileFixtures.happyPathRandomPwd
+          ],
+          totalCount: 1
+        }
+      },
+      tlsrandommebxpwd: {
+        code: 200,
+        response: {
+          data: [
+            profileFixtures.happyPathTlsRandomMebxPwd
+          ],
+          totalCount: 1
+        }
+      },
+      tlsrandompwd: {
+        code: 200,
+        response: {
+          data: [
+            profileFixtures.happyPathTlsRandomPwd
+          ],
+          totalCount: 1
+        }
+      },
       empty: {
         code: 200,
         response: {
@@ -557,6 +620,16 @@ const apiResponses = {
           activation: 'ccmactivate',
           ciraConfigName: 'default',
           dhcpEnabled: true
+        }
+      },
+      static: {
+        code: 201,
+        response: {
+          profileName: 'happyPath',
+          configurationScript: null,
+          activation: 'ccmactivate',
+          ciraConfigName: null,
+          dhcpEnabled: false
         }
       },
       badRequest: {

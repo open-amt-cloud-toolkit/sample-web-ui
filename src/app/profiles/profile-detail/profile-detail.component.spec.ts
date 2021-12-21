@@ -232,23 +232,6 @@ describe('ProfileDetailComponent', () => {
     expect(component.profileForm.controls.mebxPassword.disabled).toBe(true)
   })
 
-  it('should return the search results when a search string is entered', () => {
-    component.wirelessConfigurations = ['homeWiFi', 'officeWiFi']
-    const searchString = 'home'
-    const results = component.search(searchString)
-
-    expect(results).toEqual(['homeWiFi'])
-  })
-
-  it('should update the list of tags when a tag is removed ', () => {
-    component.tags = ['acm', 'ccm', 'profile']
-    const tagName = 'ccm'
-
-    component.remove(tagName)
-
-    expect(component.tags).toEqual(['acm', 'profile'])
-  })
-
   it('should turn amt visibility on when it is off', () => {
     component.amtInputType = 'password'
     component.toggleAMTPassVisibility()
@@ -303,23 +286,6 @@ describe('ProfileDetailComponent', () => {
     expect(component.profileForm.controls.mebxPassword.value.length).toBe(16)
   })
 
-  it('should return the search results when a search string is entered', () => {
-    component.wirelessConfigurations = ['homeWiFi', 'officeWiFi']
-    const searchString = 'home'
-    const results = component.search(searchString)
-
-    expect(results).toEqual(['homeWiFi'])
-  })
-
-  it('should update the list of tags when a tag is removed ', () => {
-    component.tags = ['acm', 'ccm', 'profile']
-    const tagName = 'ccm'
-
-    component.remove(tagName)
-
-    expect(component.tags).toEqual(['acm', 'profile'])
-  })
-
   it('should set the ciraCofigName property to null when TLS Selected', () => {
     component.connectionModeChange('TLS')
     expect(component.profileForm.controls.ciraConfigName.value).toEqual(null)
@@ -355,5 +321,20 @@ describe('ProfileDetailComponent', () => {
     component.remove(tagName)
 
     expect(component.tags).toEqual(['acm', 'profile'])
+  })
+
+  it('should hide the MEBx password field when client control mode activation selected', () => {
+    component.profileForm.controls.generateRandomMEBxPassword.setValue(false)
+    component.profileForm.controls.activation.setValue('ccmactivate')
+    const isPasswordHidden: boolean = component.hideMebxPasswordField()
+
+    expect(isPasswordHidden).toBeTrue()
+  })
+
+  it('should hide the MEBx password field when random MEBx password generation checkbox is checked', () => {
+    component.profileForm.controls.generateRandomMEBxPassword.setValue(true)
+    const isPasswordHidden: boolean = component.hideMebxPasswordField()
+
+    expect(isPasswordHidden).toBeTrue()
   })
 })

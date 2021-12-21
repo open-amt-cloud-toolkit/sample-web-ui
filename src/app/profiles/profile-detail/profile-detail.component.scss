@@ -46,4 +46,14 @@
 .no-results {
   pointer-events: none;
 }
+
+.connection-configs {
+  display: flex;
+  flex-direction: column;
+  margin: 15px 0;
+}
+
+.config-button {
+  margin: 5px;
+}
   
