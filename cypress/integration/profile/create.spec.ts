@@ -52,13 +52,13 @@ describe('Test Profile Page', () => {
       profileFixtures.happyPath.profileName,
       profileFixtures.happyPath.activation,
       false,
-      false,
+      true,
       profileFixtures.happyPath.dhcpEnabled,
       profileFixtures.happyPath.connectionMode,
       profileFixtures.happyPath.ciraConfig
     )
     cy.get('button[type=submit]').click()
-    // cy.get('button').contains('Continue').click()
+    cy.get('button').contains('Continue').click()
 
     // Wait for requests to finish and check them their responses
     cy.wait('@post-profile').then((req) => {

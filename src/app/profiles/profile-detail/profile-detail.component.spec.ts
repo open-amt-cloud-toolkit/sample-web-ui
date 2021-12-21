@@ -356,4 +356,19 @@ describe('ProfileDetailComponent', () => {
 
     expect(component.tags).toEqual(['acm', 'profile'])
   })
+
+  it('should hide the MEBx password field when client control mode activation selected', () => {
+    component.profileForm.controls.generateRandomMEBxPassword.setValue(false)
+    component.profileForm.controls.activation.setValue('ccmactivate')
+    const isPasswordHidden: boolean = component.hideMebxPasswordField()
+
+    expect(isPasswordHidden).toBeTrue()
+  })
+
+  it('should hide the MEBx password field when random MEBx password generation checkbox is checked', () => {
+    component.profileForm.controls.generateRandomMEBxPassword.setValue(true)
+    const isPasswordHidden: boolean = component.hideMebxPasswordField()
+
+    expect(isPasswordHidden).toBeTrue()
+  })
 })

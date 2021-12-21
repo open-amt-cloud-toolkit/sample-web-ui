@@ -204,6 +204,10 @@ export class ProfileDetailComponent implements OnInit {
     this.mebxInputType = this.mebxInputType === 'password' ? 'text' : 'password'
   }
 
+  hideMebxPasswordField (): boolean {
+    return this.profileForm.controls.generateRandomMEBxPassword.value === true || this.profileForm.controls.activation.value === 'ccmactivate'
+  }
+
   networkConfigChange (value: boolean): void {
     if (!value) {
       this.profileForm.controls.ciraConfigName.disable()
