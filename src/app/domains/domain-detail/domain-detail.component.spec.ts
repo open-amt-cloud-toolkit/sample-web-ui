@@ -2,7 +2,6 @@
 * Copyright (c) Intel Corporation 2021
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
-import { NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { ActivatedRoute } from '@angular/router'
@@ -28,16 +27,13 @@ describe('DomainDetailComponent', () => {
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [DomainDetailComponent],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
       providers: [
         { provide: DomainsService, useValue: domainsService },
         {
           provide: ActivatedRoute,
           useValue: { params: of({ name: 'name' }) }
         }]
-
-    })
-      .compileComponents()
+    }).compileComponents()
   })
 
   beforeEach(() => {
@@ -93,6 +89,7 @@ describe('DomainDetailComponent', () => {
   })
 
   it('should read the domain certificate file contents on file upload', () => {
+    const fileSelectedSpy = spyOn(component, 'onFileSelected')
     const obj = {
       data: 'application/x-pkcs12;base64;domaincertdata'
     }
@@ -103,5 +100,7 @@ describe('DomainDetailComponent', () => {
     }
 
     component.onFileSelected(event)
+    fixture.detectChanges()
+    expect(fileSelectedSpy).toHaveBeenCalled()
   })
 })

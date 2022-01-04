@@ -3,6 +3,11 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
+export interface TlsMode {
+  value: number
+  viewValue: string
+}
+
 export interface Device {
   hostname: string
   icon: number
@@ -46,6 +51,7 @@ export interface Profile {
   mebxPassword: string
   tags: string[]
   wifiConfigs: any[]
+  tlsMode: number
 }
 
 export interface ProfileResponse {
@@ -68,6 +74,19 @@ export interface CIRAConfig {
 
 export interface CIRAConfigResponse {
   data: CIRAConfig[]
+  totalCount: number
+}
+
+export interface TLSConfig {
+  configName: string
+  commonName: string
+  organization: string
+  province: string
+  country: string
+}
+
+export interface TLSConfigResponse {
+  data: TLSConfig[]
   totalCount: number
 }
 
@@ -324,4 +343,12 @@ export interface userConsentData {
 export interface errorResponse {
   error: string
   errorDescription: string
+}
+
+export interface MQTTEvent {
+  guid: string
+  message: string
+  timestamp: number
+  type: string
+  methods: string[]
 }

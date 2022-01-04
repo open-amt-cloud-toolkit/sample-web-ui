@@ -5,13 +5,15 @@
 import { Component, OnInit } from '@angular/core'
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { MatSnackBar } from '@angular/material/snack-bar'
+import { MatDialog } from '@angular/material/dialog'
 import { ActivatedRoute, Router } from '@angular/router'
 import { finalize, map, startWith } from 'rxjs/operators'
 import { ConfigsService } from 'src/app/configs/configs.service'
 import Constants from 'src/app/shared/config/Constants'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
-import { CIRAConfigResponse, WiFiProfile, WirelessConfigResponse } from 'src/models/models'
+import { CIRAConfigResponse, Profile, TLSConfigResponse, TlsMode, WiFiProfile, WirelessConfigResponse } from 'src/models/models'
 import { ProfilesService } from '../profiles.service'
+import { RandomPassAlertComponent } from 'src/app/shared/random-pass-alert/random-pass-alert.component'
 import { COMMA, ENTER } from '@angular/cdk/keycodes'
 import { MatChipInputEvent } from '@angular/material/chips'
 import { WirelessService } from 'src/app/wireless/wireless.service'
@@ -28,6 +30,7 @@ export class ProfileDetailComponent implements OnInit {
   public profileForm: FormGroup
   public activationModes = [{ display: 'Admin Control Mode', value: Constants.ACMActivate }, { display: 'Client Control Mode', value: Constants.CCMActivate }]
   public ciraConfigurations: CIRAConfigResponse = { data: [], totalCount: 0 }
+  public tlsConfigurations: TLSConfigResponse = { data: [], totalCount: 0 }
   public isLoading = false
   public pageTitle = 'New Profile'
   public isEdit = false
@@ -37,12 +40,15 @@ export class ProfileDetailComponent implements OnInit {
   public mebxInputType = 'password'
   readonly separatorKeysCodes: number[] = [ENTER, COMMA]
   public errorMessages: string[] = []
+  public tlsModes: TlsMode[] = []
+
   wirelessConfigurations: string[] = []
   filteredWifiList: Observable<string[]> = of([])
   wifiAutocomplete = new FormControl()
 
   constructor (public snackBar: MatSnackBar, public fb: FormBuilder, public router: Router, private readonly activeRoute: ActivatedRoute,
-    public profilesService: ProfilesService, private readonly configsService: ConfigsService, private readonly wirelessService: WirelessService) {
+    public profilesService: ProfilesService, private readonly configsService: ConfigsService, private readonly wirelessService: WirelessService, public dialog: MatDialog) {
+    this.tlsModes = profilesService.tlsModes
     this.profileForm = fb.group({
       profileName: [null, Validators.required],
       activation: [this.activationModes[0].value, Validators.required],
@@ -51,8 +57,10 @@ export class ProfileDetailComponent implements OnInit {
       generateRandomMEBxPassword: [true, Validators.required],
       mebxPassword: [{ value: null, disabled: true }],
       dhcpEnabled: [true],
+      connectionMode: ['NONE'],
       ciraConfigName: [null],
-      wifiConfigs: [null]
+      wifiConfigs: [null],
+      tlsMode: [null]
     })
   }
 
@@ -73,6 +81,7 @@ export class ProfileDetailComponent implements OnInit {
             this.tags = data.tags
             this.profileForm.patchValue(data)
             this.selectedWifiConfigs = data.wifiConfigs != null ? data.wifiConfigs : []
+            this.setConnectionMode(data)
           }, error => {
             this.errorMessages = error
           })
@@ -84,6 +93,7 @@ export class ProfileDetailComponent implements OnInit {
     }, error => {
       this.errorMessages = error
     })
+
     this.filteredWifiList = this.wifiAutocomplete.valueChanges.pipe(
       startWith(''),
       map(value => value.length > 0 ? this.search(value) : [])
@@ -92,7 +102,17 @@ export class ProfileDetailComponent implements OnInit {
     this.profileForm.controls.generateRandomPassword?.valueChanges.subscribe(value => this.generateRandomPasswordChange(value))
     this.profileForm.controls.generateRandomMEBxPassword?.valueChanges.subscribe(value => this.generateRandomMEBxPasswordChange(value))
     this.profileForm.controls.dhcpEnabled?.valueChanges.subscribe(value => this.networkConfigChange(value))
-    this.profileForm.controls.ciraConfigName?.valueChanges.subscribe(value => this.ciraConfigChange(value))
+    this.profileForm.controls.connectionMode?.valueChanges.subscribe(value => this.connectionModeChange(value))
+  }
+
+  setConnectionMode (data: Profile): void {
+    if (data.tlsMode != null) {
+      this.profileForm.controls.connectionMode.setValue('TLS')
+    } else if (data.ciraConfigName != null) {
+      this.profileForm.controls.connectionMode.setValue('CIRA')
+    } else {
+      this.profileForm.controls.connectionMode.setValue('NONE')
+    }
   }
 
   activationChange (value: string): void {
@@ -119,7 +139,6 @@ export class ProfileDetailComponent implements OnInit {
       this.profileForm.controls.amtPassword.disable()
       this.profileForm.controls.amtPassword.setValue(null)
       this.profileForm.controls.amtPassword.clearValidators()
-      this.profileForm.controls.amtPassword.setValue(null)
     } else {
       this.profileForm.controls.amtPassword.enable()
       this.profileForm.controls.amtPassword.setValidators(Validators.required)
@@ -131,7 +150,6 @@ export class ProfileDetailComponent implements OnInit {
       this.profileForm.controls.mebxPassword.disable()
       this.profileForm.controls.mebxPassword.setValue(null)
       this.profileForm.controls.mebxPassword.clearValidators()
-      this.profileForm.controls.mebxPassword.setValue(null)
     } else if (this.profileForm.controls.activation.value === Constants.ACMActivate) {
       this.profileForm.controls.mebxPassword.enable()
       this.profileForm.controls.mebxPassword.setValidators(Validators.required)
@@ -197,10 +215,24 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  ciraConfigChange (value: string): void {
-    if (value === Constants.NOCONFIGSELECTED) {
+  connectionModeChange (value: string): void {
+    if (value === 'TLS') {
+      this.profileForm.controls.ciraConfigName.clearValidators()
+      this.profileForm.controls.ciraConfigName.setValue(null)
+      this.profileForm.controls.tlsMode.setValidators(Validators.required)
+    } else if (value === 'CIRA') {
+      this.profileForm.controls.tlsMode.clearValidators()
+      this.profileForm.controls.tlsMode.setValue(null)
+      this.profileForm.controls.ciraConfigName.setValidators(Validators.required)
+    } else {
+      this.profileForm.controls.tlsMode.clearValidators()
+      this.profileForm.controls.ciraConfigName.clearValidators()
+
+      this.profileForm.controls.tlsMode.setValue(null)
       this.profileForm.controls.ciraConfigName.setValue(null)
     }
+    this.profileForm.controls.ciraConfigName.updateValueAndValidity()
+    this.profileForm.controls.tlsMode.updateValueAndValidity()
   }
 
   selectWifiProfile (event: MatAutocompleteSelectedEvent): void {
@@ -271,37 +303,60 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  onSubmit (): void {
+  confirm (): void {
+    // Warn user of risk if using random generated passwords
     if (this.profileForm.valid) {
       this.isLoading = true
       const result: any = Object.assign({}, this.profileForm.getRawValue())
-      result.tags = this.tags
-      if (result.dhcpEnabled) {
-        result.wifiConfigs = this.selectedWifiConfigs
-      } else {
-        result.wifiConfigs = [] // Empty the wifi configs for static network
-      }
-      let request
-      let reqType: string
-      if (this.isEdit) {
-        request = this.profilesService.update(result)
-        reqType = 'updated'
-      } else {
-        request = this.profilesService.create(result)
-        reqType = 'created'
-      }
-      request
-        .pipe(
-          finalize(() => {
-            this.isLoading = false
-          }))
-        .subscribe(data => {
-          this.snackBar.open($localize`Profile ${reqType} successfully`, undefined, SnackbarDefaults.defaultSuccess)
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          this.router.navigate(['/profiles'])
-        }, error => {
-          this.errorMessages = error
+      // When creating new
+      if (!this.isEdit && (result.generateRandomPassword || result.generateRandomMEBxPassword)) {
+        const dialog = this.dialog.open(RandomPassAlertComponent, {
+          height: '225px',
+          width: '450px'
         })
+        dialog.afterClosed().subscribe(data => {
+          if (data) {
+            this.onSubmit()
+          } else { // Cancel form submission
+            this.isLoading = false
+          }
+        })
+      } else {
+        this.onSubmit()
+      }
     }
+  }
+
+  onSubmit (): void {
+    this.isLoading = true
+    const result: any = Object.assign({}, this.profileForm.getRawValue())
+    result.tags = this.tags
+    delete result.connectionMode
+    if (result.dhcpEnabled) {
+      result.wifiConfigs = this.selectedWifiConfigs
+    } else {
+      result.wifiConfigs = [] // Empty the wifi configs for static network
+    }
+    let request
+    let reqType: string
+    if (this.isEdit) {
+      request = this.profilesService.update(result)
+      reqType = 'updated'
+    } else {
+      request = this.profilesService.create(result)
+      reqType = 'created'
+    }
+    request
+      .pipe(
+        finalize(() => {
+          this.isLoading = false
+        }))
+      .subscribe(data => {
+        this.snackBar.open($localize`Profile ${reqType} successfully`, undefined, SnackbarDefaults.defaultSuccess)
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        this.router.navigate(['/profiles'])
+      }, error => {
+        this.errorMessages = error
+      })
   }
 }

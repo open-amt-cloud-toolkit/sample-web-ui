@@ -2,21 +2,24 @@
 * Copyright (c) Intel Corporation 2021
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
-import { AfterViewInit, Component, OnInit } from '@angular/core'
+import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core'
 import { NavigationStart, Router } from '@angular/router'
 import { AuthService } from './auth.service'
+import { MQTTService } from './event-channel/event-channel.service'
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit, AfterViewInit {
-  title = 'Open AMT Cloud Toolkit'
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoggedIn = false
-  constructor (public router: Router, public authService: AuthService
-  ) {
 
+  constructor (public router: Router, public authService: AuthService, public mqttService: MQTTService
+  ) {
+    this.mqttService.connect()
+    this.mqttService.subscribeToTopic('mps/#')
+    this.mqttService.subscribeToTopic('rps/#')
   }
 
   ngOnInit (): void {
@@ -36,5 +39,9 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
       }
     })
+  }
+
+  ngOnDestroy (): void {
+    this.mqttService?.destroy()
   }
 }

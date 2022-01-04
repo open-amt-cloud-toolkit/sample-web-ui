@@ -9,7 +9,7 @@ import { ActivatedRoute, Router } from '@angular/router'
 import { throwError } from 'rxjs'
 import { finalize } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
-import { AmtFeaturesResponse, AuditLogResponse, HardwareInformation } from 'src/models/models'
+import { AmtFeaturesResponse, AuditLogResponse, EventLog, HardwareInformation } from 'src/models/models'
 import { DevicesService } from '../devices.service'
 
 @Component({
@@ -60,13 +60,16 @@ export class DeviceDetailComponent implements OnInit {
   public selectedAction: string = ''
   public deviceState: number = 0
   public amtEnabledFeatures: FormGroup
+  public isDisabled: boolean = false
+  public userConsentValues = ['none', 'kvm', 'all']
+  public eventLogData: EventLog[] = []
   constructor (public snackBar: MatSnackBar, public readonly activatedRoute: ActivatedRoute, public readonly router: Router, private readonly devicesService: DevicesService, public fb: FormBuilder) {
     this.targetOS = this.devicesService.TargetOSMap
     this.amtEnabledFeatures = fb.group({
       enableIDER: false,
       enableKVM: false,
       enableSOL: false,
-      userConsent: 'none',
+      userConsent: [{ value: 'none', disabled: this.isDisabled }],
       optInState: 0,
       redirection: false
     })
@@ -76,12 +79,13 @@ export class DeviceDetailComponent implements OnInit {
     this.activatedRoute.params.subscribe(params => {
       this.isLoading = true
       this.deviceId = params.id
-      const tempLoading = [true, true, true]
+      const tempLoading = [true, true, true, true]
       this.devicesService.getAMTVersion(this.deviceId).pipe(finalize(() => {
         tempLoading[0] = false
         this.isLoading = !tempLoading.every(v => !v)
       })).subscribe(results => {
         this.amtVersion = results
+        this.isDisabled = results?.AMT_SetupAndConfigurationService?.response?.ProvisioningMode === 4
       }, err => {
         this.snackBar.open($localize`Error retrieving AMT Version`, undefined, SnackbarDefaults.defaultError)
         return throwError(err)
@@ -120,6 +124,15 @@ export class DeviceDetailComponent implements OnInit {
         this.snackBar.open($localize`Error retrieving AMT Features`, undefined, SnackbarDefaults.defaultError)
         return throwError(err)
       })
+      this.devicesService.getEventLog(this.deviceId).pipe(finalize(() => {
+        tempLoading[3] = false
+        this.isLoading = !tempLoading.every(v => !v)
+      })).subscribe(results => {
+        this.eventLogData = results
+      }, err => {
+        this.snackBar.open($localize`Error retrieving Event Logs`, undefined, SnackbarDefaults.defaultError)
+        return throwError(err)
+      })
     })
   }
 
@@ -129,6 +142,9 @@ export class DeviceDetailComponent implements OnInit {
       this.isLoading = false
     })).subscribe((results: any) => {
       this.snackBar.open($localize`${results.status}`, undefined, SnackbarDefaults.defaultSuccess)
+    }, err => {
+      this.snackBar.open($localize`Failed to update AMT Features`, undefined, SnackbarDefaults.defaultError)
+      return throwError(err)
     })
   }
 

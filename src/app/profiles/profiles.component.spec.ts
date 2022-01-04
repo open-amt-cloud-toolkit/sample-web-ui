@@ -2,7 +2,6 @@
 * Copyright (c) Intel Corporation 2021
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
-import { NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { MatDialog } from '@angular/material/dialog'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
@@ -21,6 +20,7 @@ describe('ProfilesComponent', () => {
 
   beforeEach(async () => {
     const profilesService = jasmine.createSpyObj('ProfilesService', ['getData', 'delete'])
+    profilesService.tlsModes = [{ value: 1, viewValue: 'test' }]
     getDataSpy = profilesService.getData.and.returnValue(of({
       data: [{
         activation: 'acmactivate',
@@ -32,7 +32,8 @@ describe('ProfilesComponent', () => {
         passwordLength: null,
         profileName: 'profile1',
         tags: [],
-        wifiConfigs: []
+        wifiConfigs: [],
+        tlsMode: 1
       }],
       totalCount: 1
     }))
@@ -41,11 +42,8 @@ describe('ProfilesComponent', () => {
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [ProfilesComponent],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
       providers: [{ provide: ProfilesService, useValue: profilesService }]
-
-    })
-      .compileComponents()
+    }).compileComponents()
   })
 
   beforeEach(() => {
@@ -100,5 +98,13 @@ describe('ProfilesComponent', () => {
     expect(component.paginator.pageSize).toBe(25)
     expect(component.paginator.pageIndex).toBe(0)
     expect(component.paginator.showFirstLastButtons).toBe(true)
+  })
+  it('should parseTlsMode when known', () => {
+    const result = component.parseTlsMode(1)
+    expect(result).toBe('test')
+  })
+  it('should parseTlsMode when unknown', () => {
+    const result = component.parseTlsMode(null as any)
+    expect(result).toBe('')
   })
 })
