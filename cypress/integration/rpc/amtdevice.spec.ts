@@ -7,7 +7,7 @@ describe('Successful execution of pre-provisioning on amtdevice', () => {
   })
 
   it('Control Mode is pre-provisioning with Activate Device', () => {
-    cy.exec('docker run --device=/dev/mei0 vprodemo.azurecr.io/rpc:latest --url wss://${FQDN}/activate -n -c "-t activate --profile ${profileName}"', { failOnNonZeroExit: false }).then((result) => {
+    cy.exec('docker run --device=/dev/mei0 intel/oact-rpc-go:latest --url wss://${FQDN}/activate -n -c "-t activate --profile ${profileName}"', { failOnNonZeroExit: false }).then((result) => {
       cy.log(result.stderr)
       expect(result.stderr).to.contain('pre-provisioning state')
     })
