@@ -33,7 +33,7 @@
     "tslib": "^2.3.1",
     "@open-amt-cloud-toolkit/ui-toolkit-angular": "^2.0.2",
     "xterm": "^4.17.0",
-    "zone.js": "~0.11.4"
+    "zone.js": "~0.11.5"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.1102.14",
@@ -61,7 +61,7 @@
     "jasmine-spec-reporter": "~7.0.0",
     "karma": "~6.3.16",
     "karma-chrome-launcher": "~3.1.0",
-    "karma-coverage": "~2.1.0",
+    "karma-coverage": "~2.2.0",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.7.0",
     "protractor": "~7.0.0",
