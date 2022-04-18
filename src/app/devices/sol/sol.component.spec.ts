@@ -1,7 +1,11 @@
+/*********************************************************************
+* Copyright (c) Intel Corporation 2021
+* SPDX-License-Identifier: Apache-2.0
+**********************************************************************/
 import { Component, EventEmitter, Input } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
-import { ActivatedRoute } from '@angular/router'
-import { of } from 'rxjs'
+import { ActivatedRoute, NavigationStart, Router, RouterEvent } from '@angular/router'
+import { of, ReplaySubject } from 'rxjs'
 import { SolComponent } from './sol.component'
 import { DevicesService } from '../devices.service'
 import { MomentModule } from 'ngx-moment'
@@ -9,6 +13,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { SharedModule } from 'src/app/shared/shared.module'
 import { RouterTestingModule } from '@angular/router/testing'
 import { AuthService } from 'src/app/auth.service'
+import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 
 describe('SolComponent', () => {
   let component: SolComponent
@@ -18,6 +23,8 @@ describe('SolComponent', () => {
   let getAMTFeaturesSpy: jasmine.Spy
   let reqUserConsentCodeSpy: jasmine.Spy
   let tokenSpy: jasmine.Spy
+  let snackBarSpy: jasmine.Spy
+  const eventSubject = new ReplaySubject<RouterEvent>(1)
 
   beforeEach(async () => {
     const devicesService = jasmine.createSpyObj('DevicesService', ['getPowerState', 'setAmtFeatures', 'getAMTFeatures', 'reqUserConsentCode', 'cancelUserConsentCode'])
@@ -31,6 +38,10 @@ describe('SolComponent', () => {
     const authServiceStub = {
       stopwebSocket: new EventEmitter<boolean>(false),
       startwebSocket: new EventEmitter<boolean>(false)
+    }
+    const routerMock = {
+      navigateStart: jasmine.createSpy('navigation'),
+      events: eventSubject.asObservable()
     }
 
     @Component({
@@ -51,7 +62,9 @@ describe('SolComponent', () => {
         provide: ActivatedRoute,
         useValue:
           { params: of({ id: 'guid' }) }
-      }, { provide: AuthService, useValue: authService }]
+      }, { provide: AuthService, useValue: authService }, {
+        provide: Router, useValue: routerMock
+      }]
     })
       .compileComponents()
   })
@@ -60,6 +73,7 @@ describe('SolComponent', () => {
     fixture = TestBed.createComponent(SolComponent)
     component = fixture.componentInstance
     fixture.detectChanges()
+    snackBarSpy = spyOn(component.snackBar, 'open')
   })
 
   it('should create', () => {
@@ -69,5 +83,29 @@ describe('SolComponent', () => {
     expect(setAmtFeaturesSpy).toHaveBeenCalled()
     expect(getAMTFeaturesSpy).toHaveBeenCalled()
     expect(reqUserConsentCodeSpy).toHaveBeenCalled()
+  })
+  it('should show error and hide loading when disconnected', () => {
+    component.isDisconnecting = false
+    component.deviceStatus(0)
+    expect(snackBarSpy).toHaveBeenCalledOnceWith('Connecting to SOL failed. Only one session per device is allowed. Also ensure that your token is valid and you have access.', undefined, SnackbarDefaults.defaultError)
+    expect(component.isLoading).toBeFalse()
+    expect(component.deviceState).toBe(0)
+  })
+  it('should not show error and hide loading when isDisconnecting is true', () => {
+    component.isDisconnecting = true
+    component.deviceStatus(0)
+    expect(snackBarSpy).not.toHaveBeenCalled()
+    expect(component.isLoading).toBeFalse()
+    expect(component.deviceState).toBe(0)
+  })
+  it('should  hide loading when connected', () => {
+    component.deviceStatus(3)
+    expect(snackBarSpy).not.toHaveBeenCalled()
+    expect(component.isLoading).toBeFalse()
+    expect(component.deviceState).toBe(3)
+  })
+  it('should not show error when NavigationStart triggers', () => {
+    eventSubject.next(new NavigationStart(1, 'regular'))
+    expect(snackBarSpy).not.toHaveBeenCalled()
   })
 })
