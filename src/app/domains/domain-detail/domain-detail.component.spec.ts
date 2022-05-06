@@ -103,4 +103,18 @@ describe('DomainDetailComponent', () => {
     fixture.detectChanges()
     expect(fileSelectedSpy).toHaveBeenCalled()
   })
+
+  it('should turn cert pass visibility on when it is off', () => {
+    component.certPassInputType = 'password'
+    component.toggleCertPassVisibility()
+
+    expect(component.certPassInputType).toEqual('text')
+  })
+
+  it('should turn cert pass visibility off when it is on', () => {
+    component.certPassInputType = 'text'
+    component.toggleCertPassVisibility()
+
+    expect(component.certPassInputType).toEqual('password')
+  })
 })
