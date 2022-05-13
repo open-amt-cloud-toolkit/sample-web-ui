@@ -6,7 +6,6 @@
 // different combinations of invalid login info.
 // Also tests things like canceling a login and logging out after the login
 
-import { accountFixtures } from '../../fixtures/accounts'
 import { urlFixtures } from '../../fixtures/urls'
 import { apiResponses, httpCodes } from '../../fixtures/api/apiResponses'
 const baseUrl: string = Cypress.env('BASEURL')
@@ -50,9 +49,9 @@ describe('Test login page', () => {
       }).as('stats-request')
 
       // Login
-      const webuiUserName = Cypress.env('WEBUI_USERNAME') || accountFixtures.default.username
-      const webuiPassword = Cypress.env('WEBUI_PASSWORD') || accountFixtures.default.password
-      cy.login(webuiUserName, webuiPassword)
+      const mpsUsername = Cypress.env('MPS_USERNAME')
+      const mpsPassword = Cypress.env('MPS_PASSWORD')
+      cy.login(mpsUsername, mpsPassword)
 
       // Check that correct post request is made
       cy.wait('@login-request').then((req) => {
@@ -61,10 +60,10 @@ describe('Test login page', () => {
           .should('eq', httpCodes.SUCCESS)
         cy.wrap(req)
           .its('request.body.username')
-          .should('eq', webuiUserName)
+          .should('eq', mpsUsername)
         cy.wrap(req)
           .its('request.body.password')
-          .should('eq', webuiPassword)
+          .should('eq', mpsPassword)
       })
 
       // Check that the login was successful
@@ -92,12 +91,13 @@ describe('Test login page', () => {
       cy.url().should('eq', baseUrl + urlFixtures.page.login)
     }
 
-    const webuiUserName = Cypress.env('WEBUI_USERNAME') || accountFixtures.default.username
-    const webuiPassword = Cypress.env('WEBUI_PASSWORD') || accountFixtures.default.password
+    const mpsUsername = Cypress.env('MPS_USERNAME')
+    const mpsPassword = Cypress.env('MPS_PASSWORD')
+    const wrongPassword = 'SoWrong'
 
     it('no username / valid password', () => {
       // Attempt to log in
-      cy.login('EMPTY', webuiPassword)
+      cy.login('EMPTY', mpsPassword)
 
       // Check that to log in fails as expected
       cy.url().should('eq', baseUrl + urlFixtures.page.login)
@@ -106,24 +106,24 @@ describe('Test login page', () => {
 
     it('invalid username / valid password', () => {
       prepareIntercepts()
-      cy.login(accountFixtures.wrong.username, webuiPassword)
+      cy.login(wrongPassword, mpsPassword)
       checkFailState()
     })
 
     it('valid username / no password', () => {
-      cy.login(webuiUserName, 'EMPTY')
+      cy.login(mpsUsername, 'EMPTY')
       cy.url().should('eq', baseUrl + urlFixtures.page.login)
       cy.get('.mat-error').should('have.length', 1)
     })
 
     it('valid username / invalid password', () => {
       prepareIntercepts()
-      cy.login(webuiUserName, accountFixtures.wrong.password)
+      cy.login(mpsUsername, wrongPassword)
       checkFailState()
     })
 
     it('no username / invalid password', () => {
-      cy.login('EMPTY', accountFixtures.wrong.password)
+      cy.login('EMPTY', wrongPassword)
       cy.url().should('eq', baseUrl + urlFixtures.page.login)
       cy.get('.mat-error').should('have.length', 1)
     })

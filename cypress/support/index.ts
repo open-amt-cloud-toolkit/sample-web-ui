@@ -4,7 +4,6 @@
  **********************************************************************/
 // Add repetitive groups of functions here
 
-import { accountFixtures } from '../fixtures/accounts'
 import { httpCodes } from '../fixtures/api/apiResponses'
 declare global {
   namespace Cypress {
@@ -40,12 +39,10 @@ Cypress.Commands.add('setup', () => {
   }).as('stats-request')
 
   // Login
-  // TODO: good page with some security conecpts
-  // https://glebbahmutov.com/blog/keep-passwords-secret-in-e2e-tests/
   cy.visit(Cypress.env('BASEURL'))
-  const webuiUserName = Cypress.env('WEBUI_USERNAME') || accountFixtures.default.username
-  const webuiPassword = Cypress.env('WEBUI_PASSWORD') || accountFixtures.default.password
-  cy.login(webuiUserName, webuiPassword)
+  const mpsUsername = Cypress.env('MPS_USERNAME')
+  const mpsPassword = Cypress.env('MPS_PASSWORD')
+  cy.login(mpsUsername, mpsPassword)
   cy.wait('@login-request')
     .its('response.statusCode')
     .should('eq', httpCodes.SUCCESS)
@@ -81,7 +78,7 @@ Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEn
 
   if (!randAmt) {
     cy.get('[data-cy=genAmtPass]').click()
-    cy.get('input').get('[formControlName=amtPassword]').type(Cypress.env('AMTPASSWORD'))
+    cy.get('input').get('[formControlName=amtPassword]').type(Cypress.env('AMT_PASSWORD'))
     // cy.get('[data-cy=genStaticAmt').click()
   }
 
@@ -89,7 +86,7 @@ Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEn
     cy.get('[data-cy=genMebxPass]').click()
     // cy.get('[data-cy=genStaticMebx').click()
     if (admin === 'acmactivate') {
-      cy.get('input').get('[formControlName=mebxPassword]').type(Cypress.env('MEBXPASSWORD'))
+      cy.get('input').get('[formControlName=mebxPassword]').type(Cypress.env('MEBX_PASSWORD'))
     }
   }
 
