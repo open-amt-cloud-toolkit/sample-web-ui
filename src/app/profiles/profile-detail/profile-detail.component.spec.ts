@@ -85,10 +85,6 @@ describe('ProfileDetailComponent', () => {
     component.setConnectionMode({ ciraConfigName: 'config1' } as any)
     expect(component.profileForm.controls.connectionMode.value).toBe('CIRA')
   })
-  it('should set connectionMode to NONE when no ciraConfigName and no tlsMode', () => {
-    component.setConnectionMode({ } as any)
-    expect(component.profileForm.controls.connectionMode.value).toBe('NONE')
-  })
   it('should cancel', async () => {
     const routerSpy = spyOn(component.router, 'navigate')
     await component.cancel()
@@ -123,7 +119,7 @@ describe('ProfileDetailComponent', () => {
       generateRandomMEBxPassword: false,
       mebxPassword: 'Password123',
       dhcpEnabled: true,
-      ciraConfigName: null,
+      ciraConfigName: 'config1',
       tlsConfigName: null
     })
     component.confirm()
@@ -143,7 +139,7 @@ describe('ProfileDetailComponent', () => {
       generateRandomMEBxPassword: false,
       mebxPassword: 'Password123',
       dhcpEnabled: true,
-      ciraConfigName: null,
+      ciraConfigName: 'config1',
       tlsConfigName: null
     })
     component.confirm()
@@ -166,7 +162,7 @@ describe('ProfileDetailComponent', () => {
       generateRandomMEBxPassword: true,
       mebxPassword: '',
       dhcpEnabled: true,
-      ciraConfigName: null
+      ciraConfigName: 'config1'
     })
     component.confirm()
 
@@ -190,7 +186,7 @@ describe('ProfileDetailComponent', () => {
       generateRandomMEBxPassword: true,
       mebxPassword: '',
       dhcpEnabled: true,
-      ciraConfigName: null
+      ciraConfigName: 'config1'
     })
     component.confirm()
 
@@ -432,13 +428,6 @@ describe('ProfileDetailComponent', () => {
     expect(component.profileForm.controls.tlsMode.value).toEqual(null)
     expect(component.profileForm.controls.tlsMode.valid).toBeTrue()
     expect(component.profileForm.controls.ciraConfigName.value).toBe('config1')
-  })
-  it('should set the tlsMode property to null when CIRA Selected', () => {
-    component.connectionModeChange('None')
-    expect(component.profileForm.controls.ciraConfigName.value).toEqual(null)
-    expect(component.profileForm.controls.tlsMode.value).toEqual(null)
-    expect(component.profileForm.controls.tlsMode.valid).toBeTrue()
-    expect(component.profileForm.controls.ciraConfigName.valid).toBeTrue()
   })
 
   it('should return the search results when a search string is entered', () => {
