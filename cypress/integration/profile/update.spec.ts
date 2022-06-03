@@ -17,7 +17,6 @@ describe('Test Update Profile Page', () => {
       body: apiResponses.profiles.getAll.success.response
     }).as('get-profiles')
 
-    cy.goToPage('Profiles')
     // Stub the get and post requests
     cy.myIntercept('GET', 'ciraconfigs?$count=true', {
       statusCode: httpCodes.SUCCESS,
@@ -32,83 +31,92 @@ describe('Test Update Profile Page', () => {
     cy.goToPage('Profiles')
     cy.wait('@get-profiles')
 
-    // change api response
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: apiResponses.profiles.getAll.success.response
-    }).as('get-profiles2')
     cy.myIntercept('GET', 'happyTlspath', {
-      statusCode: httpCodes.SUCCESS,
-      body: apiResponses.profiles.getAll.success.response.data
-    }).as('get-profile')
-  })
-  it('Update profile TLS Mode to Server TLS Authentication Only', () => {
-    cy.myIntercept('PATCH', 'profiles', {
-      statusCode: httpCodes.SUCCESS,
-      body: profileFixtures.patchServerAuthentication
-    }).as('patch-profile')
-
-    cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
-    cy.setAMTMEBXPasswords(Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
-    cy.get('mat-select[formcontrolname=tlsMode]').click({ force: true })
-    cy.contains('Server Authentication Only').click({ force: true })
-    cy.contains('SAVE').click({ force: true })
-    cy.myIntercept('GET', 'happyTlspath', {
-      statusCode: httpCodes.SUCCESS,
-      body: profileFixtures.patchServerAuthentication
-    }).as('get-profile')
-    cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
-    cy.contains('Server Authentication Only').should('exist')
-  })
-  it('Update profile to Admin Control Mode', () => {
-    cy.myIntercept('PATCH', 'profiles', {
       statusCode: httpCodes.SUCCESS,
       body: profileFixtures.happyPathTls
-    }).as('patch-profile')
+    }).as('get-profile')
+  })
+  it('Update profile TLS Mode to Server and Non-TLS Authentication', () => {
+    cy.myIntercept('PATCH', 'profiles', {
+      statusCode: httpCodes.SUCCESS,
+      body: profileFixtures.patchServerNonTLS
+    }).as('save-profile')
+    cy.myIntercept('GET', 'happyTlspath', {
+      statusCode: httpCodes.SUCCESS,
+      body: profileFixtures.patchServerNonTLS
+    }).as('get-profiles')
 
     cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
-    cy.wait('@get-profile')
-    cy.get('mat-select[formcontrolname=activation').click()
-    cy.contains('Admin Control Mode').click({ force: true })
-    cy.setAMTMEBXPasswords(Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
-    cy.contains('SAVE').click({ force: true })
-    cy.get('mat-table').contains('mat-row', profileFixtures.happyPathTls.profileName).then(row => {
-      cy.wrap(row).contains('ccmactivate').should('exist')
+    cy.setAMTMEBXPasswords('acmactivate', Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
+    cy.get('[formControlName=connectionMode]').contains('TLS').click()
+    cy.get('[formControlName=tlsMode]').scrollIntoView().click().get('mat-option').contains('Server & Non-TLS Authentication').click()
+    cy.contains('SAVE').scrollIntoView().click()
+    cy.wait('@save-profile')
+
+    cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
+    cy.contains('Server & Non-TLS Authentication').should('exist')
+  })
+  it('Update profile to Admin Control Mode', () => {
+    cy.myIntercept('GET', 'happyTlspath', {
+      statusCode: httpCodes.SUCCESS,
+      body: profileFixtures.happyPathTls
     })
+    cy.myIntercept('PATCH', 'profiles', {
+      statusCode: httpCodes.SUCCESS,
+      body: profileFixtures.patchServerAuthentication
+    }).as('save-profile')
+    cy.myIntercept('GET', 'happyTlspath', {
+      statusCode: httpCodes.SUCCESS,
+      body: profileFixtures.patchServerAuthentication
+    })
+
+    cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
+    cy.get('mat-select[formcontrolname=activation').click().get('mat-option').contains('Admin Control Mode').click()
+    cy.setAMTMEBXPasswords('acmactivate', Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
+    cy.contains('SAVE').click()
+    cy.wait('@save-profile')
+
+    cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
+    cy.contains('Admin Control Mode').should('exist')
   })
   it('Update profile with WirelessConfig', () => {
     cy.myIntercept('GET', 'happyTlspath', {
       statusCode: httpCodes.SUCCESS,
-      body: apiResponses.profiles.getAll.success.response.data
-    }).as('get-profile')
+      body: profileFixtures.happyPathTls
+    })
     cy.myIntercept('PATCH', 'profiles', {
       statusCode: httpCodes.SUCCESS,
       body: profileFixtures.patchWirelessConfigHappyPath
-    }).as('patch-profile')
+    }).as('save-profile')
+
     cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
-    cy.setAMTMEBXPasswords(Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
+    cy.setAMTMEBXPasswords('ccmactivate', Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
     cy.get('[data-placeholder="Search for Wi-Fi Profiles to Add"]').type(`${wirelessFixtures.happyPath.profileName}{enter}`)
-    cy.contains('SAVE').click({ force: true })
-    cy.myIntercept('GET', 'happyTlspath', {
-      statusCode: httpCodes.SUCCESS,
-      body: profileFixtures.patchWirelessConfigHappyPath
-    }).as('get-profile2')
-    cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
-    cy.contains('1. happyPath').should('exist')
+    cy.wait('@get-wirelessConfigs')
+    cy.contains('SAVE').click()
+    cy.wait('@save-profile')
   })
   it('Update profile\'s Network Configuration to STATIC', () => {
+    cy.myIntercept('GET', 'happyTlspath', {
+      statusCode: httpCodes.SUCCESS,
+      body: profileFixtures.happyPathTls
+    })
     cy.myIntercept('PATCH', 'profiles', {
       statusCode: httpCodes.SUCCESS,
       body: profileFixtures.patchSTATIC
-    }).as('patch-profile')
+    }).as('save-profile')
+
     cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
-    cy.setAMTMEBXPasswords(Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
-    cy.contains('STATIC').click({ force: true })
+    cy.setAMTMEBXPasswords('ccmactivate', Cypress.env('AMT_PASSWORD'), Cypress.env('MEBX_PASSWORD'))
+    cy.contains('STATIC').click()
     cy.contains('SAVE').click()
+    cy.wait('@save-profile')
+
     cy.myIntercept('GET', profileFixtures.happyPathTls.profileName, {
       statusCode: httpCodes.SUCCESS,
       body: profileFixtures.patchSTATIC
-    }).as('get-profile')
+    })
+
     cy.get('mat-row').contains(profileFixtures.happyPathTls.profileName).click()
     cy.contains('STATIC').parent().should('have.class', 'mat-radio-checked')
   })
