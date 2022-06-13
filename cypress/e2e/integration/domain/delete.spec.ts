@@ -5,8 +5,6 @@
 
 // https://open-amt-cloud-toolkit.github.io/docs/1.1/General/createProfileACM/
 
-import 'cypress-file-upload'
-
 import { domainFixtures } from '../../fixtures/domain'
 import { apiResponses, httpCodes } from '../../fixtures/api/apiResponses'
 

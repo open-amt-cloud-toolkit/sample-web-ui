@@ -6,7 +6,7 @@
 import { Component, Input } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
-import { ActivatedRoute } from '@angular/router'
+import { Router, ActivatedRoute } from '@angular/router'
 import { RouterTestingModule } from '@angular/router/testing'
 import { MomentModule } from 'ngx-moment'
 import { of } from 'rxjs'
@@ -18,6 +18,7 @@ import { DeviceDetailComponent } from './device-detail.component'
 describe('DeviceDetailComponent', () => {
   let component: DeviceDetailComponent
   let fixture: ComponentFixture<DeviceDetailComponent>
+  let sendPowerActionSpy: jasmine.Spy
   let getAuditLogSpy: jasmine.Spy
   let getAMTFeaturesSpy: jasmine.Spy
   let getHardwareInformationSpy: jasmine.Spy
@@ -36,6 +37,11 @@ describe('DeviceDetailComponent', () => {
   beforeEach(async () => {
     const devicesService = jasmine.createSpyObj('DevicesService', ['getAuditLog', 'getAMTFeatures', 'getHardwareInformation', 'getAMTVersion', 'sendPowerAction', 'setAmtFeatures', 'getEventLog'])
     devicesService.TargetOSMap = { 0: 'Unknown' }
+    sendPowerActionSpy = devicesService.sendPowerAction.and.returnValue(of({
+      Body: {
+        ReturnValueStr: 'NOT_READY'
+      }
+    }))
     getAuditLogSpy = devicesService.getAuditLog.and.returnValue(of({ totalCnt: 0, records: [] }))
     getAMTFeaturesSpy = devicesService.getAMTFeatures.and.returnValue(of({ }))
     getAMTVersionSpy = devicesService.getAMTVersion.and.returnValue(of({ }))
@@ -50,6 +56,11 @@ describe('DeviceDetailComponent', () => {
         provide: ActivatedRoute,
         useValue: {
           params: of({ id: 'guid' })
+        }
+      }, {
+        provide: Router,
+        useValue: {
+          url: 'sol'
         }
       }]
     })
@@ -77,10 +88,22 @@ describe('DeviceDetailComponent', () => {
     expect(component.showSol).toBeFalse()
   })
 
-  it('should navigate to', async () => {
-    const routerSpy = spyOn(component.router, 'navigate')
-    await component.navigateTo('path')
-    expect(routerSpy).toHaveBeenCalledWith(['/devices/guid/path'])
+  it('should send power action', () => {
+    component.sendPowerAction(4)
+
+    fixture.detectChanges()
+
+    expect(sendPowerActionSpy).toHaveBeenCalledWith('guid', 4, false)
+    fixture.detectChanges()
+    expect(component.isLoading).toBeFalse()
+  })
+
+  it('should send power action - sol', async () => {
+    component.sendPowerAction(101)
+    fixture.detectChanges()
+    expect(sendPowerActionSpy).toHaveBeenCalledWith('guid', 101, true)
+    fixture.detectChanges()
+    expect(component.isLoading).toBeFalse()
   })
 
   it('should parse provisioning mode - ACM', async () => {
