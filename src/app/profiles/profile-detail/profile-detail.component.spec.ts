@@ -307,6 +307,76 @@ describe('ProfileDetailComponent', () => {
     expect(routerSpy).not.toHaveBeenCalled()
   })
 
+  it('should submit when valid with only random mebx password + ccm activation', () => {
+    const routerSpy = spyOn(component.router, 'navigate')
+
+    component.isEdit = false
+    component.profileForm.patchValue({
+      profileName: 'profile',
+      activation: 'ccmactivate',
+      amtPassword: 'Password123',
+      generateRandomPassword: false,
+      generateRandomMEBxPassword: true,
+      mebxPassword: '',
+      dhcpEnabled: true,
+      ciraConfigName: null
+    })
+    component.confirm()
+
+    expect(profileCreateSpy).toHaveBeenCalled()
+    expect(routerSpy).toHaveBeenCalled()
+  })
+
+  it('should submit if cira config and static network are simultaneously selected + only random mebx password + ccm activation', () => {
+    const routerSpy = spyOn(component.router, 'navigate')
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+
+    component.isEdit = false
+    component.profileForm.patchValue({
+      profileName: 'profile',
+      activation: 'ccmactivate',
+      amtPassword: 'Password123',
+      generateRandomPassword: false,
+      generateRandomMEBxPassword: true,
+      mebxPassword: '',
+      dhcpEnabled: false,
+      ciraConfigName: 'config1',
+      tlsConfigName: null
+    })
+    component.confirm()
+
+    expect(dialogSpy).toHaveBeenCalled()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
+    expect(profileCreateSpy).toHaveBeenCalled()
+    expect(routerSpy).toHaveBeenCalled()
+  })
+
+  it('should cancel submit if cira config and static network are simultaneously selected + only random mebx password + ccm activation', () => {
+    const routerSpy = spyOn(component.router, 'navigate')
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+
+    component.isEdit = false
+    component.profileForm.patchValue({
+      profileName: 'profile',
+      activation: 'ccmactivate',
+      amtPassword: 'Password123',
+      generateRandomPassword: false,
+      generateRandomMEBxPassword: true,
+      mebxPassword: '',
+      dhcpEnabled: false,
+      ciraConfigName: 'config1',
+      tlsConfigName: null
+    })
+    component.confirm()
+
+    expect(dialogSpy).toHaveBeenCalled()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
+    expect(profileCreateSpy).not.toHaveBeenCalled()
+    expect(routerSpy).not.toHaveBeenCalled()
+  })
+
   it('should update the selected wifi configs on selecting a wifi profile', () => {
     component.selectedWifiConfigs = [{ priority: 1, profileName: 'home' }]
     const option: any = {
