@@ -208,7 +208,7 @@ describe('ProfileDetailComponent', () => {
     // Add check for wifi config disabled or selected wifi config is 0
   })
 
-  it('should submit if cira config and static network are simultaneously selected', () => {
+  it('should submit if cira config and static network are simultaneously selected and user confirms', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
@@ -237,7 +237,7 @@ describe('ProfileDetailComponent', () => {
     expect(routerSpy).toHaveBeenCalled()
   })
 
-  it('should cancel submit if cira config and static network are simultaneously selected', () => {
+  it('should cancel submit if cira config and static network are simultaneously selected and user cancels', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
@@ -262,7 +262,7 @@ describe('ProfileDetailComponent', () => {
     expect(routerSpy).not.toHaveBeenCalled()
   })
 
-  it('should submit if cira config and static network are simultaneously selected + randomly generated password', () => {
+  it('should submit if cira config and static network are simultaneously selected + randomly generated password and user confirms', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
@@ -287,7 +287,7 @@ describe('ProfileDetailComponent', () => {
     expect(routerSpy).toHaveBeenCalled()
   })
 
-  it('should cancel submit if cira config and static network are simultaneously selected + randomly generated password', () => {
+  it('should cancel submit if cira config and static network are simultaneously selected + randomly generated password and user cancels dialog', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
@@ -298,6 +298,78 @@ describe('ProfileDetailComponent', () => {
       activation: 'acmactivate',
       amtPassword: '',
       generateRandomPassword: true,
+      generateRandomMEBxPassword: true,
+      mebxPassword: '',
+      dhcpEnabled: false,
+      ciraConfigName: 'config1',
+      tlsConfigName: null
+    })
+    component.confirm()
+
+    expect(dialogSpy).toHaveBeenCalled()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
+    expect(profileCreateSpy).not.toHaveBeenCalled()
+    expect(routerSpy).not.toHaveBeenCalled()
+  })
+
+  it('should submit when valid with only random mebx password + ccm activation', () => {
+    const routerSpy = spyOn(component.router, 'navigate')
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+    component.isEdit = false
+    component.profileForm.patchValue({
+      profileName: 'profile',
+      activation: 'ccmactivate',
+      amtPassword: 'Password123',
+      generateRandomPassword: false,
+      generateRandomMEBxPassword: true,
+      mebxPassword: '',
+      dhcpEnabled: true,
+      ciraConfigName: null
+    })
+    component.confirm()
+    expect(dialogSpy).toHaveBeenCalled()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
+    expect(profileCreateSpy).toHaveBeenCalled()
+    expect(routerSpy).toHaveBeenCalled()
+  })
+
+  it('should submit if cira config and static network are simultaneously selected + only random mebx password + ccm activation', () => {
+    const routerSpy = spyOn(component.router, 'navigate')
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+
+    component.isEdit = false
+    component.profileForm.patchValue({
+      profileName: 'profile',
+      activation: 'ccmactivate',
+      amtPassword: 'Password123',
+      generateRandomPassword: false,
+      generateRandomMEBxPassword: true,
+      mebxPassword: '',
+      dhcpEnabled: false,
+      ciraConfigName: 'config1',
+      tlsConfigName: null
+    })
+    component.confirm()
+
+    expect(dialogSpy).toHaveBeenCalled()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
+    expect(profileCreateSpy).toHaveBeenCalled()
+    expect(routerSpy).toHaveBeenCalled()
+  })
+
+  it('should cancel submit if cira config and static network are simultaneously selected + only random mebx password + ccm activation', () => {
+    const routerSpy = spyOn(component.router, 'navigate')
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+
+    component.isEdit = false
+    component.profileForm.patchValue({
+      profileName: 'profile',
+      activation: 'ccmactivate',
+      amtPassword: 'Password123',
+      generateRandomPassword: false,
       generateRandomMEBxPassword: true,
       mebxPassword: '',
       dhcpEnabled: false,
@@ -336,11 +408,11 @@ describe('ProfileDetailComponent', () => {
 
   it('should adjust related fields on selecting activation mode', () => {
     component.activationChange(Constants.CCMActivate)
-    expect(component.profileForm.controls.mebxPassword.disabled).toBe(true)
+    expect(component.profileForm.controls.generateRandomMEBxPassword.disabled).toBe(true)
     expect(component.profileForm.controls.userConsent.disabled).toBe(true)
     expect(component.profileForm.controls.userConsent.value).toEqual(Constants.UserConsent_All)
     component.activationChange(Constants.ACMActivate)
-    expect(component.profileForm.controls.mebxPassword.disabled).toBe(false)
+    expect(component.profileForm.controls.generateRandomMEBxPassword.disabled).toBe(false)
     expect(component.profileForm.controls.userConsent.disabled).toBe(false)
   })
 
