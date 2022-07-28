@@ -44,7 +44,7 @@
     "@angular-eslint/schematics": "14.0.0",
     "@angular-eslint/template-parser": "^14.0.0",
     "@angular/cli": "~14.0.0",
-    "@angular/compiler-cli": "~14.0.0",
+    "@angular/compiler-cli": "~14.1.0",
     "@angular/localize": "^14.0.0",
     "@types/jasmine": "~4.0.3",
     "@types/node": "^16.0.0",
