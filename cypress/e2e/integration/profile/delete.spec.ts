@@ -7,7 +7,7 @@
 import { empty } from 'cypress/e2e/fixtures/api/general'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
 import { profiles } from 'cypress/e2e/fixtures/api/profile'
-import { amtProfiles } from '../../fixtures/formEntry/profile'
+import { testProfiles } from '../../fixtures/formEntry/profile'
 
 // ---------------------------- Test section ----------------------------
 
@@ -32,7 +32,7 @@ describe('Test Profile Page', () => {
     cy.get('button').contains('No').click()
   })
 
-  amtProfiles.forEach((profile: any) => {
+  testProfiles.forEach((profile: any) => {
     it(`should delete ${profile.profileName as string}`, () => {
       cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
         statusCode: httpCodes.SUCCESS,

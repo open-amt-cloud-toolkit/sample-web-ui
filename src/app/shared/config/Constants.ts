@@ -10,20 +10,123 @@ const EVENTTYPEMAP: EventTypeMap = {
   10: 'Linkup Event',
   111: 'Sensor specific event'
 }
+const TlsModes = {
+  SERVER: {
+    value: 1,
+    display: 'Server Authentication Only'
+  },
+  SERVER_NON_TLS: {
+    value: 2,
+    display: 'Server & Non-TLS Authentication'
+  },
+  MUTUAL: {
+    value: 3,
+    display: 'Mutual TLS Authentication Only'
+  },
+  MUTUAL_NON_TLS: {
+    value: 4,
+    display: 'Mutual and Non-TLS Authentication'
+  }
+}
+function parseTlsMode (value: number): string {
+  for (const mode of Object.values(TlsModes)) {
+    if (value === mode.value) {
+      return mode.display
+    }
+  }
+  return ''
+}
+const DhcpModes = {
+  DHCP: {
+    value: true,
+    display: 'DHCP'
+  },
+  STATIC: {
+    value: false,
+    display: 'STATIC'
+  }
+}
+function parseDhcpMode (value: boolean): string {
+  for (const mode of Object.values(DhcpModes)) {
+    if (value === mode.value) {
+      return mode.display
+    }
+  }
+  return ''
+}
 
 export default {
-  ACMActivate: 'acmactivate',
-  CCMActivate: 'ccmactivate',
+  ActivationModes: {
+    ADMIN: {
+      value: 'acmactivate',
+      display: 'Admin Control Mode'
+    },
+    CLIENT: {
+      value: 'ccmactivate',
+      display: 'Client Control Mode'
+    }
+  },
+  // these redirection values must match AMTUserConsent values
+  UserConsentModes: {
+    ALL: {
+      value: 'All',
+      display: 'All'
+    },
+    KVM: {
+      value: 'KVM',
+      display: 'KVM Only'
+    },
+    NONE: {
+      value: 'None',
+      display: 'None'
+    }
+  },
+  ConnectionModes: {
+    CIRA: {
+      value: 'CIRA',
+      display: 'CIRA (Cloud)'
+    },
+    TLS: {
+      value: 'TLS',
+      display: 'TLS (Enterprise)'
+    }
+  },
+  // TlsModes: {
+  //   SERVER: {
+  //     value: 1,
+  //     display: 'Server Authentication Only'
+  //   },
+  //   SERVER_NON_TLS: {
+  //     value: 2,
+  //     display: 'Server & Non-TLS Authentication'
+  //   },
+  //   MUTUAL: {
+  //     value: 3,
+  //     display: 'Mutual TLS Authentication Only'
+  //   },
+  //   MUTUAL_NON_TLS: {
+  //     value: 4,
+  //     display: 'Mutual and Non-TLS Authentication'
+  //   }
+  // },
+  TlsModes,
+  parseTlsMode,
+  // DhcpModes: {
+  //   DHCP: {
+  //     value: true,
+  //     display: 'DHCP'
+  //   },
+  //   STATIC: {
+  //     value: false,
+  //     display: 'STATIC'
+  //   }
+  // },
+  DhcpModes,
+  parseDhcpMode,
   WPAPSK: 4,
   WPA2PSK: 6,
   TKIP: 3,
   CCMP: 4,
   NORESULTS: 'No Wifi Configs Found',
-  EVENTTYPEMAP: EVENTTYPEMAP,
-  ConnectionMode_TLS: 'TLS',
-  ConnectionMode_CIRA: 'CIRA',
-  // these redirection values must match AMTUserConsent values
-  UserConsent_None: 'None',
-  UserConsent_All: 'All',
-  UserConsent_KVM: 'KVM'
+  EVENTTYPEMAP: EVENTTYPEMAP
 }

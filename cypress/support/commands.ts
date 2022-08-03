@@ -7,9 +7,14 @@
 /// <reference types="cypress" />
 
 import { httpCodes } from '../e2e/fixtures/api/httpCodes'
+import Constants from '../../src/app/shared/config/Constants'
+
 declare global {
   namespace Cypress {
     interface Chainable {
+      chooseMaterialSelect: (formControlName: string, value: string) => Chainable<Element>
+      setMaterialCheckbox: (formControlName: string, checked: boolean) => Chainable<Element>
+      typeMaterialTextInput: (formControlName: string, value: string) => Chainable<Element>
       setup: () => Chainable<Element>
       login: (user: string, password: string) => Chainable<Element>
       myIntercept: (method: string, url: string | RegExp, body: any) => Chainable<Element>
@@ -19,10 +24,47 @@ declare global {
       enterWirelessInfo: (name: string, ssid: string, password: string, authenticationMethod: string, encryptionMethod: string) => Chainable<Element>
       enterProfileInfo: (name: string, activation: string, randAmt: boolean, randMebx: boolean, network: boolean, connection: string, connectionConfig: string, userConsent: string, iderEnabled: boolean, kvmEnabled: boolean, solEnabled: boolean, wifiConfigs?: Array<{ profileName: string, priority: number }>) => Chainable<Element>
       setAMTMEBXPasswords: (mode: string, amtPassword: string, mebxPassword: string) => Chainable<Element>
+      setProfileActivationMode: (activationMode: string) => Chainable<Element>
+      setProfileDhcp: (dhcpEnabled: boolean) => Chainable<Element>
+      setProfileRedirectionFeatures: (userConsent: string, iderEnabled: boolean, kvmEnabled: boolean, solEnabled: boolean) => Chainable<Element>
+      assertProfileRedirectionFeatures: (userConsent: string, iderEnabled: boolean, kvmEnabled: boolean, solEnabled: boolean) => Chainable<Element>
+      setProfilePasswordAMT: (generate: boolean) => Chainable<Element>
+      setMEBXPassword: (generate: boolean) => Chainable<Element>
     }
   }
 }
 
+Cypress.Commands.add('setMaterialCheckbox', (formControlName: string, checked: boolean) => {
+  // check that the form element is enabled
+  cy.get(`mat-checkbox[formcontrolname=${formControlName}]`).find('[type="checkbox"]').invoke('is', ':disabled').then(isDisabled => {
+    if (!isDisabled) {
+      // material checkbox input elements are hidden/covered so not 'checkable' without forcing
+      if (checked) {
+        cy.get(`mat-checkbox[formcontrolname=${formControlName}]`).find('[type="checkbox"]').check({ force: true })
+      } else {
+        cy.get(`mat-checkbox[formcontrolname=${formControlName}]`).find('[type="checkbox"]').uncheck({ force: true })
+      }
+    }
+  })
+})
+
+Cypress.Commands.add('typeMaterialTextInput', (formControlName: string, value: string) => {
+  // check that the form element is enabled
+  cy.get(`[formcontrolname=${formControlName}]`).as('input').invoke('is', ':disabled').then(isDisabled => {
+    if (!isDisabled) {
+      cy.get('@input').type(value)
+    }
+  })
+})
+
+Cypress.Commands.add('chooseMaterialSelect', (formControlName: string, value: string) => {
+  // check that the form element is enabled
+  cy.get(`[formcontrolname=${formControlName}]`).as('input').invoke('is', ':disabled').then(isDisabled => {
+    if (!isDisabled) {
+      cy.get('@input').click().get('mat-option').contains(value).click()
+    }
+  })
+})
 // -------------------- before / beforeEach ---------------------------
 
 Cypress.Commands.add('setup', () => {
@@ -71,82 +113,52 @@ Cypress.Commands.add('enterCiraInfo', (name, format, addr, user) => {
   cy.get('input').get('[name=username]').clear().type(user)
 })
 
-Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEnabled, connection, connectionConfig, userConsent, iderEnabled, kvmEnabled, solEnabled, wifiConfigs) => {
-  cy.get('[name=profileName]').then((x) => {
-    if (!x.is(':disabled')) {
-      cy.get('[name=profileName]').type(name)
+Cypress.Commands.add(
+  'enterProfileInfo',
+  (
+    name, activationMode,
+    randAmtPassword, randomMebxPassword,
+    dhcpEnabled,
+    connectionMode, connectionSelection,
+    userConsent, iderEnabled, kvmEnabled, solEnabled,
+    wifiConfigs
+  ) => {
+    cy.typeMaterialTextInput('profileName', name)
+    // cy.get('[name=profileName]').then((x) => {
+    //   if (!x.is(':disabled')) {
+    //     cy.get('[name=profileName]').type(name)
+    //   }
+    // })
+    cy.chooseMaterialSelect('activation', activationMode)
+
+    cy.setMaterialCheckbox('generateRandomPassword', randAmtPassword)
+    if (!randAmtPassword) {
+      cy.typeMaterialTextInput('amtPassword', Cypress.env('AMT_PASSWORD'))
     }
-  })
+    cy.setMaterialCheckbox('generateRandomMEBxPassword', randomMebxPassword)
+    if (!randomMebxPassword) {
+      cy.typeMaterialTextInput('mebxPassword', Cypress.env('MEBX_PASSWORD'))
+    }
+    cy.contains(Constants.parseDhcpMode(dhcpEnabled)).click()
 
-  cy.get('mat-select[formcontrolname=activation]').click()
+    cy.contains(connectionMode).click()
+    if (connectionMode === Constants.ConnectionModes.CIRA.display) {
+      cy.chooseMaterialSelect('ciraConfigName', connectionSelection)
+    } else if (connectionMode === Constants.ConnectionModes.TLS.display) {
+      cy.chooseMaterialSelect('tlsMode', connectionSelection)
+    }
 
-  if (admin === 'ccmactivate') {
-    cy.get('mat-option').contains('Client Control Mode').click()
-  } else {
-    cy.get('mat-option').contains('Admin Control Mode').click()
-  }
-
-  if (!randAmt) {
-    cy.get('[data-cy=genAmtPass]').click()
-    cy.get('input').get('[formControlName=amtPassword]').type(Cypress.env('AMT_PASSWORD'))
-    // cy.get('[data-cy=genStaticAmt').click()
-  }
-  if (admin === 'acmactivate') {
-    if (!randMebx) {
-      cy.get('[data-cy=genMebxPass]').find('input[type=checkbox]').then((x) => {
-        if (x.is(':checked')) {
-          cy.get('[data-cy=genMebxPass]').click()
-        }
-
-        cy.get('input').get('[formControlName=mebxPassword]').type(Cypress.env('MEBX_PASSWORD'))
+    if (wifiConfigs != null && wifiConfigs.length > 0) {
+      wifiConfigs.forEach(wifiProfile => {
+        cy.get('input[data-cy=wifiAutocomplete]').type(wifiProfile.profileName)
+        cy.get('mat-option').contains(wifiProfile.profileName).click()
       })
     }
-  }
-  cy.contains(connection).click()
-
-  if (dhcpEnabled) {
-    cy.contains('DHCP').click()
-  } else {
-    cy.contains('STATIC').click()
-  }
-
-  if (connection === 'CIRA (Cloud)') {
-    cy.get('mat-select[formcontrolname=ciraConfigName]').click()
-  } else if (connection === 'TLS (Enterprise)') {
-    cy.get('mat-select[formcontrolname=tlsMode]').click()
-  }
-
-  cy.get('mat-option').contains(connectionConfig).click()
-
-  if (wifiConfigs != null && wifiConfigs.length > 0) {
-    wifiConfigs.forEach(wifiProfile => {
-      cy.get('input[data-cy=wifiAutocomplete]').type(wifiProfile.profileName)
-      cy.get('mat-option').contains(wifiProfile.profileName).click()
-    })
-  }
-  // if (admin !== 'ccmactivate') {
-  //   cy.get('mat-select[formcontrolname=userConsent').click()
-  //   cy.contains(userConsent).click()
-  // }
-  let id = '[data-cy="redirect_ider"]'
-  cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
-    if ((iderEnabled && !isChecked) || (isChecked && !iderEnabled)) {
-      cy.get(id).click()
-    }
+    cy.get('mat-select[formControlName=userConsent] option:checked').should('have.value', userConsent)
+    cy.setMaterialCheckbox('iderEnabled', iderEnabled)
+    cy.setMaterialCheckbox('kvmEnabled', kvmEnabled)
+    cy.setMaterialCheckbox('solEnabled', solEnabled)
   })
-  id = '[data-cy="redirect_kvm"] '
-  cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
-    if ((kvmEnabled && !isChecked) || (isChecked && !kvmEnabled)) {
-      cy.get(id).click()
-    }
-  })
-  id = '[data-cy="redirect_sol"]'
-  cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
-    if ((solEnabled && !isChecked) || (isChecked && !solEnabled)) {
-      cy.get(id).click()
-    }
-  })
-})
 
 Cypress.Commands.add('enterDomainInfo', (name, domain, file, pass) => {
   cy.get('input[name="name"]').type(name)
@@ -163,19 +175,17 @@ Cypress.Commands.add('enterWirelessInfo', (name, ssid, password, authMethod, enc
   cy.get('mat-select[formControlName=encryptionMethod]').click().get('mat-option').contains(encryptionMethod).click()
 })
 
+Cypress.Commands.add('assertProfileRedirectionFeatures', (userConsent: string, iderEnabled: boolean, kvmEnabled: boolean, solEnabled: boolean) => {
+  cy.get('mat-select[formControlName=userConsent] option:checked').should('have.value', userConsent)
+  cy.setMaterialCheckbox('iderEnabled', iderEnabled)
+  cy.setMaterialCheckbox('kvmEnabled', kvmEnabled)
+  cy.setMaterialCheckbox('solEnabled', solEnabled)
+})
+
 // ------------------------- Common Navigation --------------------------
 
 Cypress.Commands.add('goToPage', (pageName) => {
   cy.get('.mat-list-item').contains(pageName).click()
-})
-
-Cypress.Commands.add('setAMTMEBXPasswords', (mode, amtPassword, mebxPassword) => {
-  // cy.get('[formControlName=generateRandomPassword]').click()
-  cy.get('input').get('[formControlName=amtPassword]').type(amtPassword)
-  if (mode === 'acmactivate') {
-    // cy.get('[formControlName=generateRandomMEBxPassword]').click()
-    cy.get('input').get('[formControlName=mebxPassword]').type(mebxPassword)
-  }
 })
 
 // ------------------------------- Other --------------------------------

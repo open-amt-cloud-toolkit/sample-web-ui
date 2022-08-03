@@ -12,6 +12,7 @@ import { SharedModule } from '../shared/shared.module'
 
 import { ProfilesComponent } from './profiles.component'
 import { ProfilesService } from './profiles.service'
+import Constants from '../shared/config/Constants'
 
 describe('ProfilesComponent', () => {
   let component: ProfilesComponent
@@ -103,13 +104,5 @@ describe('ProfilesComponent', () => {
     expect(component.paginator.pageSize).toBe(25)
     expect(component.paginator.pageIndex).toBe(0)
     expect(component.paginator.showFirstLastButtons).toBe(true)
-  })
-  it('should parseTlsMode when known', () => {
-    const result = component.parseTlsMode(1)
-    expect(result).toBe('test')
-  })
-  it('should parseTlsMode when unknown', () => {
-    const result = component.parseTlsMode(null as any)
-    expect(result).toBe('')
   })
 })

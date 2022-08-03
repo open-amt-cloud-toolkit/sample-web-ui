@@ -4,61 +4,52 @@
 **********************************************************************/
 
 import Constants from '../../../../src/app/shared/config/Constants'
-
-const amtModes = ['ccmactivate', 'acmactivate']
-const dhcpEnabled = [true, false]
-
-const tlsModes: any = {
-  'CIRA (Cloud)': { profileValue: 'CIRA' },
-  'Server Authentication Only': { profileValue: 'server', value: 1 },
-  'Server & Non-TLS Authentication': { profileValue: 'server-nontls', value: 2 },
-  'Mutual TLS Authentication Only': { profileValue: 'mutualtls', value: 3 },
-  'Mutual and Non-TLS Authentication': { profileValue: 'mutual-nontls', value: 4 }
-}
-const connectionMode = ['CIRA (Cloud)', 'Server Authentication Only', 'Server & Non-TLS Authentication', 'Mutual TLS Authentication Only', 'Mutual and Non-TLS Authentication']
-const ciraProfile = 'happyPath'
-const amtProfiles: any[] = []
+const allConnections = [
+  { mode: Constants.ConnectionModes.CIRA.display, selection: 'happyPath' },
+  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.SERVER.display },
+  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.SERVER_NON_TLS.display },
+  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.MUTUAL.display },
+  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.MUTUAL_NON_TLS.display }
+]
 const wifiConfigs = [
   [{}], // support non wifi config
   [{
     profileName: 'happyPath'
   }]
 ]
-amtModes.forEach((amtMode) => {
-  dhcpEnabled.forEach((dhcp) => {
-    connectionMode.forEach((conMode) => {
-      wifiConfigs.forEach((wifi) => {
-        const dhcpS = dhcp ? 'DHCP' : 'Static'
 
+const testProfiles: any[] = []
+// build an array of profiles to be tested based on configuration permutations
+for (const [, activationMode] of Object.entries(Constants.ActivationModes)) {
+  for (const [,dhcpMode] of Object.entries(Constants.DhcpModes)) {
+    allConnections.forEach((cnx) => {
+      wifiConfigs.forEach((wifi) => {
+        let profileName = `${activationMode.value}-${dhcpMode.display}`
         const profile: any = {
-          profileName: `${amtMode}-${dhcpS}-${tlsModes[conMode].profileValue as string}`,
-          activation: amtMode,
+          // profileName: `${amtMode.value}-${dhcpS}-${tlsModes[conMode.value].profileValue as string}`,
+          activationMode: activationMode.value,
+          connectionMode: cnx.mode,
+          connectionSelection: cnx.selection,
+          // TODO: if we always use the env for this testing, why bother having it set in test profile?
           amtPassword: '', // Cypress.env('AMT_PASSWORD'),
           mebxPassword: '', // Cypress.env('MEBX_PASSWORD'),
-          dhcpEnabled: dhcp,
+          dhcpEnabled: dhcpMode.value,
           //   userConsent: Constants.UserConsent_All,
           iderEnabled: true,
           kvmEnabled: true,
           solEnabled: true
         }
-        if (conMode === 'CIRA (Cloud)') {
-          profile.connectionMode = conMode
-          profile.ciraConfigName = ciraProfile
-        } else {
-          profile.connectionMode = 'TLS (Enterprise)'
-          profile.tlsConfig = conMode
-          profile.tlsMode = tlsModes[conMode].value
-        }
         if ((wifi[0] as any).profileName) {
-          if (!dhcp) { return }
-          (profile.profileName as string) += '-WiFi'
+          if (!dhcpMode.value) { return }
+          profileName += '-WiFi'
           profile.wifiConfigs = wifi
         }
-        amtProfiles.push(profile)
+        profile.profileName = profileName
+        testProfiles.push(profile)
       })
     })
-  })
-})
+  }
+}
 
 const profileFixtures = {
   happyPath: {
@@ -69,7 +60,7 @@ const profileFixtures = {
     connectionMode: 'CIRA (Cloud)',
     dhcpEnabled: true,
     ciraConfig: 'happyPath',
-    userConsent: Constants.UserConsent_All,
+    userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true,
@@ -109,7 +100,7 @@ const profileFixtures = {
     connectionMode: 'TLS (Enterprise)',
     tlsConfig: 'Server Authentication Only',
     generateRandomPassword: false,
-    userConsent: Constants.UserConsent_All,
+    userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true,
@@ -129,7 +120,7 @@ const profileFixtures = {
     connectionMode: 'CIRA (Cloud)',
     dhcpEnabled: false,
     ciraConfig: 'happyPath',
-    userConsent: Constants.UserConsent_All,
+    userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true,
@@ -149,7 +140,7 @@ const profileFixtures = {
     connectionMode: 'CIRA (Cloud)',
     dhcpEnabled: false,
     ciraConfig: 'happyPath',
-    userConsent: Constants.UserConsent_All,
+    userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true
@@ -170,13 +161,14 @@ const profileFixtures = {
         priority: 1
       }
     ],
-    userConsent: Constants.UserConsent_All,
+    userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true
   },
   patchServerAuthentication: {
     profileName: 'happyTlspath',
+    // todo: use constants
     activation: 'acmactivate',
     ciraConfigName: null,
     generateRandomPassword: false,
@@ -236,4 +228,4 @@ const profileFixtures = {
     wifiConfigs: []
   }
 }
-export { profileFixtures, amtProfiles }
+export { profileFixtures, testProfiles }

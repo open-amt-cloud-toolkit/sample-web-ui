@@ -3,10 +3,10 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-export interface TlsMode {
-  value: number
-  viewValue: string
-}
+// export interface TlsMode {
+//   value: number
+//   viewValue: string
+// }
 
 export interface Device {
   hostname: string

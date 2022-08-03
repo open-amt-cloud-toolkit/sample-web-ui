@@ -12,7 +12,7 @@ import { finalize, map, startWith } from 'rxjs/operators'
 import { ConfigsService } from 'src/app/configs/configs.service'
 import Constants from 'src/app/shared/config/Constants'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
-import { CIRAConfigResponse, Profile, TLSConfigResponse, TlsMode, WiFiProfile, WirelessConfigResponse } from 'src/models/models'
+import { CIRAConfigResponse, Profile, TLSConfigResponse, WiFiProfile, WirelessConfigResponse } from 'src/models/models'
 import { ProfilesService } from '../profiles.service'
 import { RandomPassAlertComponent } from 'src/app/shared/random-pass-alert/random-pass-alert.component'
 import { StaticCIRAWarningComponent } from 'src/app/shared/static-cira-warning/static-cira-warning.component'
@@ -30,17 +30,11 @@ import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete'
 })
 export class ProfileDetailComponent implements OnInit {
   public profileForm: FormGroup
-  public activationModes = [
-    { display: 'Admin Control Mode', value: Constants.ACMActivate },
-    { display: 'Client Control Mode', value: Constants.CCMActivate }
-  ]
-
-  public userConsentModes = [
-    { display: 'None', value: Constants.UserConsent_None },
-    { display: 'All', value: Constants.UserConsent_All },
-    { display: 'KVM Only', value: Constants.UserConsent_KVM }
-  ]
-
+  public activationModes = Constants.ActivationModes
+  public userConsentModes = Constants.UserConsentModes
+  public dhcpModes = Constants.DhcpModes
+  public connectionModes = Constants.ConnectionModes
+  public tlsModes = Constants.TlsModes
   public ciraConfigurations: CIRAConfigResponse = { data: [], totalCount: 0 }
   public tlsConfigurations: TLSConfigResponse = { data: [], totalCount: 0 }
   public isLoading = false
@@ -52,7 +46,6 @@ export class ProfileDetailComponent implements OnInit {
   public mebxInputType = 'password'
   readonly separatorKeysCodes: number[] = [ENTER, COMMA]
   public errorMessages: string[] = []
-  public tlsModes: TlsMode[] = []
   matDialogConfig: MatDialogConfig = {
     height: '225px',
     width: '450px'
@@ -64,10 +57,9 @@ export class ProfileDetailComponent implements OnInit {
 
   constructor (public snackBar: MatSnackBar, public fb: FormBuilder, public router: Router, private readonly activeRoute: ActivatedRoute,
     public profilesService: ProfilesService, private readonly configsService: ConfigsService, private readonly wirelessService: WirelessService, public dialog: MatDialog) {
-    this.tlsModes = profilesService.tlsModes
     this.profileForm = fb.group({
       profileName: [null, Validators.required],
-      activation: [Constants.ACMActivate, Validators.required],
+      activation: [Constants.ActivationModes.ADMIN.value, Validators.required],
       generateRandomPassword: [true, Validators.required],
       amtPassword: [{ value: null, disabled: true }],
       generateRandomMEBxPassword: [true, Validators.required],
@@ -79,7 +71,7 @@ export class ProfileDetailComponent implements OnInit {
       tlsMode: [null],
       version: [null],
       // userConsent default depends on activation
-      userConsent: [Constants.UserConsent_None, Validators.required],
+      userConsent: [Constants.UserConsentModes.NONE, Validators.required],
       iderEnabled: [true, Validators.required],
       kvmEnabled: [true, Validators.required],
       solEnabled: [true, Validators.required]
@@ -129,16 +121,16 @@ export class ProfileDetailComponent implements OnInit {
 
   setConnectionMode (data: Profile): void {
     if (data.tlsMode != null) {
-      this.profileForm.controls.connectionMode.setValue(Constants.ConnectionMode_TLS)
+      this.profileForm.controls.connectionMode.setValue(Constants.ConnectionModes.TLS.value)
     } else if (data.ciraConfigName != null) {
-      this.profileForm.controls.connectionMode.setValue(Constants.ConnectionMode_CIRA)
+      this.profileForm.controls.connectionMode.setValue(Constants.ConnectionModes.CIRA.value)
     }
   }
 
   activationChange (value: string): void {
-    if (value === Constants.CCMActivate) {
+    if (value === Constants.ActivationModes.CLIENT.value) {
       this.profileForm.controls.userConsent.disable()
-      this.profileForm.controls.userConsent.setValue(Constants.UserConsent_All)
+      this.profileForm.controls.userConsent.setValue(Constants.UserConsentModes.ALL.value)
       this.profileForm.controls.userConsent.clearValidators()
       this.profileForm.controls.mebxPassword.disable()
       this.profileForm.controls.mebxPassword.setValue(null)
@@ -178,7 +170,7 @@ export class ProfileDetailComponent implements OnInit {
       this.profileForm.controls.mebxPassword.disable()
       this.profileForm.controls.mebxPassword.setValue(null)
       this.profileForm.controls.mebxPassword.clearValidators()
-    } else if (this.profileForm.controls.activation.value === Constants.ACMActivate) {
+    } else if (this.profileForm.controls.activation.value === Constants.ActivationModes.ADMIN.value) {
       this.profileForm.controls.mebxPassword.enable()
       this.profileForm.controls.mebxPassword.setValidators(Validators.required)
     }
@@ -243,11 +235,11 @@ export class ProfileDetailComponent implements OnInit {
   }
 
   connectionModeChange (value: string): void {
-    if (value === Constants.ConnectionMode_TLS) {
+    if (value === Constants.ConnectionModes.TLS.value) {
       this.profileForm.controls.ciraConfigName.clearValidators()
       this.profileForm.controls.ciraConfigName.setValue(null)
       this.profileForm.controls.tlsMode.setValidators(Validators.required)
-    } else if (value === Constants.ConnectionMode_CIRA) {
+    } else if (value === Constants.ConnectionModes.CIRA.value) {
       this.profileForm.controls.tlsMode.clearValidators()
       this.profileForm.controls.tlsMode.setValue(null)
       this.profileForm.controls.ciraConfigName.setValidators(Validators.required)
@@ -344,7 +336,7 @@ export class ProfileDetailComponent implements OnInit {
       if (!this.isEdit && (result.generateRandomPassword || result.generateRandomMEBxPassword)) {
         dialogs.push(this.randPasswordWarning())
       }
-      if (result.connectionMode === Constants.ConnectionMode_CIRA && result.dhcpEnabled === false) {
+      if (result.connectionMode === Constants.ConnectionModes.CIRA.value && result.dhcpEnabled === false) {
         dialogs.push(this.CIRAStaticWarning())
       }
 

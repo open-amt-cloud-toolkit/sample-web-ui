@@ -3,14 +3,14 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-import { amtProfiles } from '../formEntry/profile'
+import { testProfiles } from '../formEntry/profile'
 
 const profiles = {
   getAll: {
     success: {
       response: {
-        data: amtProfiles,
-        totalCount: amtProfiles.length
+        data: testProfiles,
+        totalCount: testProfiles.length
       }
     },
     forPaging: {

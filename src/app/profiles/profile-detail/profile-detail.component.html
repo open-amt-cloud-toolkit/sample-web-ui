@@ -26,8 +26,8 @@
           <mat-form-field fxFlex="100">
             <mat-label>Activation Mode</mat-label>
             <mat-select formControlName="activation" required>
-              <mat-option *ngFor="let activationMode of activationModes" [value]="activationMode.value">
-                {{activationMode.display}}
+              <mat-option *ngFor="let mode of activationModes | keyvalue" [value]="mode.value.value">
+                {{mode.value.display}}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -36,20 +36,20 @@
             <mat-label>AMT Features - Enable/Disable redirection features of AMT</mat-label>
           </div>
           <div fxFlex="100" style="margin-top:10px">
-            <mat-checkbox data-cy="redirect_ider" formControlName="iderEnabled">IDE Redirect</mat-checkbox>
+            <mat-checkbox formControlName="iderEnabled">IDE Redirect</mat-checkbox>
           </div>
           <div fxFlex="100">
-            <mat-checkbox data-cy="redirect_kvm" formControlName="kvmEnabled">KVM</mat-checkbox>
+            <mat-checkbox formControlName="kvmEnabled">KVM</mat-checkbox>
           </div>
           <div fxFlex="100">
-            <mat-checkbox data-cy="redirect_sol" formControlName="solEnabled">SOL</mat-checkbox>
+            <mat-checkbox formControlName="solEnabled">SOL</mat-checkbox>
           </div>
           <mat-form-field fxFlex="100" style="margin-top:10px">
             <mat-label>User Consent</mat-label>
             <mat-hint>Controls when a user must be present for select AMT features</mat-hint>
             <mat-select formControlName="userConsent" required>
-              <mat-option *ngFor="let mode of userConsentModes" [value]="mode.value">
-                {{mode.display}}
+              <mat-option *ngFor="let mode of userConsentModes | keyvalue" [value]="mode.value.value">
+                {{mode.value.display}}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -100,8 +100,8 @@
             <mat-label>Network Configuration</mat-label>
             <br>
             <mat-radio-group name="dhcpEnabled" formControlName="dhcpEnabled"><br />
-              <mat-radio-button [value]="true" checked="true">DHCP</mat-radio-button><br /><br />
-              <mat-radio-button [value]="false">STATIC</mat-radio-button><br /><br />
+              <mat-radio-button [value]="dhcpModes.DHCP.value" checked="true">{{dhcpModes.DHCP.display}}</mat-radio-button><br /><br />
+              <mat-radio-button [value]="dhcpModes.STATIC.value">{{dhcpModes.STATIC.display}}</mat-radio-button><br /><br />
             </mat-radio-group>
           </div>
           <mat-form-field fxFlex=100 style="margin-bottom:24px;">
@@ -124,19 +124,26 @@
             <br>
             <mat-radio-group name="connectionMode" formControlName="connectionMode"><br/>
               <mat-error *ngIf="profileForm.get('connectionMode')?.touched && profileForm.get('connectionMode')?.invalid ">A CIRA or TLS Config is required</mat-error>
-              <mat-radio-button [disabled]="ciraConfigurations?.data?.length === 0" value="CIRA">CIRA (Cloud) <span [fxShow]="ciraConfigurations?.data?.length === 0">
-                 - No CIRA Configs Found</span> </mat-radio-button><br /><br />
-              <mat-radio-button value="TLS">TLS (Enterprise)</mat-radio-button><br /><br />
+              <mat-radio-button
+                [disabled]="ciraConfigurations?.data?.length === 0"
+                [value]="connectionModes.CIRA.value">
+                {{ connectionModes.CIRA.display }} <span [fxShow]="ciraConfigurations?.data?.length === 0">- No CIRA Configs Found</span>
+              </mat-radio-button>
+              <br /><br />
+              <mat-radio-button [value]="connectionModes.TLS.value">{{ connectionModes.TLS.display }} </mat-radio-button>
+              <br /><br />
             </mat-radio-group>
           </div>
-          <mat-form-field fxFlex="100" [fxShow]="profileForm.get('connectionMode')?.value=== 'TLS'">
+          <mat-form-field fxFlex="100" [fxShow]="profileForm.get('connectionMode')?.value===connectionModes.TLS.value">
             <mat-label>TLS Mode</mat-label>
             <mat-select formControlName="tlsMode">
-              <mat-option *ngFor="let tm of tlsModes" [value]="tm.value">{{tm.viewValue}}</mat-option>
+              <mat-option *ngFor="let mode of tlsModes | keyvalue" [value]="mode.value.value">
+                {{mode.value.display}}
+              </mat-option>
             </mat-select>
             <mat-hint>CIRA cannot be configured, if TLS is configured</mat-hint>
           </mat-form-field>
-          <mat-form-field fxFlex="100" [fxShow]="profileForm.get('connectionMode')?.value=== 'CIRA'">
+          <mat-form-field fxFlex="100" [fxShow]="profileForm.get('connectionMode')?.value===connectionModes.CIRA.value">
             <mat-label>CIRA Configuration</mat-label>
             <mat-select formControlName="ciraConfigName">
               <mat-option *ngFor="let cc of ciraConfigurations.data" [value]="cc.configName">{{cc.configName}}

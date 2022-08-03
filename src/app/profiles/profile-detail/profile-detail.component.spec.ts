@@ -85,11 +85,11 @@ describe('ProfileDetailComponent', () => {
   })
   it('should set connectionMode to TLS when tlsMode is not null', () => {
     component.setConnectionMode({ tlsMode: 4 } as any)
-    expect(component.profileForm.controls.connectionMode.value).toBe(Constants.ConnectionMode_TLS)
+    expect(component.profileForm.controls.connectionMode.value).toBe(Constants.ConnectionModes.TLS.value)
   })
   it('should set connectionMode to CIRA when ciraConfigName is not null', () => {
     component.setConnectionMode({ ciraConfigName: 'config1' } as any)
-    expect(component.profileForm.controls.connectionMode.value).toBe('CIRA')
+    expect(component.profileForm.controls.connectionMode.value).toBe(Constants.ConnectionModes.CIRA.value)
   })
   it('should cancel', async () => {
     const routerSpy = spyOn(component.router, 'navigate')
@@ -407,11 +407,11 @@ describe('ProfileDetailComponent', () => {
   })
 
   it('should adjust related fields on selecting activation mode', () => {
-    component.activationChange(Constants.CCMActivate)
+    component.activationChange(Constants.ActivationModes.CLIENT.value)
     expect(component.profileForm.controls.generateRandomMEBxPassword.disabled).toBe(true)
     expect(component.profileForm.controls.userConsent.disabled).toBe(true)
-    expect(component.profileForm.controls.userConsent.value).toEqual(Constants.UserConsent_All)
-    component.activationChange(Constants.ACMActivate)
+    expect(component.profileForm.controls.userConsent.value).toEqual(Constants.UserConsentModes.ALL.value)
+    component.activationChange(Constants.ActivationModes.ADMIN.value)
     expect(component.profileForm.controls.generateRandomMEBxPassword.disabled).toBe(false)
     expect(component.profileForm.controls.userConsent.disabled).toBe(false)
   })
@@ -505,13 +505,13 @@ describe('ProfileDetailComponent', () => {
   })
 
   it('should set the ciraCofigName property to null when TLS Selected', () => {
-    component.connectionModeChange(Constants.ConnectionMode_TLS)
+    component.connectionModeChange(Constants.ConnectionModes.TLS.value)
     expect(component.profileForm.controls.ciraConfigName.value).toEqual(null)
     expect(component.profileForm.controls.ciraConfigName.valid).toBeTrue()
     expect(component.profileForm.controls.tlsMode.valid).toBeFalse()
   })
   it('should set the tlsMode property to null when CIRA Selected', () => {
-    component.connectionModeChange('CIRA')
+    component.connectionModeChange(Constants.ConnectionModes.CIRA.value)
     expect(component.profileForm.controls.tlsMode.value).toEqual(null)
     expect(component.profileForm.controls.tlsMode.valid).toBeTrue()
     expect(component.profileForm.controls.ciraConfigName.value).toBe('config1')

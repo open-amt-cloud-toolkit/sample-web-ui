@@ -76,4 +76,59 @@ describe('Test Update Profile Page', () => {
   //     // cy.get('mat-cell').contains(updatedAMTProfile.activation)
   //   })
   // })
+
+  // TODO: get these working
+  // it('Update profile redirection features', () => {
+  //   // build out the updated fields
+  //   const profileName = profileFixtures.happyPath.profileName
+  //   const originalCfg = JSON.parse(JSON.stringify(profileFixtures.happyPath))
+  //   originalCfg.activationMode = 'Admin Control Mode'
+  //   const updatedCfg = JSON.parse(JSON.stringify(profileFixtures.happyPath))
+  //   updatedCfg.activationMode = 'Admin Control Mode'
+  //   updatedCfg.activation = 'ccmadmin'
+  //   updatedCfg.userConsent = Constants.UserConsent_KVM
+  //   updatedCfg.iderEnabled = !profileFixtures.happyPath.iderEnabled
+  //   updatedCfg.kvmEnabled = !profileFixtures.happyPath.kvmEnabled
+  //   updatedCfg.solEnabled = !profileFixtures.happyPath.solEnabled
+  //   cy.myIntercept('GET', profileName,
+  //     {
+  //       statusCode: httpCodes.SUCCESS,
+  //       body: profileFixtures.happyPath
+  //     })
+  //     .as('get-original')
+  //   cy.myIntercept('PATCH', 'profiles',
+  //     {
+  //       statusCode: httpCodes.SUCCESS,
+  //       body: updatedCfg
+  //     })
+  //     .as('patch-original')
+  //   cy.myIntercept('GET', profileName,
+  //     {
+  //       statusCode: httpCodes.SUCCESS,
+  //       body: profileFixtures.happyPath
+  //     })
+  //     .as('get-updated')
+  //
+  //   cy.get('mat-row').contains(profileName).click()
+  //   // cy.wait('@getOriginal').its('response.statusCode').should('eq', 200)
+  //   cy.setActivationMode(updatedCfg.activationMode)
+  //   cy.setAMTPassword(false)
+  //   cy.setMEBXPassword(false)
+  //   cy.setProfileRedirectionFeatures(
+  //     updatedCfg.userConsent,
+  //     updatedCfg.iderEnabled,
+  //     updatedCfg.kvmEnabled,
+  //     updatedCfg.solEnabled
+  //   )
+  //   cy.get('button[type=submit]').click()
+  //   cy.wait('@patch-original').its('response.statusCode').should('eq', 200)
+  //   cy.get('mat-row').contains(updatedCfg.profileName).click()
+  //   cy.wait('@get-updated').its('response.statusCode').should('eq', 200)
+  //   cy.assertProfileFeatures(
+  //     updatedCfg.userConsent,
+  //     updatedCfg.iderEnabled,
+  //     updatedCfg.kvmEnabled,
+  //     updatedCfg.solEnabled
+  //   )
+  // })
 })
