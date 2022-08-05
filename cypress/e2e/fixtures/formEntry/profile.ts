@@ -5,11 +5,11 @@
 
 import Constants from '../../../../src/app/shared/config/Constants'
 const allConnections = [
-  { mode: Constants.ConnectionModes.CIRA.display, selection: 'happyPath' },
-  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.SERVER.display },
-  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.SERVER_NON_TLS.display },
-  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.MUTUAL.display },
-  { mode: Constants.ConnectionModes.TLS.display, selection: Constants.TlsModes.MUTUAL_NON_TLS.display }
+  { id: 'CIRA-happyPath', mode: Constants.ConnectionModes.CIRA, tlsMode: null, ciraConfigName: 'happyPath' },
+  { id: 'TLS-server', mode: Constants.ConnectionModes.TLS, tlsMode: Constants.TlsModes.SERVER, ciraConfigName: null },
+  { id: 'TLS-servernontls', mode: Constants.ConnectionModes.TLS, tlsMode: Constants.TlsModes.SERVER_NON_TLS, ciraConfigName: null },
+  { id: 'TLS-mutual', mode: Constants.ConnectionModes.TLS, tlsMode: Constants.TlsModes.MUTUAL, ciraConfigName: null },
+  { id: 'TLS-mutualnontls', mode: Constants.ConnectionModes.TLS, tlsMode: Constants.TlsModes.MUTUAL_NON_TLS, ciraConfigName: null }
 ]
 const wifiConfigs = [
   [{}], // support non wifi config
@@ -24,28 +24,31 @@ for (const [, activationMode] of Object.entries(Constants.ActivationModes)) {
   for (const [,dhcpMode] of Object.entries(Constants.DhcpModes)) {
     allConnections.forEach((cnx) => {
       wifiConfigs.forEach((wifi) => {
-        let profileName = `${activationMode.value}-${dhcpMode.display}`
-        const profile: any = {
-          // profileName: `${amtMode.value}-${dhcpS}-${tlsModes[conMode.value].profileValue as string}`,
-          activationMode: activationMode.value,
-          connectionMode: cnx.mode,
-          connectionSelection: cnx.selection,
-          // TODO: if we always use the env for this testing, why bother having it set in test profile?
-          amtPassword: '', // Cypress.env('AMT_PASSWORD'),
-          mebxPassword: '', // Cypress.env('MEBX_PASSWORD'),
-          dhcpEnabled: dhcpMode.value,
-          //   userConsent: Constants.UserConsent_All,
+        // generate a distincitive name of the general format
+        // {activation}-{dhcp}-{connection}-{connectionselection}-{wifi}
+        let name = `${activationMode.value}-${dhcpMode.display}-${cnx.id}`
+        let curWifiCfgs = null
+        if ((wifi[0] as any).profileName) {
+          // Wi-Fi will not work over static Network
+          if (!dhcpMode.value) { return }
+          name += '-WiFi'
+          curWifiCfgs = wifi
+        }
+        // creat a 'pure' profile with only the values that are valid for req/rsp
+        // any usage of display strings should be looked up based on value
+        const testProfile: any = {
+          profileName: name,
+          activation: activationMode.value,
+          userConsent: Constants.UserConsentModes.ALL.value,
           iderEnabled: true,
           kvmEnabled: true,
-          solEnabled: true
+          solEnabled: true,
+          ciraConfigName: cnx.ciraConfigName,
+          tlsMode: cnx.tlsMode?.value,
+          dhcpEnabled: dhcpMode.value,
+          wifiConfigs: curWifiCfgs
         }
-        if ((wifi[0] as any).profileName) {
-          if (!dhcpMode.value) { return }
-          profileName += '-WiFi'
-          profile.wifiConfigs = wifi
-        }
-        profile.profileName = profileName
-        testProfiles.push(profile)
+        testProfiles.push(testProfile)
       })
     })
   }

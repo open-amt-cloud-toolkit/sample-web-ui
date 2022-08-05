@@ -21,6 +21,7 @@ export class WirelessDetailComponent implements OnInit {
   public wirelessForm: FormGroup
   public pageTitle = 'New Wireless Config'
   public pskInputType = 'password'
+  // TOOD: get these into Constants.ts
   public authenticationModes = [{ display: 'WPA PSK', value: Constants.WPAPSK }, { display: 'WPA2 PSK', value: Constants.WPA2PSK }]
   public encryptionModes = [{ display: 'TKIP', value: Constants.TKIP }, { display: 'CCMP', value: Constants.CCMP }]
   isLoading: boolean = true

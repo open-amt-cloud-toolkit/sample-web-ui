@@ -169,7 +169,7 @@
             <br />
             <mat-hint>Drag and Drop to reorder</mat-hint>
           </div>
-          <mat-list cdkDropList (cdkDropListDropped)="drop($event)">
+          <mat-list data-cy="wifiConfigs" cdkDropList (cdkDropListDropped)="drop($event)">
             <mat-list-item class="drag-box" cdkDrag *ngFor="let item of selectedWifiConfigs">
               <p matLine>{{item.priority}}. {{item.profileName}}</p>
               <mat-icon matListIcon>drag_handle</mat-icon>

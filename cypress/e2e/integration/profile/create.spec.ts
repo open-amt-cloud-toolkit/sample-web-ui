@@ -5,7 +5,6 @@
 
 // Tests the creation of a profile
 import { ciraConfig } from 'cypress/e2e/fixtures/api/cira'
-import { empty } from 'cypress/e2e/fixtures/api/general'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
 import { profiles } from 'cypress/e2e/fixtures/api/profile'
 import { wirelessConfigs } from 'cypress/e2e/fixtures/api/wireless'
@@ -21,7 +20,7 @@ describe('Test Profile Page', () => {
     cy.myIntercept('GET', 'ciraconfigs?$count=true', {
       statusCode: httpCodes.SUCCESS,
       body: ciraConfig.getAll.forProfile.response
-    }).as('get-configs')
+    }).as('get-ciraConfigs')
 
     cy.myIntercept('GET', 'wirelessconfigs?$count=true', {
       statusCode: httpCodes.SUCCESS,
@@ -33,9 +32,13 @@ describe('Test Profile Page', () => {
       body: profiles.create.success.response
     }).as('post-profile')
 
+    // this first get-profiles will be empty
     cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
       statusCode: httpCodes.SUCCESS,
-      body: empty.response
+      body: {
+        data: [],
+        totalCount: 0
+      }
     }).as('get-profiles')
 
     cy.goToPage('Profiles')
@@ -49,47 +52,88 @@ describe('Test Profile Page', () => {
 
     // Fill out the profile
     cy.get('button').contains('Add New').click()
-    cy.wait('@get-configs')
+    cy.wait('@get-ciraConfigs')
     cy.wait('@get-wirelessConfigs')
   })
 
-  testProfiles.forEach((profile) => {
-    it(`creates the profile - ${profile.profileName as string}`, () => {
-      cy.log(profile)
+  testProfiles.forEach((testProfile) => {
+    const postResponse: any = {
+      data: [],
+      totalCount: 0
+    }
+    it(`creates the profile - ${testProfile.profileName as string}`, () => {
+      cy.log(testProfile)
       cy.enterProfileInfo(
-        profile.profileName,
-        profile.activationMode,
+        testProfile.profileName,
+        testProfile.activation,
+        testProfile.userConsent,
+        testProfile.iderEnabled,
+        testProfile.kvmEnabled,
+        testProfile.solEnabled,
         false,
         false,
-        profile.dhcpEnabled,
-        profile.connectionMode,
-        profile.connectionSelection,
-        profile.userConsent,
-        profile.iderEnabled,
-        profile.kvmEnabled,
-        profile.solEnabled,
-        profile.wifiConfigs
+        testProfile.dhcpEnabled,
+        testProfile.ciraConfigName,
+        testProfile.tlsMode,
+        testProfile.wifiConfigs
       )
+      postResponse.data.push(testProfile)
+      postResponse.totalCount = postResponse.data.length
+      cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
+        statusCode: httpCodes.SUCCESS,
+        body: postResponse
+      }).as('get-profiles')
+
       cy.get('button[type=submit]').click()
-      if (!profile.dhcpEnabled && profile.connectionMode === 'CIRA (Cloud)') {
+      // clear the warning dialog
+      if (!testProfile.dhcpEnabled && testProfile.ciraConfigName) {
         cy.get('button').contains('Continue').click()
       }
+
       cy.wait('@post-profile')
         .its('response')
         .then(response => {
           cy.wrap(response).its('statusCode').should('eq', httpCodes.CREATED)
         })
-      cy.wait('@post-profile').then((interception) => {
-        cy.wrap(interception)
-          .its('response.statusCode')
-          .should('eq', httpCodes.CREATED)
+      // Check that the config was successful
+      cy.wait('@get-profiles')
+      cy.get('mat-cell').contains(testProfile.profileName)
+      cy.get('mat-cell').contains(Constants.parseDhcpMode(testProfile.dhcpEnabled))
+      if (testProfile.ciraConfigName) {
+        cy.get('mat-cell').contains(testProfile.ciraConfigName)
+      }
+      if (testProfile.tlsMode) {
+        cy.get('mat-cell').contains(Constants.parseTlsMode(testProfile.tlsMode))
+      }
+      cy.get('mat-cell').contains(testProfile.activation)
 
-        // Check that the config was successful
-        cy.get('mat-cell').contains(profile.profileName)
-        cy.get('mat-cell').contains(Constants.parseDhcpMode(profile.dhcpEnabled))
-        cy.get('mat-cell').contains(profile.connectionMode)
-        cy.get('mat-cell').contains(profile.activationMode)
-      })
+      // setup the get response based on the profile clicked
+      cy.myIntercept('GET', testProfile.profileName, {
+        statusCode: httpCodes.SUCCESS,
+        body: testProfile
+      }).as('get-test-profile')
+
+      cy.contains('mat-row', testProfile.profileName).click()
+      cy.wait('@get-test-profile')
+        .its('response')
+        .then(response => {
+          cy.wrap(response).its('statusCode').should('eq', httpCodes.SUCCESS)
+        })
+
+      cy.assertProfileInfo(
+        testProfile.profileName,
+        testProfile.activation,
+        testProfile.userConsent,
+        testProfile.iderEnabled,
+        testProfile.kvmEnabled,
+        testProfile.solEnabled,
+        false,
+        false,
+        testProfile.dhcpEnabled,
+        testProfile.ciraConfigName,
+        testProfile.tlsMode,
+        testProfile.wifiConfigs
+      )
     })
   })
 })

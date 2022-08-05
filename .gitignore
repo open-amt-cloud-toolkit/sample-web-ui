@@ -50,6 +50,8 @@ testem.log
 # for cypress tests in dev/local environment
 cypress.env.*
 
+TESTS-*.xml
+
 # System Files
 .DS_Store
 Thumbs.db
