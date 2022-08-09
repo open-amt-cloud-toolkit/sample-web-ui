@@ -14,6 +14,7 @@ const allConnections = [
 const wifiConfigs = [
   [{}], // support non wifi config
   [{
+    priority: 1,
     profileName: 'happyPath'
   }]
 ]
@@ -43,9 +44,9 @@ for (const [, activationMode] of Object.entries(Constants.ActivationModes)) {
           iderEnabled: true,
           kvmEnabled: true,
           solEnabled: true,
+          dhcpEnabled: dhcpMode.value,
           ciraConfigName: cnx.ciraConfigName,
           tlsMode: cnx.tlsMode?.value,
-          dhcpEnabled: dhcpMode.value,
           wifiConfigs: curWifiCfgs
         }
         testProfiles.push(testProfile)
@@ -55,18 +56,23 @@ for (const [, activationMode] of Object.entries(Constants.ActivationModes)) {
 }
 
 const profileFixtures = {
+  wrong: {
+    name: 'bad name !',
+    amtPassword: 'password',
+    mebxPassword: '12345678'
+  },
+  totalCount: 100,
   happyPath: {
     profileName: 'happyPath',
-    activation: 'ccmactivate',
-
-    mebxPassword: 'P@ssw0rd',
-    connectionMode: 'CIRA (Cloud)',
-    dhcpEnabled: true,
-    ciraConfig: 'happyPath',
+    activation: Constants.ActivationModes.CLIENT.value,
     userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true,
+    mebxPassword: 'P@ssw0rd',
+    dhcpEnabled: Constants.DhcpModes.DHCP.value,
+    ciraConfig: 'happyPath',
+    tlsMode: null,
     wifiConfigs: [
       {
         priority: 1,
@@ -74,39 +80,19 @@ const profileFixtures = {
       }
     ]
   },
-
-  wrong: {
-    name: 'bad name !',
-    amtPassword: 'password',
-    mebxPassword: '12345678'
-  },
-
-  check: {
-    network: {
-      dhcp: 'DHCP',
-      static: 'Static'
-    },
-
-    mode: {
-      acm: 'acmactivate',
-      ccm: 'ccmactivate'
-    }
-  },
-
-  totalCount: 100,
   happyPathTls: {
     profileName: 'happyTlspath',
-    activation: 'ccmactivate',
-    amtPassword: 'P@ssw0rd',
-    mebxPassword: 'P@ssw0rd',
-    dhcpEnabled: true,
-    connectionMode: 'TLS (Enterprise)',
-    tlsConfig: 'Server Authentication Only',
-    generateRandomPassword: false,
+    activation: Constants.ActivationModes.CLIENT.value,
     userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true,
+    amtPassword: 'P@ssw0rd',
+    mebxPassword: 'P@ssw0rd',
+    dhcpEnabled: Constants.DhcpModes.DHCP.value,
+    ciraConfig: null,
+    tlsMode: Constants.TlsModes.SERVER.value,
+    generateRandomPassword: false,
     wifiConfigs: [
       {
         profileName: 'happyPath',
@@ -117,16 +103,16 @@ const profileFixtures = {
 
   happyPathStaticCIRA: {
     profileName: 'happyPathStaticCIRA',
-    activation: 'ccmactivate',
-    amtPassword: 'P@ssw0rd',
-    mebxPassword: 'P@ssw0rd',
-    connectionMode: 'CIRA (Cloud)',
-    dhcpEnabled: false,
-    ciraConfig: 'happyPath',
+    activation: Constants.ActivationModes.CLIENT.value,
     userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
     solEnabled: true,
+    amtPassword: 'P@ssw0rd',
+    mebxPassword: 'P@ssw0rd',
+    dhcpEnabled: Constants.DhcpModes.STATIC.value,
+    ciraConfig: 'happyPath',
+    tlsMode: null,
     wifiConfigs: [
       {
         profileName: 'happyPath',
@@ -137,96 +123,115 @@ const profileFixtures = {
 
   happyPathStaticCIRARandomPassword: {
     profileName: 'happyPathStaticCIRARandomPassword',
-    activation: 'ccmactivate',
-    amtPassword: 'P@ssw0rd',
-    mebxPassword: 'P@ssw0rd',
-    connectionMode: 'CIRA (Cloud)',
-    dhcpEnabled: false,
-    ciraConfig: 'happyPath',
+    activation: Constants.ActivationModes.CLIENT.value,
     userConsent: Constants.UserConsentModes.ALL.value,
     iderEnabled: true,
     kvmEnabled: true,
-    solEnabled: true
+    solEnabled: true,
+    amtPassword: 'P@ssw0rd',
+    mebxPassword: 'P@ssw0rd',
+    dhcpEnabled: Constants.DhcpModes.STATIC.value,
+    ciraConfig: 'happyPath',
+    tlsMode: null
   },
   patchWirelessConfigHappyPath: {
     profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
+    activation: Constants.ActivationModes.ADMIN.value,
+    userConsent: Constants.UserConsentModes.ALL.value,
+    iderEnabled: true,
+    kvmEnabled: true,
+    solEnabled: true,
     generateRandomPassword: false,
     generateRandomMEBxPassword: false,
     tags: [],
-    dhcpEnabled: true,
-    tlsMode: 1,
+    dhcpEnabled: Constants.DhcpModes.DHCP.value,
+    ciraConfigName: null,
+    tlsMode: Constants.TlsModes.SERVER.value,
     tenantId: '',
     wifiConfigs: [
       {
         profileName: 'happyPath',
         priority: 1
       }
-    ],
-    userConsent: Constants.UserConsentModes.ALL.value,
-    iderEnabled: true,
-    kvmEnabled: true,
-    solEnabled: true
+    ]
   },
   patchServerAuthentication: {
     profileName: 'happyTlspath',
-    // todo: use constants
-    activation: 'acmactivate',
-    ciraConfigName: null,
+    activation: Constants.ActivationModes.ADMIN.value,
+    userConsent: Constants.UserConsentModes.ALL.value,
+    iderEnabled: true,
+    kvmEnabled: true,
+    solEnabled: true,
     generateRandomPassword: false,
     generateRandomMEBxPassword: false,
     tags: [],
-    dhcpEnabled: true,
-    tlsMode: 1,
+    dhcpEnabled: Constants.DhcpModes.DHCP.value,
+    ciraConfigName: null,
+    tlsMode: Constants.TlsModes.SERVER.value,
     tenantId: '',
     wifiConfigs: []
   },
   patchServerNonTLS: {
     profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
+    activation: Constants.ActivationModes.ADMIN.value,
+    userConsent: Constants.UserConsentModes.ALL.value,
+    iderEnabled: true,
+    kvmEnabled: true,
+    solEnabled: true,
     generateRandomPassword: false,
     generateRandomMEBxPassword: false,
     tags: [],
-    dhcpEnabled: true,
-    tlsMode: 2,
+    dhcpEnabled: Constants.DhcpModes.DHCP.value,
+    ciraConfigName: null,
+    tlsMode: Constants.TlsModes.SERVER_NON_TLS.value,
     tenantId: '',
     wifiConfigs: []
   },
   patchMutualTLS: {
     profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
+    activation: Constants.ActivationModes.ADMIN.value,
+    userConsent: Constants.UserConsentModes.ALL.value,
+    iderEnabled: true,
+    kvmEnabled: true,
+    solEnabled: true,
     generateRandomPassword: false,
     generateRandomMEBxPassword: false,
     tags: [],
-    dhcpEnabled: true,
-    tlsMode: 3,
+    dhcpEnabled: Constants.DhcpModes.DHCP.value,
+    ciraConfigName: null,
+    tlsMode: Constants.TlsModes.MUTUAL.value,
     tenantId: '',
     wifiConfigs: []
   },
   patchMutualNonTLS: {
     profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
+    activation: Constants.ActivationModes.ADMIN.value,
+    userConsent: Constants.UserConsentModes.ALL.value,
+    iderEnabled: true,
+    kvmEnabled: true,
+    solEnabled: true,
     generateRandomPassword: false,
     generateRandomMEBxPassword: false,
     tags: [],
-    dhcpEnabled: true,
-    tlsMode: 4,
+    dhcpEnabled: Constants.DhcpModes.DHCP.value,
+    ciraConfigName: null,
+    tlsMode: Constants.TlsModes.MUTUAL_NON_TLS.value,
     tenantId: '',
     wifiConfigs: []
   },
   patchSTATIC: {
     profileName: 'happyTlspath',
-    activation: 'ccmactivate',
-    ciraConfigName: null,
+    activation: Constants.ActivationModes.CLIENT.value,
+    userConsent: Constants.UserConsentModes.ALL.value,
+    iderEnabled: true,
+    kvmEnabled: true,
+    solEnabled: true,
     generateRandomPassword: false,
     generateRandomMEBxPassword: false,
     tags: [],
-    dhcpEnabled: false,
-    tlsMode: 1,
+    dhcpEnabled: Constants.DhcpModes.STATIC.value,
+    ciraConfigName: null,
+    tlsMode: Constants.TlsModes.SERVER.value,
     tenantId: '',
     wifiConfigs: []
   }

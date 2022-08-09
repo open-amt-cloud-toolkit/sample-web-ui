@@ -3,132 +3,134 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-// Tests the update of a profile
 import { ciraConfig } from 'cypress/e2e/fixtures/api/cira'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { profiles } from 'cypress/e2e/fixtures/api/profile'
 import { wirelessConfigs } from 'cypress/e2e/fixtures/api/wireless'
-// import { profileFixtures } from 'cypress/e2e/fixtures/formEntry/profile'
-// ---------------------------- Test section ----------------------------
+import { testProfiles } from '../../fixtures/formEntry/profile'
+import Constants from '../../../../src/app/shared/config/Constants'
 
-describe('Test Update Profile Page', () => {
-  // Real stack execution order: profile/create-tls.spec.ts, wireless/create.spec.ts and then profile/update-tls.spec.ts
+function freshenGetProfilesIntercept (profiles: any[]): void {
+  cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
+    statusCode: httpCodes.SUCCESS,
+    body: {
+      data: profiles,
+      totalCount: profiles.length
+    }
+  }).as('get-profiles')
+}
+function freshenGetProfileIntercept (profile: any): void {
+  cy.myIntercept('GET', profile.profileName,
+    {
+      statusCode: httpCodes.SUCCESS,
+      body: profile
+    })
+    .as('get-profile')
+}
+function openProfileDetails (profile: any): void {
+  freshenGetProfileIntercept(profile)
+  cy.get('mat-cell').contains(profile.profileName).click()
+  cy.wait('@get-profile')
+    .its('response')
+    .then(response => {
+      cy.wrap(response).its('statusCode').should('eq', httpCodes.SUCCESS)
+    })
+  cy.wait('@get-ciraConfigs')
+  cy.wait('@get-wirelessConfigs')
+}
+function saveProfileDetails (profile: any): void {
+  cy.myIntercept('PATCH', 'profiles', {
+    statusCode: httpCodes.SUCCESS,
+    body: profile
+  }).as('patch-profile')
+  freshenGetProfilesIntercept([profile])
+  cy.get('button[type=submit]').click()
+  // clear the warning dialog
+  if (!profile.dhcpEnabled && profile.ciraConfigName) {
+    cy.get('button').contains('Continue').click()
+  }
+  cy.wait('@patch-profile')
+    .its('response')
+    .then(response => {
+      cy.wrap(response).its('statusCode').should('eq', httpCodes.SUCCESS)
+    })
+
+  cy.wait('@get-profiles')
+    .get('mat-cell').contains(profile.profileName)
+    .next().should('contain.text', Constants.parseDhcpMode(profile.dhcpEnabled))
+    .next().should('contain.text', (profile.ciraConfigName) ? profile.ciraConfigName : Constants.parseTlsMode(profile.tlsMode))
+    .next().should('contain.text', profile.activation)
+}
+describe('Test Update Profile Page Update', () => {
+  // Real stack execution order:
+  // profile/create-tls.spec.ts,
+  // wireless/create.spec.ts
+  // profile/update-tls.spec.ts
   beforeEach('clear cache and login', () => {
     cy.setup()
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.success.response
-    }).as('get-profiles')
-
-    // Stub the get and post requests
+    const testProfile = JSON.parse(JSON.stringify(testProfiles[0]))
+    freshenGetProfilesIntercept([testProfile])
     cy.myIntercept('GET', 'ciraconfigs?$count=true', {
       statusCode: httpCodes.SUCCESS,
       body: ciraConfig.getAll.forProfile.response
-    }).as('get-configs')
-
+    }).as('get-ciraConfigs')
     cy.myIntercept('GET', 'wirelessconfigs?$count=true', {
       statusCode: httpCodes.SUCCESS,
       body: wirelessConfigs.getAll.forProfile.response
     }).as('get-wirelessConfigs')
-
     cy.goToPage('Profiles')
     cy.wait('@get-profiles')
   })
-  // it('Update profile should succeed', () => {
-  //   cy.myIntercept('GET', /profiles\/.*$/, {
-  //     statusCode: httpCodes.SUCCESS,
-  //     body: profiles.getAll.success.response.data[0]
-  //   }).as('get-profiles')
 
-  //   cy.myIntercept('PATCH', 'profiles', {
-  //     statusCode: httpCodes.SUCCESS,
-  //     body: profileFixtures.patchServerNonTLS
-  //   }).as('save-profile')
+  it('update activation mode should succeed', () => {
+    const testProfile = JSON.parse(JSON.stringify(testProfiles[0]))
+    expect(testProfile.activation).to.eq(Constants.ActivationModes.ADMIN.value)
+    expect(testProfile.userConsent).to.eq(Constants.UserConsentModes.ALL.value)
+    openProfileDetails(testProfile)
+    // set the userConsent mode specifically BEFORE changing from ADMIN to CLIENT
+    cy.matSelectChoose('[formControlName="userConsent"]', Constants.UserConsentModes.NONE.value)
+    // setting activation to CLIENT should trigger automatic UserConsent change to ALL
+    // which gets confirmed later
+    testProfile.activation = Constants.ActivationModes.CLIENT.value
+    cy.enterProfileInfo(testProfile, false, false)
+    saveProfileDetails(testProfile)
+    openProfileDetails(testProfile)
+    cy.assertProfileInfo(testProfile)
+  })
 
-  //   cy.get('mat-row').first().click()
-  //   // idk -- grab the last one in the list, should be different enough
-  //   const updatedAMTProfile = profiles.getAll.success.response.data[profiles.getAll.success.response.data.length - 1]
-  //   cy.enterProfileInfo(
-  //     updatedAMTProfile.profileName,
-  //     updatedAMTProfile.activation,
-  //     false,
-  //     false,
-  //     updatedAMTProfile.dhcpEnabled,
-  //     updatedAMTProfile.connectionMode,
-  //     updatedAMTProfile.ciraConfigName ?? updatedAMTProfile.tlsConfig,
-  //     updatedAMTProfile.userConsent,
-  //     updatedAMTProfile.iderEnabled,
-  //     updatedAMTProfile.kvmEnabled,
-  //     updatedAMTProfile.solEnabled,
-  //     updatedAMTProfile.wifiConfigs
-  //   )
-  //   cy.get('button[type=submit]').click()
+  it('update redirection features should succeed', () => {
+    const testProfile = JSON.parse(JSON.stringify(testProfiles[0]))
+    openProfileDetails(testProfile)
+    testProfile.userConsent = Constants.UserConsentModes.NONE.value
+    testProfile.iderEnabled = !testProfile.iderEnabled
+    testProfile.kvmEnabled = !testProfile.kvmEnabled
+    testProfile.solEnabled = !testProfile.solEnabled
+    cy.enterProfileInfo(testProfile, false, false)
+    saveProfileDetails(testProfile)
+    openProfileDetails(testProfile)
+    cy.assertProfileInfo(testProfile)
+  })
 
-  //   cy.wait('@save-profile').then((req) => {
-  //     cy.wrap(req)
-  //       .its('response.statusCode')
-  //       .should('eq', httpCodes.SUCCESS)
+  it('update DHCP mode should succeed', () => {
+    const testProfile = JSON.parse(JSON.stringify(testProfiles[0]))
+    openProfileDetails(testProfile)
+    testProfile.dhcpEnabled = !testProfile.dhcpEnabled
+    cy.enterProfileInfo(testProfile, false, false)
+    saveProfileDetails(testProfile)
+    openProfileDetails(testProfile)
+    cy.assertProfileInfo(testProfile)
+  })
 
-  //     // // Check that the config was successful
-  //     // cy.get('mat-cell').contains(updatedAMTProfile.profileName)
-  //     // // cy.get('mat-cell').contains(profileFixtures.check.network.dhcp.toString())
-  //     // cy.get('mat-cell').contains(updatedAMTProfile.ciraConfig ?? updatedAMTProfile.tlsConfig)
-  //     // cy.get('mat-cell').contains(updatedAMTProfile.activation)
-  //   })
-  // })
-
-  // TODO: get these working
-  // it('Update profile redirection features', () => {
-  //   // build out the updated fields
-  //   const profileName = profileFixtures.happyPath.profileName
-  //   const originalCfg = JSON.parse(JSON.stringify(profileFixtures.happyPath))
-  //   originalCfg.activationMode = 'Admin Control Mode'
-  //   const updatedCfg = JSON.parse(JSON.stringify(profileFixtures.happyPath))
-  //   updatedCfg.activationMode = 'Admin Control Mode'
-  //   updatedCfg.activation = 'ccmadmin'
-  //   updatedCfg.userConsent = Constants.UserConsent_KVM
-  //   updatedCfg.iderEnabled = !profileFixtures.happyPath.iderEnabled
-  //   updatedCfg.kvmEnabled = !profileFixtures.happyPath.kvmEnabled
-  //   updatedCfg.solEnabled = !profileFixtures.happyPath.solEnabled
-  //   cy.myIntercept('GET', profileName,
-  //     {
-  //       statusCode: httpCodes.SUCCESS,
-  //       body: profileFixtures.happyPath
-  //     })
-  //     .as('get-original')
-  //   cy.myIntercept('PATCH', 'profiles',
-  //     {
-  //       statusCode: httpCodes.SUCCESS,
-  //       body: updatedCfg
-  //     })
-  //     .as('patch-original')
-  //   cy.myIntercept('GET', profileName,
-  //     {
-  //       statusCode: httpCodes.SUCCESS,
-  //       body: profileFixtures.happyPath
-  //     })
-  //     .as('get-updated')
-  //
-  //   cy.get('mat-row').contains(profileName).click()
-  //   // cy.wait('@getOriginal').its('response.statusCode').should('eq', 200)
-  //   cy.setActivationMode(updatedCfg.activationMode)
-  //   cy.setAMTPassword(false)
-  //   cy.setMEBXPassword(false)
-  //   cy.setProfileRedirectionFeatures(
-  //     updatedCfg.userConsent,
-  //     updatedCfg.iderEnabled,
-  //     updatedCfg.kvmEnabled,
-  //     updatedCfg.solEnabled
-  //   )
-  //   cy.get('button[type=submit]').click()
-  //   cy.wait('@patch-original').its('response.statusCode').should('eq', 200)
-  //   cy.get('mat-row').contains(updatedCfg.profileName).click()
-  //   cy.wait('@get-updated').its('response.statusCode').should('eq', 200)
-  //   cy.assertProfileFeatures(
-  //     updatedCfg.userConsent,
-  //     updatedCfg.iderEnabled,
-  //     updatedCfg.kvmEnabled,
-  //     updatedCfg.solEnabled
-  //   )
-  // })
+  for (const [, tlsMode] of Object.entries(Constants.TlsModes)) {
+    it(`update tls mode should succeed ${tlsMode.value}:${tlsMode.display}`, () => {
+      const testProfile = JSON.parse(JSON.stringify(testProfiles[0]))
+      openProfileDetails(testProfile)
+      testProfile.ciraConfigName = null
+      // sorry about the name-property mistmatch between object and Constant
+      testProfile.tlsMode = tlsMode.value
+      cy.enterProfileInfo(testProfile, false, false)
+      saveProfileDetails(testProfile)
+      openProfileDetails(testProfile)
+      cy.assertProfileInfo(testProfile)
+    })
+  }
 })

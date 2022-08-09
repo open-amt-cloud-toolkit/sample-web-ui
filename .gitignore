@@ -50,7 +50,8 @@ testem.log
 # for cypress tests in dev/local environment
 cypress.env.*
 
-TESTS-*.xml
+TESTS-*
+cypress-ui-test-output*
 
 # System Files
 .DS_Store

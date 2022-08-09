@@ -53,7 +53,7 @@ const DhcpModes = {
   },
   STATIC: {
     value: false,
-    display: 'STATIC'
+    display: 'Static'
   }
 }
 function parseDhcpMode (value: boolean): string {
