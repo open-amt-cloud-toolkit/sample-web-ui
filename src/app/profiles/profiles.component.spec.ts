@@ -12,7 +12,6 @@ import { SharedModule } from '../shared/shared.module'
 
 import { ProfilesComponent } from './profiles.component'
 import { ProfilesService } from './profiles.service'
-import Constants from '../shared/config/Constants'
 
 describe('ProfilesComponent', () => {
   let component: ProfilesComponent
