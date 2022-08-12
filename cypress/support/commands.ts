@@ -77,8 +77,8 @@ Cypress.Commands.add('matSelectChoose', (selector: string, value: string) => {
   const elementId = `mat-select${selector}`
   cy.get(elementId).then((el) => {
     if (el.attr('aria-disabled') === 'false') {
-      cy.get(elementId).click().get(`[ng-reflect-value="${value}"]`).click()
-      // cy.get(elementId).click().get('mat-option').contains(value).click()
+      cy.get(elementId).click()
+      cy.get(`mat-option[ng-reflect-value="${value}"]`).click()
     }
   })
 })
