@@ -73,19 +73,23 @@ Cypress.Commands.add('matRadioButtonAssert', (selector: string, value: string) =
   cy.get(`mat-radio-group${selector}`).find('.mat-radio-checked').find(':radio').should('have.attr', 'value', value)
 })
 
-Cypress.Commands.add('matSelectChoose', (selector: string, value: string) => {
+Cypress.Commands.add('matSelectChoose', (selector: string, text: string) => {
   const elementId = `mat-select${selector}`
-  cy.get(elementId).then((el) => {
-    if (el.attr('aria-disabled') === 'false') {
-      cy.get(elementId).click()
-      cy.get(`mat-option[ng-reflect-value="${value}"]`).click()
-    }
-  })
+  cy.get(elementId).click().get('.mat-option-text').contains(text).click()
+  cy.get(elementId).focus().type('{esc}')
+  cy.get(elementId).should('have.text', text)
+  //
+  // cy.get(elementId).then((el) => {
+  //   if (el.attr('aria-disabled') === 'false') {
+  //     cy.get(elementId).click()
+  //     cy.get(`mat-option[ng-reflect-value="${value}"]`).click()
+  //   }
+  // })
 })
 
 Cypress.Commands.add('matSelectAssert', (selector: string, text: string) => {
   const elementId = `mat-select${selector}`
-  cy.get(elementId).should('include.text', text)
+  cy.get(elementId).should('have.text', text)
 })
 
 Cypress.Commands.add('matTextlikeInputType', (selector: string, value: string) => {
@@ -150,8 +154,13 @@ Cypress.Commands.add('enterCiraInfo', (name, format, addr, user) => {
 })
 
 Cypress.Commands.add('enterProfileInfo', (profile: any, randomAmtPassword: boolean, randMebxPassword: boolean) => {
-  cy.matSelectChoose('[formControlName="activation"]', profile.activation)
-  cy.matSelectChoose('[formControlName="userConsent"]', profile.userConsent)
+  cy.matSelectChoose('[formControlName="activation"]', Constants.parseActivationMode(profile.activation))
+  // user consent is force to ALL for ccmactivation
+  if (profile.activation === Constants.ActivationModes.ADMIN.value) {
+    cy.matSelectChoose('[formControlName="userConsent"]', Constants.parseUserConsentMode(profile.userConsent))
+  } else {
+    cy.matSelectAssert('[formControlName="userConsent"]', Constants.parseUserConsentMode(profile.userConsent))
+  }
   cy.matCheckboxSet('[formControlName="iderEnabled"]', profile.iderEnabled)
   cy.matCheckboxSet('[formControlName="kvmEnabled"]', profile.kvmEnabled)
   cy.matCheckboxSet('[formControlName="solEnabled"]', profile.solEnabled)
@@ -170,7 +179,7 @@ Cypress.Commands.add('enterProfileInfo', (profile: any, randomAmtPassword: boole
     cy.matSelectChoose('[formControlName="ciraConfigName"]', profile.ciraConfigName)
   } else if (profile.tlsMode) {
     cy.matRadioButtonChoose('[formControlName="connectionMode"]', Constants.ConnectionModes.TLS.value)
-    cy.matSelectChoose('[formControlName="tlsMode"]', profile.tlsMode.toString())
+    cy.matSelectChoose('[formControlName="tlsMode"]', Constants.parseTlsMode(profile.tlsMode))
   }
   if (profile.wifiConfigs != null && profile.wifiConfigs.length > 0) {
     profile.wifiConfigs.forEach((wifiProfile: { profileName: string | number | RegExp }) => {

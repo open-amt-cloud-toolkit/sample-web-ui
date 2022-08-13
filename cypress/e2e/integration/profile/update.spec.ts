@@ -86,8 +86,6 @@ describe('Test Update Profile Page Update', () => {
     expect(testProfile.activation).to.eq(Constants.ActivationModes.ADMIN.value)
     expect(testProfile.userConsent).to.eq(Constants.UserConsentModes.ALL.value)
     openProfileDetails(testProfile)
-    // set the userConsent mode specifically BEFORE changing from ADMIN to CLIENT
-    cy.matSelectChoose('[formControlName="userConsent"]', Constants.UserConsentModes.NONE.value)
     // setting activation to CLIENT should trigger automatic UserConsent change to ALL
     // which gets confirmed later
     testProfile.activation = Constants.ActivationModes.CLIENT.value
