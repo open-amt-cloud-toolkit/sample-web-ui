@@ -6,7 +6,7 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference types="cypress" />
 
-import { httpCodes } from '../e2e/fixtures/api/apiResponses'
+import { httpCodes } from '../e2e/fixtures/api/httpCodes'
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -35,7 +35,7 @@ Cypress.Commands.add('setup', () => {
     body: { token: '' }
   }).as('login-request')
 
-  cy.myIntercept('GET', 'mps/api/v1/devices/stats', {
+  cy.myIntercept('GET', 'api/v1/devices/stats', {
     statusCode: 200,
     body: {}
   }).as('stats-request')
@@ -72,10 +72,18 @@ Cypress.Commands.add('enterCiraInfo', (name, format, addr, user) => {
 })
 
 Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEnabled, connection, connectionConfig, userConsent, iderEnabled, kvmEnabled, solEnabled, wifiConfigs) => {
-  cy.get('input').get('[name=profileName]').type(name)
+  cy.get('[name=profileName]').then((x) => {
+    if (!x.is(':disabled')) {
+      cy.get('[name=profileName]').type(name)
+    }
+  })
+
+  cy.get('mat-select[formcontrolname=activation]').click()
+
   if (admin === 'ccmactivate') {
-    cy.get('mat-select[formcontrolname=activation').click()
-    cy.contains('Client Control Mode').click()
+    cy.get('mat-option').contains('Client Control Mode').click()
+  } else {
+    cy.get('mat-option').contains('Admin Control Mode').click()
   }
 
   if (!randAmt) {
@@ -83,15 +91,17 @@ Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEn
     cy.get('input').get('[formControlName=amtPassword]').type(Cypress.env('AMT_PASSWORD'))
     // cy.get('[data-cy=genStaticAmt').click()
   }
+  if (admin === 'acmactivate') {
+    if (!randMebx) {
+      cy.get('[data-cy=genMebxPass]').find('input[type=checkbox]').then((x) => {
+        if (x.is(':checked')) {
+          cy.get('[data-cy=genMebxPass]').click()
+        }
 
-  if (!randMebx) {
-    cy.get('[data-cy=genMebxPass]').click()
-    // cy.get('[data-cy=genStaticMebx').click()
-    if (admin === 'acmactivate') {
-      cy.get('input').get('[formControlName=mebxPassword]').type(Cypress.env('MEBX_PASSWORD'))
+        cy.get('input').get('[formControlName=mebxPassword]').type(Cypress.env('MEBX_PASSWORD'))
+      })
     }
   }
-
   cy.contains(connection).click()
 
   if (dhcpEnabled) {
@@ -105,7 +115,8 @@ Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEn
   } else if (connection === 'TLS (Enterprise)') {
     cy.get('mat-select[formcontrolname=tlsMode]').click()
   }
-  cy.contains(connectionConfig).click()
+
+  cy.get('mat-option').contains(connectionConfig).click()
 
   if (wifiConfigs != null && wifiConfigs.length > 0) {
     wifiConfigs.forEach(wifiProfile => {
@@ -117,24 +128,24 @@ Cypress.Commands.add('enterProfileInfo', (name, admin, randAmt, randMebx, dhcpEn
   //   cy.get('mat-select[formcontrolname=userConsent').click()
   //   cy.contains(userConsent).click()
   // }
-  // let id = 'input[data-cy="redirect_ider"]'
-  // cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
-  //   if ((iderEnabled && !isChecked) || (isChecked && !iderEnabled)) {
-  //     cy.get(id).click()
-  //   }
-  // })
-  // id = 'input[data-cy="redirect_kvm"] '
-  // cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
-  //   if ((kvmEnabled && !isChecked) || (isChecked && !kvmEnabled)) {
-  //     cy.get(id).click()
-  //   }
-  // })
-  // id = 'input[data-cy="redirect_sol"]'
-  // cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
-  //   if ((solEnabled && !isChecked) || (isChecked && !solEnabled)) {
-  //     cy.get(id).click()
-  //   }
-  // })
+  let id = '[data-cy="redirect_ider"]'
+  cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
+    if ((iderEnabled && !isChecked) || (isChecked && !iderEnabled)) {
+      cy.get(id).click()
+    }
+  })
+  id = '[data-cy="redirect_kvm"] '
+  cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
+    if ((kvmEnabled && !isChecked) || (isChecked && !kvmEnabled)) {
+      cy.get(id).click()
+    }
+  })
+  id = '[data-cy="redirect_sol"]'
+  cy.get(id).as('checkbox').invoke('is', ':checked').then(isChecked => {
+    if ((solEnabled && !isChecked) || (isChecked && !solEnabled)) {
+      cy.get(id).click()
+    }
+  })
 })
 
 Cypress.Commands.add('enterDomainInfo', (name, domain, file, pass) => {
