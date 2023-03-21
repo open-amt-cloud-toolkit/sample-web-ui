@@ -3,98 +3,62 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-// Tests the creation of a cira-config
-
-import { ciraConfig } from 'cypress/e2e/fixtures/api/cira'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
+import * as apiCira from 'cypress/e2e/fixtures/api/cira'
+import * as cira from 'src/app/configs/configs.constants'
 
-// ---------------------------- Test section ----------------------------
+describe('Test CIRA Config Page Paging', () => {
+  const TotalCount = 100
+  const pageResponse: cira.ConfigsResponse = {
+    ...apiCira.allConfigsResponse,
+    totalCount: TotalCount
+  }
+  const expectedLabel01 = `1 – 25 of ${TotalCount}`
+  const expectedLabel02 = `26 – 50 of ${TotalCount}`
+  const expectedLabel03 = `51 – 75 of ${TotalCount}`
+  const expectedLabel04 = `76 – 100 of ${TotalCount}`
 
-describe('Test CIRA Config Page', () => {
-  beforeEach('Clear cache and login', () => {
+  beforeEach('clear cache and login', () => {
     cy.setup()
+    apiCira.interceptGetAll(httpCodes.SUCCESS, pageResponse).as('apiCira.GetAll')
   })
 
-  it('pagination for next page', () => {
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs')
-
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=25&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs2')
-
-    // Fill out the config
+  it('should pass for next, last, previous, first', () => {
     cy.goToPage('CIRA Configs')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
-    cy.wait('@get-configs')
-    cy.get('.mat-paginator').find('button.mat-paginator-navigation-next.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`26 – 50 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
-  })
-
-  it('paging for previous page', () => {
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs3')
-
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=50&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs4')
-
-    // Fill out the config
-    cy.goToPage('CIRA Configs')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
-    cy.wait('@get-configs3')
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel01)
 
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-next.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`26 – 50 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel02)
+
+    cy.get('.mat-paginator').find('button.mat-paginator-navigation-next.mat-icon-button').click()
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel03)
+
+    cy.get('.mat-paginator').find('button.mat-paginator-navigation-next.mat-icon-button').click()
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel04)
+
+    // check that next is not available now?
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-previous.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
-  })
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel03)
 
-  it('paging for last page', () => {
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs5')
+    cy.get('.mat-paginator').find('button.mat-paginator-navigation-previous.mat-icon-button').click()
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel02)
 
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=25&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs6')
-
-    // Fill out the config
-    cy.goToPage('CIRA Configs')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
-    cy.wait('@get-configs5')
+    cy.get('.mat-paginator').find('button.mat-paginator-navigation-previous.mat-icon-button').click()
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel01)
 
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-last.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`76 – 100 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
-  })
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel04)
 
-  it('paging for first page', () => {
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs7')
-
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=25&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forPaging.response
-    }).as('get-configs8')
-
-    // Fill out the config
-    cy.goToPage('CIRA Configs')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
-    cy.wait('@get-configs7')
-
-    cy.get('.mat-paginator').find('button.mat-paginator-navigation-last.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`76 – 100 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-first.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${ciraConfig.getAll.forPaging.response.totalCount}`)
+    cy.wait('@apiCira.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel01)
   })
 })

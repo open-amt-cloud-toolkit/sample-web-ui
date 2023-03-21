@@ -3,16 +3,6 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-export interface TlsMode {
-  value: number
-  label: string
-}
-
-export interface TlsSigningAuthority {
-  value: string
-  label: string
-}
-
 export interface Device {
   hostname: string
   icon: number
@@ -41,58 +31,6 @@ export interface Domain {
 
 export interface DomainsResponse {
   data: Domain[]
-  totalCount: number
-}
-
-export interface Profile {
-  profileName: string
-  generateRandomPassword: boolean
-  amtPassword: null
-  activation: string
-  ciraConfigName: string
-  dhcpEnabled: boolean
-  generateRandomMEBxPassword: boolean
-  mebxPassword: string
-  tags: string[]
-  ieee8021xProfileName: string | null
-  wifiConfigs: any[]
-  tlsMode: number
-  tlsSigningAuthority: string
-}
-
-export interface ProfileResponse {
-  data: Profile[]
-  totalCount: number
-}
-
-export interface CIRAConfig {
-  configName: string
-  mpsServerAddress: string
-  mpsPort: number
-  username: string
-  password: string
-  commonName: string
-  serverAddressFormat: number
-  authMethod: number
-  mpsRootCertificate: string
-  proxyDetails: string
-}
-
-export interface CIRAConfigResponse {
-  data: CIRAConfig[]
-  totalCount: number
-}
-
-export interface TLSConfig {
-  configName: string
-  commonName: string
-  organization: string
-  province: string
-  country: string
-}
-
-export interface TLSConfigResponse {
-  data: TLSConfig[]
   totalCount: number
 }
 
@@ -297,24 +235,6 @@ export interface HardwareInformation {
   CIM_PhysicalMemory: HardwareResponse<CIMPhysicalMemory>
   CIM_MediaAccessDevice: HardwareResponse<CIMMediaAccessDevice[]>
   CIM_PhysicalPackage: HardwareResponse<CIMPhysicalPackage[]>
-}
-
-export interface WiFiProfile {
-  profileName: string
-  priority: number
-}
-export interface WirelessConfig {
-  profileName: string
-  authenticationMethod: number
-  encryptionMethod: number
-  ssid: string
-  pskValue: string
-  linkPolicy: number[]
-}
-
-export interface WirelessConfigResponse {
-  data: WirelessConfig[]
-  totalCount: number
 }
 
 export interface ValidatorError {

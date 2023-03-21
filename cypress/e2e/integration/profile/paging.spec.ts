@@ -3,94 +3,62 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-// Tests the creation of a profile
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { profiles } from 'cypress/e2e/fixtures/api/profile'
-import { paging } from 'cypress/e2e/fixtures/formEntry/paging'
-// ---------------------------- Test section ----------------------------
+import * as apiProfile from 'cypress/e2e/fixtures/api/profile'
+import * as profiles from 'src/app/profiles/profiles.constants'
 
-describe('Test Profile Page', () => {
+describe('Test Profile Page Paging', () => {
+  const TotalCount = 100
+  const pageResponse: profiles.ProfilesResponse = {
+    ...apiProfile.allConfigsResponse,
+    totalCount: TotalCount
+  }
+  const expectedLabel01 = `1 – 25 of ${TotalCount}`
+  const expectedLabel02 = `26 – 50 of ${TotalCount}`
+  const expectedLabel03 = `51 – 75 of ${TotalCount}`
+  const expectedLabel04 = `76 – 100 of ${TotalCount}`
+
   beforeEach('clear cache and login', () => {
     cy.setup()
+    apiProfile.interceptGetAll(httpCodes.SUCCESS, pageResponse).as('apiProfile.GetAll')
   })
 
-  it('pagination for next page', () => {
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles')
-
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=25&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles2')
-
+  it('should pass for next, last, previous, first', () => {
     cy.goToPage('Profiles')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${paging.totalCount}`)
-    cy.wait('@get-profiles')
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel01)
 
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-next.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`26 – 50 of ${paging.totalCount}`)
-  })
-
-  it('pagination for previous page', () => {
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles3')
-
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=25&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles4')
-
-    cy.goToPage('Profiles')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${paging.totalCount}`)
-    cy.wait('@get-profiles3')
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel02)
 
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-next.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`26 – 50 of ${paging.totalCount}`)
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel03)
+
+    cy.get('.mat-paginator').find('button.mat-paginator-navigation-next.mat-icon-button').click()
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel04)
+
+    // check that next is not available now?
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-previous.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${paging.totalCount}`)
-  })
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel03)
 
-  it('pagination for last page', () => {
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles5')
+    cy.get('.mat-paginator').find('button.mat-paginator-navigation-previous.mat-icon-button').click()
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel02)
 
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=75&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles6')
-
-    cy.goToPage('Profiles')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${paging.totalCount}`)
-    cy.wait('@get-profiles5')
+    cy.get('.mat-paginator').find('button.mat-paginator-navigation-previous.mat-icon-button').click()
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel01)
 
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-last.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`76 – 100 of ${paging.totalCount}`)
-  })
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel04)
 
-  it('pagination for first page', () => {
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles5')
-
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=75&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.forPaging.response
-    }).as('get-profiles6')
-
-    cy.goToPage('Profiles')
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${paging.totalCount}`)
-    cy.wait('@get-profiles5')
-
-    cy.get('.mat-paginator').find('button.mat-paginator-navigation-last.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`76 – 100 of ${paging.totalCount}`)
     cy.get('.mat-paginator').find('button.mat-paginator-navigation-first.mat-icon-button').click()
-    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(`1 – 25 of ${paging.totalCount}`)
+    cy.wait('@apiProfile.GetAll')
+    cy.get('.mat-paginator').find('.mat-paginator-range-label').contains(expectedLabel01)
   })
 })

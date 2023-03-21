@@ -26,8 +26,11 @@
 
                     <mat-radio-group name="serverAddressFormat" formControlName="serverAddressFormat"
                         fxLayout="row wrap">
-                        <mat-radio-button fxFlex=50 value="3" checked="true">IPv4</mat-radio-button>
-                        <mat-radio-button fxFlex=50 value="201">FQDN</mat-radio-button>
+                        <mat-radio-button fxFlex=50 *ngFor='let format of serverAdressFormats.all()'
+                          [value]="format.value"
+                          [checked]="format.value === serverAdressFormats.IPv4.value">
+                          {{format.label}}
+                        </mat-radio-button>
                     </mat-radio-group>
                     <mat-form-field fxFlex="100">
                         <input formControlName="mpsServerAddress" matInput name="mpsServerAddress"

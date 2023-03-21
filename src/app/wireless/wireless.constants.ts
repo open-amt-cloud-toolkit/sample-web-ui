@@ -14,8 +14,7 @@ export const AuthenticationMethods = {
   WPA2_PSK: { value: 6, label: 'WPA2 PSK' },
   WPA2_IEEE8021X: { value: 7, label: 'WPA2 IEEE 802.1x' },
   labelForValue (value: number): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): AuthenticationMethod[] {
     return [
@@ -42,8 +41,7 @@ export const EncryptionMethods = {
   TKIP: { value: 3, label: 'TKIP' },
   CCMP: { value: 4, label: 'CCMP' },
   labelForValue (value: number): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): EncryptionMethod[] {
     return [

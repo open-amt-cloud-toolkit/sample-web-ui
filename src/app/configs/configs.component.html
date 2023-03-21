@@ -13,7 +13,7 @@
 <mat-card>
     <mat-card-content>
         <h3 [fxShow]="isNoData()" fxLayoutAlign="center">No CIRA Configs</h3>
-        <mat-table [dataSource]="configs.data" [fxHide]="isNoData()">
+        <mat-table [dataSource]="configs" [fxHide]="isNoData()">
 
             <!-- select Column -->
             <ng-container matColumnDef="select">
@@ -78,10 +78,10 @@
             <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
             <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="navigateTo(row.configName)"></mat-row>
         </mat-table>
-        <div *ngIf="configs.totalCount">    
+        <div *ngIf="totalCount">
             <mat-paginator [pageSizeOptions]="[25, 50, 100]"
-                showFirstLastButtons 
-                [length]="configs.totalCount"
+                showFirstLastButtons
+                [length]="totalCount"
                 (page) = "pageChanged($event)"
                 [pageSize]="25">
             </mat-paginator>

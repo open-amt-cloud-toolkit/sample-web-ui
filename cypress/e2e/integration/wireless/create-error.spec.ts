@@ -4,19 +4,15 @@
 **********************************************************************/
 
 import { httpCodes } from '../../fixtures/api/httpCodes'
-import { wirelessFixtures } from '../../fixtures/formEntry/wireless'
+import * as formEntry from '../../fixtures/formEntry/wireless'
 import { urlFixtures } from '../../fixtures/formEntry/urls'
 import { badRequest, empty } from 'cypress/e2e/fixtures/api/general'
-import * as api8021x from '../../fixtures/api/ieee8021x'
 
 const baseUrl: string = Cypress.env('BASEURL')
 
 describe('Test wireless creation page', () => {
   beforeEach('clear cache and login', () => {
     cy.setup()
-    api8021x
-      .interceptGetAll(httpCodes.SUCCESS, api8021x.wirelessConfigsResponse)
-      .as('intercept8021xGetAll')
   })
 
   beforeEach('Set up the api stubs', () => {
@@ -30,21 +26,21 @@ describe('Test wireless creation page', () => {
       body: badRequest.response
     }).as('post-wireless')
 
+    cy.myIntercept('GET', 'ieee8021xconfigs?$count=true', {
+      statuscode: httpCodes.SUCCESS,
+      body: empty.response
+    })
+
     cy.goToPage('Wireless')
     cy.wait('@get-wireless3')
 
     cy.get('button').contains('Add New').click()
-    cy.wait('@intercept8021xGetAll')
   })
 
   it('invalid profile name', () => {
-    cy.enterWirelessInfo(
-      wirelessFixtures.wrong.profileName,
-      Cypress.env('WIFI_SSID'),
-      Cypress.env('WIFI_PSK_PASSPHRASE'),
-      wirelessFixtures.happyPath.authenticationMethod,
-      wirelessFixtures.happyPath.encryptionMethod
-    )
+    const config = { ...formEntry.configs[0] }
+    config.profileName = 'wireless config'
+    cy.enterWirelessInfo(config)
   })
 
   afterEach('Check for error', () => {

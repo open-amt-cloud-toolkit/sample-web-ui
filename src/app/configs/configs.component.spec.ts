@@ -12,31 +12,30 @@ import { SharedModule } from '../shared/shared.module'
 
 import { ConfigsComponent } from './configs.component'
 import { ConfigsService } from './configs.service'
+import { AuthMethods, Config, ServerAddressFormats } from './configs.constants'
 
 describe('ConfigsComponent', () => {
   let component: ConfigsComponent
   let fixture: ComponentFixture<ConfigsComponent>
   let getDataSpy: jasmine.Spy
   let deleteSpy: jasmine.Spy
+  let config: Config
 
   beforeEach(async () => {
-    const configsService = jasmine.createSpyObj('ConfigsService', ['getData', 'delete'])
-    getDataSpy = configsService.getData.and.returnValue(of({
-      data: [{
-        authMethod: 2,
-        commonName: '52.172.14.137',
-        configName: 'ciraconfig1',
-        generateRandomPassword: false,
-        mpsPort: 4433,
-        mpsRootCertificate: 'string',
-        mpsServerAddress: '52.172.14.137',
-        passwordLength: null,
-        proxyDetails: null,
-        serverAddressFormat: 3
+    config = {
+      configName: 'config1',
+      mpsServerAddress: '255.255.255.1',
+      mpsPort: 4433,
+      username: 'admin',
+      password: 'password',
+      commonName: '255.255.255.1',
+      serverAddressFormat: ServerAddressFormats.IPv4.value,
+      authMethod: AuthMethods.USERNAME_PASSWORD.value,
+      mpsRootCertificate: 'mpsrootcertificate'
+    }
 
-      }],
-      totalCount: 1
-    }))
+    const configsService = jasmine.createSpyObj('ConfigsService', ['getData', 'delete'])
+    getDataSpy = configsService.getData.and.returnValue(of({ data: [config], totalCount: 1 }))
     deleteSpy = configsService.delete.and.returnValue(of(null))
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, SharedModule, RouterTestingModule.withRoutes([])],

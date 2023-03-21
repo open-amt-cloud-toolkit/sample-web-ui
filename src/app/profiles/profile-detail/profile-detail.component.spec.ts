@@ -12,12 +12,21 @@ import { of } from 'rxjs'
 import { ConfigsService } from 'src/app/configs/configs.service'
 import { SharedModule } from 'src/app/shared/shared.module'
 import { WirelessService } from 'src/app/wireless/wireless.service'
+import * as Wireless from 'src/app/wireless/wireless.constants'
 import { ProfilesService } from '../profiles.service'
 import * as IEEE8021x from 'src/app/ieee8021x/ieee8021x.constants'
 import { IEEE8021xService } from 'src/app/ieee8021x/ieee8021x.service'
 
 import { ProfileDetailComponent } from './profile-detail.component'
-import Constants from '../../shared/config/Constants'
+import {
+  ActivationModes,
+  ConnectionModes,
+  DhcpModes,
+  Profile,
+  TlsModes,
+  TlsSigningAuthorities,
+  UserConsentModes
+} from '../profiles.constants'
 
 describe('ProfileDetailComponent', () => {
   let component: ProfileDetailComponent
@@ -50,6 +59,22 @@ describe('ProfileDetailComponent', () => {
     }
   ]
   let ieee8021xConfigsSpy: jasmine.Spy
+  const wirelessAvailableConfigs: Wireless.Config[] = [
+    {
+      profileName: 'wireless01',
+      authenticationMethod: Wireless.AuthenticationMethods.WPA_PSK.value,
+      pskPassphrase: 'ABCDEF0123456789',
+      encryptionMethod: Wireless.EncryptionMethods.TKIP.value,
+      ssid: 'thisisthessid'
+    },
+    {
+      profileName: 'wireless02',
+      authenticationMethod: Wireless.AuthenticationMethods.WPA_IEEE8021X.value,
+      ieee8021xProfileName: ieee8021xAvailableConfigs[1].profileName,
+      encryptionMethod: Wireless.EncryptionMethods.TKIP.value,
+      ssid: 'thisisthessid'
+    }
+  ]
   let wirelessConfigsSpy: jasmine.Spy
   // let tlsConfigSpy: jasmine.Spy
   beforeEach(async () => {
@@ -58,27 +83,17 @@ describe('ProfileDetailComponent', () => {
     const ieee8021xService = jasmine.createSpyObj('IEEE8021xService', ['getData'])
     const wirelessService = jasmine.createSpyObj('WirelessService', ['getData'])
     // const tlsService = jasmine.createSpyObj('TLSService', ['getData'])
-    const profileResponse = {
-      profileName: 'profile1',
-      amtPassword: 'P@ssw0rd',
-      generateRandomPassword: false,
-      activation: 'ccmactivate',
-      ciraConfigName: 'config1',
-      tlsMode: null,
-      tlsSigningAuthority: null,
-      dhcpEnabled: true,
-      generateRandomMEBxPassword: true,
-      tags: ['acm'],
-      ieee8021xProfileName: ieee8021xAvailableConfigs[0].profileName,
-      wifiConfigs: [{ priority: 1, profileName: 'wifi' }]
-    }
-    profileSpy = profilesService.getRecord.and.returnValue(of(profileResponse))
+
+    profileSpy = profilesService.getRecord.and.returnValue(of(profile))
     profileCreateSpy = profilesService.create.and.returnValue(of({}))
     profileUpdateSpy = profilesService.update.and.returnValue(of({}))
     configsSpy = configsService.getData.and.returnValue(of({ data: [{ profileName: '' }], totalCount: 0 }))
-    ieee8021xConfigsSpy = ieee8021xService.getData.and.returnValue(of({ data: ieee8021xAvailableConfigs, totalCount: ieee8021xAvailableConfigs.length }))
-    wirelessConfigsSpy = wirelessService.getData.and.returnValue(of({ data: [], totalCount: 0 }))
-    // tlsConfigSpy = tlsService.getData.and.returnValue(of({ data: [], totalCount: 0 }))
+    ieee8021xConfigsSpy = ieee8021xService.getData.and.returnValue(of(
+      { data: ieee8021xAvailableConfigs, totalCount: ieee8021xAvailableConfigs.length }
+    ))
+    wirelessConfigsSpy = wirelessService.getData.and.returnValue(of(
+      { data: wirelessAvailableConfigs, totalCount: wirelessAvailableConfigs.length }
+    ))
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [ProfileDetailComponent],
@@ -87,7 +102,6 @@ describe('ProfileDetailComponent', () => {
         { provide: ConfigsService, useValue: configsService },
         { provide: IEEE8021xService, useValue: ieee8021xService },
         { provide: WirelessService, useValue: wirelessService },
-        // { provide: TLSService, useValue: tlsService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -97,11 +111,29 @@ describe('ProfileDetailComponent', () => {
       ]
     }).compileComponents()
   })
+  let profile: Profile
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ProfileDetailComponent)
     component = fixture.componentInstance
     fixture.detectChanges()
+    profile = {
+      profileName: 'profile1',
+      iderEnabled: true,
+      kvmEnabled: true,
+      solEnabled: true,
+      activation: ActivationModes.ADMIN.value,
+      userConsent: UserConsentModes.NONE.value,
+      generateRandomPassword: false,
+      amtPassword: 'P@ssw0rd',
+      generateRandomMEBxPassword: false,
+      mebxPassword: 'P@ssw0rd',
+      ciraConfigName: 'config1',
+      dhcpEnabled: DhcpModes.DHCP.value,
+      tags: ['acm'],
+      ieee8021xProfileName: ieee8021xAvailableConfigs[0].profileName,
+      wifiConfigs: [{ priority: 1, profileName: 'wifi' }]
+    }
   })
 
   afterEach(() => {
@@ -116,30 +148,33 @@ describe('ProfileDetailComponent', () => {
     expect(wirelessConfigsSpy).toHaveBeenCalled()
   })
   it('should set connectionMode to TLS when tlsMode is not null', () => {
-    component.setConnectionMode({ tlsMode: 4, ciraConfigName: 'config1' } as any)
-    expect(component.profileForm.controls.connectionMode.value).toBe(Constants.ConnectionMode_TLS)
+    profile.tlsMode = TlsModes.SERVER.value
+    profile.ciraConfigName = 'someOtherName'
+    component.setConnectionMode(profile)
+    expect(component.connectionMode.value).toBe(ConnectionModes.TLS.value)
   })
   it('should set connectionMode to CIRA when ciraConfigName is not null', () => {
-    component.setConnectionMode({ ciraConfigName: 'config1' } as any)
-    expect(component.profileForm.controls.connectionMode.value).toBe(Constants.ConnectionMode_CIRA)
+    delete profile.tlsMode
+    profile.ciraConfigName = 'someOtherName'
+    component.setConnectionMode(profile)
+    expect(component.connectionMode.value).toBe(ConnectionModes.CIRA.value)
   })
   it('should cancel', async () => {
     const routerSpy = spyOn(component.router, 'navigate')
     await component.cancel()
     expect(routerSpy).toHaveBeenCalledWith(['/profiles'])
   })
-  it(`should not enable mebxPassword when generateRandomMEBxPassword is false and activation is ${Constants.CCMActivate}`, () => {
-    component.profileForm.patchValue({
-      activation: Constants.CCMActivate,
-      generateRandomMEBxPassword: false
-    })
+  it(`should not enable mebxPassword when generateRandomMEBxPassword is false and activation is ${ActivationModes.CLIENT.label}`, () => {
+    profile.activation = ActivationModes.CLIENT.value
+    profile.generateRandomMEBxPassword = false
+    component.profileForm.patchValue(profile)
     expect(component.profileForm.controls.mebxPassword.disabled).toBeTrue()
     component.generateRandomMEBxPasswordChange(false)
     expect(component.profileForm.controls.mebxPassword.disabled).toBeTrue()
   })
   it('should disable mebxPassword when generateRandomMEBxPassword is true', () => {
     component.profileForm.patchValue({
-      activation: Constants.ACMActivate,
+      activation: ActivationModes.ADMIN.value,
       generateRandomMEBxPassword: false
     })
     expect(component.profileForm.controls.mebxPassword.disabled).toBeFalse()
@@ -161,41 +196,16 @@ describe('ProfileDetailComponent', () => {
 
   it('should submit when valid (update)', () => {
     const routerSpy = spyOn(component.router, 'navigate')
-
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: 'Password123',
-      generateRandomPassword: false,
-      generateRandomMEBxPassword: false,
-      mebxPassword: 'Password123',
-      dhcpEnabled: true,
-      ieee8021xProfileName: ieee8021xAvailableConfigs[0].profileName,
-      ciraConfigName: 'config1',
-      tlsConfigName: null
-    })
+    component.profileForm.patchValue(profile)
     component.confirm()
-
     expect(profileUpdateSpy).toHaveBeenCalled()
     expect(routerSpy).toHaveBeenCalled()
   })
   it('should submit when valid (create)', () => {
     const routerSpy = spyOn(component.router, 'navigate')
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: 'Password123',
-      generateRandomPassword: false,
-      generateRandomMEBxPassword: false,
-      mebxPassword: 'Password123',
-      dhcpEnabled: true,
-      ciraConfigName: 'config1',
-      tlsConfigName: null
-    })
+    component.profileForm.patchValue(profile)
     component.confirm()
-
     expect(profileCreateSpy).toHaveBeenCalled()
     expect(routerSpy).toHaveBeenCalled()
   })
@@ -204,20 +214,16 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: '',
+    const patchedProfile: Profile = {
+     ...profile,
       generateRandomPassword: true,
+      amtPassword: '',
       generateRandomMEBxPassword: true,
-      mebxPassword: '',
-      dhcpEnabled: true,
-      ciraConfigName: 'config1'
-    })
+      mebxPassword: ''
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).toHaveBeenCalled()
@@ -228,20 +234,16 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: '',
+    const patchedProfile: Profile = {
+     ...profile,
       generateRandomPassword: true,
+      amtPassword: '',
       generateRandomMEBxPassword: true,
-      mebxPassword: '',
-      dhcpEnabled: true,
-      ciraConfigName: 'config1'
-    })
+      mebxPassword: ''
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).not.toHaveBeenCalled()
@@ -249,7 +251,7 @@ describe('ProfileDetailComponent', () => {
   })
 
   it('should enable the cira config and disable wifi config when static network is selected', () => {
-    component.networkConfigChange(false)
+    component.dhcpChanged(false)
     expect(component.profileForm.controls.ciraConfigName.enabled).toBe(true)
     // Add check for wifi config disabled or selected wifi config is 0
   })
@@ -258,25 +260,13 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: 'Password123',
-      generateRandomPassword: false,
-      generateRandomMEBxPassword: false,
-      mebxPassword: 'Password123',
-      dhcpEnabled: false,
-      ciraConfigName: 'config1',
-      tlsConfigName: null,
-      userConsent: 'All',
-      iderEnabled: 'true',
-      kvmEnabled: 'true',
-      solEnabled: 'true'
-    })
+    const patchedProfile: Profile = {
+     ...profile,
+      dhcpEnabled: DhcpModes.STATIC.value
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).toHaveBeenCalled()
@@ -287,21 +277,13 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: 'Password123',
-      generateRandomPassword: false,
-      generateRandomMEBxPassword: false,
-      mebxPassword: 'Password123',
-      dhcpEnabled: false,
-      ciraConfigName: 'config1',
-      tlsConfigName: null
-    })
+    const patchedProfile: Profile = {
+     ...profile,
+      dhcpEnabled: DhcpModes.STATIC.value
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).not.toHaveBeenCalled()
@@ -312,21 +294,17 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: '',
+    const patchedProfile: Profile = {
+     ...profile,
       generateRandomPassword: true,
+      amtPassword: '',
       generateRandomMEBxPassword: true,
       mebxPassword: '',
-      dhcpEnabled: false,
-      ciraConfigName: 'config1',
-      tlsConfigName: null
-    })
+      dhcpEnabled: DhcpModes.STATIC.value
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).toHaveBeenCalled()
@@ -337,21 +315,17 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'acmactivate',
-      amtPassword: '',
+    const patchedProfile: Profile = {
+     ...profile,
       generateRandomPassword: true,
+      amtPassword: '',
       generateRandomMEBxPassword: true,
       mebxPassword: '',
-      dhcpEnabled: false,
-      ciraConfigName: 'config1',
-      tlsConfigName: null
-    })
+      dhcpEnabled: DhcpModes.STATIC.value
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).not.toHaveBeenCalled()
@@ -363,16 +337,15 @@ describe('ProfileDetailComponent', () => {
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'ccmactivate',
-      amtPassword: 'Password123',
-      generateRandomPassword: false,
+    const patchedProfile: Profile = {
+     ...profile,
+      activation: ActivationModes.CLIENT.value,
       generateRandomMEBxPassword: true,
       mebxPassword: '',
-      dhcpEnabled: true,
-      ciraConfigName: null
-    })
+      wifiConfigs: []
+    }
+    delete patchedProfile.ciraConfigName
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
@@ -384,21 +357,16 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'ccmactivate',
-      amtPassword: 'Password123',
-      generateRandomPassword: false,
+    const patchedProfile: Profile = {
+     ...profile,
+      activation: ActivationModes.CLIENT.value,
       generateRandomMEBxPassword: true,
       mebxPassword: '',
-      dhcpEnabled: false,
-      ciraConfigName: 'config1',
-      tlsConfigName: null
-    })
+      dhcpEnabled: DhcpModes.STATIC.value
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).toHaveBeenCalled()
@@ -409,21 +377,16 @@ describe('ProfileDetailComponent', () => {
     const routerSpy = spyOn(component.router, 'navigate')
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(false), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-
     component.isEdit = false
-    component.profileForm.patchValue({
-      profileName: 'profile',
-      activation: 'ccmactivate',
-      amtPassword: 'Password123',
-      generateRandomPassword: false,
+    const patchedProfile: Profile = {
+      ...profile,
+      activation: ActivationModes.CLIENT.value,
       generateRandomMEBxPassword: true,
       mebxPassword: '',
-      dhcpEnabled: false,
-      ciraConfigName: 'config1',
-      tlsConfigName: null
-    })
+      dhcpEnabled: DhcpModes.STATIC.value
+    }
+    component.profileForm.patchValue(patchedProfile)
     component.confirm()
-
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(profileCreateSpy).not.toHaveBeenCalled()
@@ -452,11 +415,11 @@ describe('ProfileDetailComponent', () => {
   })
 
   it('should adjust related fields on selecting activation mode', () => {
-    component.activationChange(Constants.CCMActivate)
+    component.activationChange(ActivationModes.CLIENT.value)
     expect(component.profileForm.controls.generateRandomMEBxPassword.disabled).toBe(true)
     expect(component.profileForm.controls.userConsent.disabled).toBe(true)
-    expect(component.profileForm.controls.userConsent.value).toEqual(Constants.UserConsent_All)
-    component.activationChange(Constants.ACMActivate)
+    expect(component.profileForm.controls.userConsent.value).toEqual(UserConsentModes.ALL.value)
+    component.activationChange(ActivationModes.ADMIN.value)
     expect(component.profileForm.controls.generateRandomMEBxPassword.disabled).toBe(false)
     expect(component.profileForm.controls.userConsent.disabled).toBe(false)
   })
@@ -524,17 +487,36 @@ describe('ProfileDetailComponent', () => {
   })
 
   it('should set the ciraCofigName property to null when TLS Selected', () => {
-    component.connectionModeChange(Constants.ConnectionMode_TLS)
+    component.connectionModeChange(ConnectionModes.TLS.value)
     expect(component.profileForm.controls.ciraConfigName.value).toEqual(null)
     expect(component.profileForm.controls.ciraConfigName.valid).toBeTrue()
     expect(component.profileForm.controls.tlsMode.valid).toBeFalse()
-    expect(component.profileForm.controls.tlsSigningAuthority.value).toEqual(ProfilesService.TLS_DEFAULT_SIGNING_AUTHORITY)
+    expect(component.profileForm.controls.tlsSigningAuthority.value).toEqual(TlsSigningAuthorities.SELF_SIGNED.value)
     expect(component.profileForm.controls.tlsSigningAuthority.valid).toBeTrue()
   })
   it('should set the tlsMode property to null when CIRA Selected', () => {
-    component.connectionModeChange(Constants.ConnectionMode_CIRA)
+    component.connectionModeChange(ConnectionModes.CIRA.value)
     expect(component.profileForm.controls.tlsMode.value).toEqual(null)
     expect(component.profileForm.controls.tlsMode.valid).toBeTrue()
-    expect(component.profileForm.controls.ciraConfigName.value).toBe('config1')
+  })
+  it('should support ieee8021x visibility', () => {
+    expect(component.showIEEE8021xConfigurations).toBeTrue()
+    const keeper = [...ieee8021xAvailableConfigs]
+    ieee8021xAvailableConfigs.splice(0)
+    component.getIEEE8021xConfigs()
+    expect(component.showIEEE8021xConfigurations).toBeFalse()
+    ieee8021xAvailableConfigs.splice(0, 0, ...keeper)
+    component.getIEEE8021xConfigs()
+    expect(component.showIEEE8021xConfigurations).toBeTrue()
+  })
+  it('should support wireless visibility', () => {
+    expect(component.showWirelessConfigurations).toBeTrue()
+    const keeper = [...wirelessAvailableConfigs]
+    wirelessAvailableConfigs.splice(0)
+    component.getWirelessConfigs()
+    expect(component.showWirelessConfigurations).toBeFalse()
+    wirelessAvailableConfigs.splice(0, 0, ...keeper)
+    component.getWirelessConfigs()
+    expect(component.showWirelessConfigurations).toBeTrue()
   })
 })

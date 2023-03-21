@@ -15,6 +15,11 @@ export const wirelessConfigsResponse = {
   totalCount: wirelessConfigs.length
 }
 
+export const allConfigsResponse = {
+  data: [...wiredConfigs, ...wirelessConfigs],
+  totalCount: wiredConfigs.length + wirelessConfigs.length
+}
+
 export const noConfigsResponse = {
   data: [],
   totalCount: 0

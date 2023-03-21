@@ -10,8 +10,7 @@ export const ActivationModes = {
   ADMIN: { value: 'acmactivate', label: 'Admin Control Mode' },
   CLIENT: { value: 'ccmactivate', label: 'Client Control Mode' },
   labelForValue (value: string): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): ActivationMode[] { return [this.ADMIN, this.CLIENT] }
 }
@@ -21,8 +20,7 @@ export const ConnectionModes = {
   CIRA: { value: 'CIRA', label: 'CIRA (Cloud)' },
   TLS: { value: 'TLS', label: 'TLS (Enterprise)' },
   labelForValue (value: string): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): ConnectionMode[] { return [this.CIRA, this.TLS] }
 }
@@ -32,8 +30,7 @@ export const DhcpModes = {
   DHCP: { value: true, label: 'DHCP' },
   STATIC: { value: false, label: 'Static' },
   labelForValue (value: boolean): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): DhcpMode[] { return [this.DHCP, this.STATIC] }
 }
@@ -45,8 +42,7 @@ export const TlsModes = {
   MUTUAL: { value: 3, label: 'Mutual TLS Authentication Only' },
   MUTUAL_NON_TLS: { value: 4, label: 'Mutual and Non-TLS Authentication' },
   labelForValue (value: number): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): TlsMode[] {
     return [this.SERVER, this.SERVER_NON_TLS, this.MUTUAL, this.MUTUAL_NON_TLS]
@@ -64,8 +60,7 @@ export const TlsSigningAuthorities = {
     value: 'MicrosoftCA'
   },
   labelForValue (value: string): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): TlsSigningAuthority[] { return [this.SELF_SIGNED, this.MICROSOFT_CA] }
 }
@@ -76,8 +71,7 @@ export const UserConsentModes = {
   KVM: { value: 'KVM', label: 'KVM Only' },
   NONE: { value: 'None', label: 'None' },
   labelForValue (value: string): string {
-    const e = this.all().find(e => e.value === value)
-    return e ? e.label : ''
+    return this.all().filter(p => p.value === value).map(p => p.label)[0]
   },
   all (): UserConsent[] { return [this.ALL, this.KVM, this.NONE] }
 }

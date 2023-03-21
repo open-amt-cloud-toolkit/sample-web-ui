@@ -11,8 +11,8 @@ import { Observable } from 'rxjs'
 
 import { finalize, mergeMap } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
-import { CIRAConfig } from 'src/models/models'
 import { ConfigsService } from '../configs.service'
+import { AuthMethods, Config, ServerAddressFormats } from '../configs.constants'
 
 @Component({
   selector: 'app-config-detail',
@@ -20,11 +20,12 @@ import { ConfigsService } from '../configs.service'
   styleUrls: ['./config-detail.component.scss']
 })
 export class ConfigDetailComponent implements OnInit {
-  public configForm: FormGroup
-  public isLoading = false
-  public pageTitle = 'New CIRA Config'
-  public isEdit = false
-  public errorMessages: string[] = []
+  pageTitle = 'New CIRA Config'
+  isLoading = false
+  isEdit = false
+  errorMessages: string[] = []
+  configForm: FormGroup
+  serverAdressFormats = ServerAddressFormats
   constructor (
     public snackBar: MatSnackBar,
     public fb: FormBuilder,
@@ -35,7 +36,7 @@ export class ConfigDetailComponent implements OnInit {
     this.configForm = fb.group({
       configName: [null, Validators.required],
       mpsServerAddress: ['', Validators.required],
-      serverAddressFormat: ['3', Validators.required], // 3 = ip, 201 = FQDN? wtf?
+      serverAddressFormat: [ServerAddressFormats.IPv4.value, Validators.required],
       commonName: [null, Validators.required],
       mpsPort: [4433, Validators.required],
       username: ['admin', Validators.required],
@@ -44,6 +45,10 @@ export class ConfigDetailComponent implements OnInit {
       regeneratePassword: [false],
       version: [null]
     })
+    this.configForm.controls.serverAddressFormat.valueChanges
+      .subscribe((value) => { this.serverAddressFormatChange(value) })
+    this.configForm.controls.mpsServerAddress.valueChanges
+      .subscribe((value) => { this.serverAddressChange(value) })
   }
   // IP ADDRESS REGEX
   // ^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$
@@ -59,34 +64,25 @@ export class ConfigDetailComponent implements OnInit {
               this.isLoading = false
             })
           )
-          .subscribe(
-            (data) => {
+          .subscribe({
+            next: (config) => {
               this.isEdit = true
-              this.pageTitle = data.configName
+              this.pageTitle = config.configName
               this.configForm.controls.configName.disable()
-              this.configForm.patchValue(data)
-              this.configForm.patchValue({
-                serverAddressFormat: data.serverAddressFormat.toString()
-              })
+              this.configForm.patchValue(config)
             },
-            (error) => {
+            error: (error) => {
               this.errorMessages = error
             }
-          )
+          })
       }
     })
-
-    this.configForm.controls.serverAddressFormat?.valueChanges.subscribe(
-      (value) => { this.serverAddressFormatChange(+value) }
-    )
-
-    this.configForm.controls.mpsServerAddress?.valueChanges.subscribe((value) => { this.serverAddressChange(value) }
-    )
   }
 
   serverAddressChange (value: string): void {
-    if (this.configForm.controls.serverAddressFormat?.value === '3') {
-      this.configForm.controls.commonName?.setValue(value)
+    const controls = this.configForm.controls
+    if (controls.serverAddressFormat.value === ServerAddressFormats.IPv4.value) {
+      controls.commonName.setValue(value)
     }
   }
 
@@ -94,14 +90,18 @@ export class ConfigDetailComponent implements OnInit {
     await this.router.navigate(['/ciraconfigs'])
   }
 
+  // from the SDK -> CN (commonName)
+  // A common name used when AccessInfo is an IP address.
   serverAddressFormatChange (value: number): void {
-    if (value === 3) {
-      // ipv4
-      this.configForm.controls.commonName?.enable()
-    } else {
-      // fqdn
-      this.configForm.controls.commonName?.disable()
-      this.configForm.controls.commonName?.setValue(null)
+    const controls = this.configForm.controls
+    if (value === ServerAddressFormats.IPv4.value) {
+      controls.commonName.enable()
+      controls.commonName.addValidators(Validators.required)
+      controls.commonName.setValue(controls.mpsServerAddress.value)
+    } else if (value === ServerAddressFormats.FQDN.value) {
+      controls.commonName.disable()
+      controls.commonName.setValue(null)
+      controls.commonName.removeValidators(Validators.required)
     }
   }
 
@@ -119,12 +119,10 @@ export class ConfigDetailComponent implements OnInit {
     if (this.configForm.valid) {
       this.isLoading = true
       const result: any = Object.assign({}, this.configForm.getRawValue())
-      // unsure why this is needed or what it is
-      result.authMethod = 2
-      // convert to number
-      result.serverAddressFormat = +result.serverAddressFormat
+      // only USERNAME_PASSWORD is supported
+      result.authMethod = AuthMethods.USERNAME_PASSWORD.value
       let reqType: string
-      let rpsRequest: Observable<CIRAConfig>
+      let rpsRequest: Observable<Config>
       if (this.isEdit) {
         reqType = 'updated'
         rpsRequest = this.configsService.update(result)
@@ -141,23 +139,23 @@ export class ConfigDetailComponent implements OnInit {
           mergeMap((data) => {
             result.mpsRootCertificate = this.trimRootCert(data)
             return rpsRequest
-          })
-        )
-        .subscribe(
-          (data) => {
+          }))
+        .subscribe({
+          next: () => {
             this.snackBar.open(
-              $localize`CIRA ${reqType} created successfully`,
+              $localize`CIRA ${reqType} successfully`,
               undefined,
-              SnackbarDefaults.defaultSuccess
-            )
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            this.router.navigate(['/ciraconfigs'])
+              SnackbarDefaults.defaultSuccess)
+            void this.router.navigate(['/ciraconfigs'])
           },
-          (error) => {
-            console.log('error', error)
-            this.errorMessages = error
+          error: err => {
+            this.snackBar.open(
+              $localize`Error creating/updating configuraion`,
+              undefined,
+              SnackbarDefaults.defaultError)
+            this.errorMessages = err
           }
-        )
+        })
     }
   }
 }

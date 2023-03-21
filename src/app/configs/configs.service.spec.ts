@@ -9,16 +9,28 @@ import { of } from 'rxjs'
 import { AuthService } from '../auth.service'
 
 import { ConfigsService } from './configs.service'
+import { AuthMethods, ServerAddressFormats, Config, ConfigsResponse } from './configs.constants'
 
 describe('ConfigsService', () => {
   let service: ConfigsService
   let httpClientSpy: { get: jasmine.Spy, post: jasmine.Spy, patch: jasmine.Spy, delete: jasmine.Spy }
   let routerSpy
+  let config: Config
   beforeEach(() => {
     httpClientSpy = jasmine.createSpyObj('HttpClient', ['get', 'post', 'delete', 'patch'])
     routerSpy = jasmine.createSpyObj('Router', ['navigate'])
     TestBed.configureTestingModule({})
-
+    config = {
+        configName: 'config1',
+        mpsServerAddress: '255.255.255.1',
+        mpsPort: 4433,
+        username: 'admin',
+        password: 'password',
+        commonName: '255.255.255.1',
+        serverAddressFormat: ServerAddressFormats.IPv4.value,
+        authMethod: AuthMethods.USERNAME_PASSWORD.value,
+        mpsRootCertificate: 'mpsrootcertificate'
+    }
     service = new ConfigsService(new AuthService(httpClientSpy as any, routerSpy as Router), httpClientSpy as any)
   })
 
@@ -31,107 +43,48 @@ describe('ConfigsService', () => {
   })
 
   it('should return all the configs when requested for all configs', (done: DoneFn) => {
-    const configResponse = {
-      data: [{
-        configName: 'config1',
-        mpsServerAddress: '255.255.255.1',
-        mpsPort: 4433,
-        username: 'admin',
-        password: 'password',
-        commonName: '255.255.255.1',
-        serverAddressFormat: 3,
-        authMethod: 2,
-        mpsRootCertificate: 'mpsrootcertificate',
-        proxyDetails: ''
-      }],
+    const configsResponse: ConfigsResponse = {
+      data: [config],
       totalCount: 1
     }
-
-    httpClientSpy.get.and.returnValue(of(configResponse))
-
+    httpClientSpy.get.and.returnValue(of(configsResponse))
     service.getData().subscribe(response => {
-      expect(response).toEqual(configResponse)
+      expect(response).toEqual(configsResponse)
       done()
     })
   })
 
   it('should return the specific config detail when requested with name', (done: DoneFn) => {
-    const configResponse = {
-      configName: 'config1',
-      mpsServerAddress: '255.255.255.1',
-      mpsPort: 4433,
-      username: 'admin',
-      password: 'password',
-      commonName: '255.255.255.1',
-      serverAddressFormat: 3,
-      authMethod: 2,
-      mpsRootCertificate: 'mpsrootcertificate',
-      proxyDetails: ''
-    }
-
-    httpClientSpy.get.and.returnValue(of(configResponse))
-
+    httpClientSpy.get.and.returnValue(of(config))
     service.getRecord('config1').subscribe(response => {
-      expect(response).toEqual(configResponse)
+      expect(response).toEqual(config)
       done()
     })
   })
 
   it('should delete the specified config when a delete request fired', (done: DoneFn) => {
     httpClientSpy.delete.and.returnValue(of({}))
-
     service.delete('config1').subscribe(() => {
       done()
     })
-
     expect(httpClientSpy.delete.calls.count()).toEqual(1)
   })
 
   it('should create the config when a post request is fired', (done: DoneFn) => {
-    const configReq = {
-      configName: 'config1',
-      mpsServerAddress: '255.255.255.1',
-      mpsPort: 4433,
-      username: 'admin',
-      password: 'password',
-      commonName: '255.255.255.1',
-      serverAddressFormat: 3,
-      authMethod: 2,
-      mpsRootCertificate: 'mpsrootcertificate',
-      proxyDetails: ''
-    }
-
-    httpClientSpy.post.and.returnValue(of(configReq))
-
-    service.create(configReq).subscribe(response => {
-      expect(response).toEqual(configReq)
+    httpClientSpy.post.and.returnValue(of(config))
+    service.create(config).subscribe(response => {
+      expect(response).toEqual(config)
       done()
     })
-
     expect(httpClientSpy.post.calls.count()).toEqual(1)
   })
 
   it('should update the config when a update request is fired', (done: DoneFn) => {
-    const configReq = {
-      configName: 'config1',
-      mpsServerAddress: '255.255.255.1',
-      mpsPort: 4433,
-      username: 'admin',
-      password: 'password',
-      commonName: '255.255.255.1',
-      serverAddressFormat: 3,
-      authMethod: 2,
-      mpsRootCertificate: 'mpsrootcertificate',
-      proxyDetails: ''
-    }
-
-    httpClientSpy.patch.and.returnValue(of(configReq))
-
-    service.update(configReq).subscribe(response => {
-      expect(response).toEqual(configReq)
+    httpClientSpy.patch.and.returnValue(of(config))
+    service.update(config).subscribe(response => {
+      expect(response).toEqual(config)
       done()
     })
-
     expect(httpClientSpy.patch.calls.count()).toEqual(1)
   })
 })

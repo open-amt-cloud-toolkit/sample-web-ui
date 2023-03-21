@@ -3,61 +3,36 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-import { AuthenticationProtocols, Config } from '../../../../src/app/ieee8021x/ieee8021x.constants'
-import { httpCodes } from '../../fixtures/api/httpCodes'
-import { wiredConfigs, wirelessConfigs } from '../../fixtures/formEntry/ieee8021x'
-import * as api8021x from '../../fixtures/api/ieee8021x'
-import { noConfigsResponse } from '../../fixtures/api/ieee8021x'
+import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
+import * as formEntry from 'cypress/e2e/fixtures/formEntry/ieee8021x'
+import * as api from 'cypress/e2e/fixtures/api/ieee8021x'
+import * as ieee8021x from 'src/app/ieee8021x/ieee8021x.constants'
 
-beforeEach('clear cache and login', () => {
-  cy.setup()
-  api8021x.interceptGetAll(httpCodes.SUCCESS, noConfigsResponse)
-  cy.goToPage('IEEE 802.1x')
-  cy.get('button').contains('Add New').click()
-})
+describe('Test IEEE 8021x Creation', () => {
+  const createdConfigs: ieee8021x.Config[] = []
+  const allConfigs = [...formEntry.wiredConfigs, ...formEntry.wirelessConfigs]
 
-describe('test ieee8021x wired config creation', () => {
-  const createdConfigs: Config[] = []
-  wiredConfigs.forEach((config) => {
-    it(`should create config ${config.profileName}`, () => {
-      createdConfigs.push(config)
-      api8021x.interceptPost(httpCodes.CREATED, config).as('interceptPost')
-      const expectedRsp = { data: createdConfigs, totalCount: createdConfigs.length }
-      api8021x.interceptGetAll(httpCodes.SUCCESS, expectedRsp).as('getAll')
-      cy.enterIEEE8021xInfo(config)
-      cy.get('button[type=submit]').click()
-      cy.wait('@interceptPost').then((rsp) => {
-        cy.wrap(rsp)
-          .its('response.statusCode')
-          .should('eq', httpCodes.CREATED)
-      })
-      cy.wait('@getAll')
-      // Check that the ieee8021x config was successful
-      cy.get('mat-cell').contains(config.profileName)
-      cy.get('mat-cell').contains(AuthenticationProtocols.labelForValue(config.authenticationProtocol))
-    })
+  beforeEach('clear cache and login', () => {
+    cy.setup()
+    api
+      .interceptGetAll(httpCodes.SUCCESS, api.noConfigsResponse)
+      .as('api.GetAll')
+    cy.goToPage('IEEE 802.1x')
+    cy.get('button').contains('Add New').click()
   })
-})
 
-describe('test ieee8021x wireless config creation', () => {
-  const createdConfigs: Config[] = []
-  wirelessConfigs.forEach((config) => {
+  allConfigs.forEach((config) => {
     it(`should create config ${config.profileName}`, () => {
       createdConfigs.push(config)
-      api8021x.interceptPost(httpCodes.CREATED, config).as('interceptPost')
+      api.interceptPost(httpCodes.CREATED, config).as('api.Post')
       const expectedRsp = { data: createdConfigs, totalCount: createdConfigs.length }
-      api8021x.interceptGetAll(httpCodes.SUCCESS, expectedRsp).as('getAll')
+      api.interceptGetAll(httpCodes.SUCCESS, expectedRsp).as('api.GetAll')
       cy.enterIEEE8021xInfo(config)
       cy.get('button[type=submit]').click()
-      cy.wait('@interceptPost').then((rsp) => {
-        cy.wrap(rsp)
-          .its('response.statusCode')
-          .should('eq', httpCodes.CREATED)
-      })
-      cy.wait('@getAll')
-      // Check that the ieee8021x config was successful
+      cy.wait('@api.Post').its('response.statusCode').should('eq', httpCodes.CREATED)
+      cy.wait('@api.GetAll')
       cy.get('mat-cell').contains(config.profileName)
-      cy.get('mat-cell').contains(AuthenticationProtocols.labelForValue(config.authenticationProtocol))
+      cy.get('mat-cell').contains(ieee8021x.AuthenticationProtocols.labelForValue(config.authenticationProtocol))
     })
   })
 })

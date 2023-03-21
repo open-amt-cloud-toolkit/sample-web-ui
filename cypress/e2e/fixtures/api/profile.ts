@@ -3,104 +3,39 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-import { amtProfiles } from '../formEntry/profile'
+import * as formEntry from 'cypress/e2e/fixtures/formEntry/profile'
+import * as profiles from 'src/app/profiles/profiles.constants'
 
-const profiles = {
-  getAll: {
-    success: {
-      response: {
-        data: amtProfiles,
-        totalCount: amtProfiles.length
-      }
-    },
-    forPaging: {
-      response: {
-        data: [
-          {
-            profileName: 'happyPath',
-            generateRandomPassword: false,
-            passwordLength: null,
-            activation: 'ccmactivate',
-            ciraConfigName: 'default',
-            dhcpEnabled: 'true',
-            generateRandomMEBxPassword: false,
-            mebxPasswordLength: null
-          },
-          {
-            profileName: 'happyPath',
-            generateRandomPassword: false,
-            passwordLength: null,
-            activation: 'ccmactivate',
-            ciraConfigName: 'default',
-            dhcpEnabled: 'true',
-            generateRandomMEBxPassword: false,
-            mebxPasswordLength: null
-          },
-          {
-            profileName: 'happyPath',
-            generateRandomPassword: false,
-            passwordLength: null,
-            activation: 'ccmactivate',
-            ciraConfigName: 'default',
-            dhcpEnabled: 'true',
-            generateRandomMEBxPassword: false,
-            mebxPasswordLength: null
-          },
-          {
-            profileName: 'happyPath',
-            generateRandomPassword: false,
-            passwordLength: null,
-            activation: 'ccmactivate',
-            ciraConfigName: 'default',
-            dhcpEnabled: 'true',
-            generateRandomMEBxPassword: false,
-            mebxPasswordLength: null
-          },
-          {
-            profileName: 'happyPath',
-            generateRandomPassword: false,
-            passwordLength: null,
-            activation: 'ccmactivate',
-            ciraConfigName: 'default',
-            dhcpEnabled: 'true',
-            generateRandomMEBxPassword: false,
-            mebxPasswordLength: null
-          }
-        ],
-        totalCount: 100
-      }
-    }
-  },
-  create: {
-    success: {
-      response: {
-        profileName: 'happyPath',
-        activation: 'ccmactivate',
-        ciraConfigName: 'default',
-        dhcpEnabled: true
-      }
-    }
-  },
-  update: {
-    success: {
-      response: {
-        profileName: 'profile6',
-        amtPassword: 'Intel123!',
-        mebxPassword: 'Intel123!',
-        activation: 'activate'
-      }
-    }
-  },
-  get: {
-    success: {
-      response: {
-        profileName: 'profile6',
-        amtPassword: 'Intel123!',
-        mebxPassword: 'Intel123!',
-        activation: 'activate'
-      }
-    }
-  }
+export const allConfigsResponse: profiles.ProfilesResponse = {
+  data: formEntry.profiles,
+  totalCount: formEntry.profiles.length
 }
 
-export { profiles }
+export const noConfigsResponse: profiles.ProfilesResponse = {
+  data: [],
+  totalCount: 0
+}
+
+export function interceptGetAll (statusCode: number, body: any): Cypress.Chainable<Element> {
+  return cy.myIntercept(
+    'GET',
+    'profiles?*$count=true',
+    { statusCode, body }
+  )
+}
+
+export function interceptPost (statusCode: number, body: any): Cypress.Chainable<Element> {
+  return cy.myIntercept(
+    'POST',
+    'profiles',
+    { statusCode, body }
+  )
+}
+
+export function interceptDelete (statusCode: number, body: any): Cypress.Chainable<Element> {
+  return cy.myIntercept(
+    'DELETE',
+    /.*profiles.*/,
+    { statusCode, body }
+  )
+}

@@ -8,11 +8,12 @@ import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog'
 import { MatLegacySnackBar as MatSnackBar } from '@angular/material/legacy-snack-bar'
 import { Router } from '@angular/router'
 import { finalize } from 'rxjs/operators'
-import { CIRAConfigResponse, PageEventOptions } from 'src/models/models'
+import { PageEventOptions } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { ConfigsService } from './configs.service'
 import { MatLegacyPaginator as MatPaginator, LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator'
+import { Config } from './configs.constants'
 
 @Component({
   selector: 'app-configs',
@@ -20,8 +21,9 @@ import { MatLegacyPaginator as MatPaginator, LegacyPageEvent as PageEvent } from
   styleUrls: ['./configs.component.scss']
 })
 export class ConfigsComponent implements OnInit {
-  public configs: CIRAConfigResponse = { data: [], totalCount: 0 }
-  public isLoading = true
+  configs: Config[] = []
+  isLoading = true
+  totalCount: number = 0
   displayedColumns: string[] = ['name', 'mpsserver', 'port', 'username', 'certname', 'rootcert', 'remove']
   pageEvent: PageEventOptions = {
     pageSize: 25,
@@ -38,19 +40,26 @@ export class ConfigsComponent implements OnInit {
   }
 
   getData (pageEvent: PageEventOptions): void {
-    this.configsService.getData(pageEvent).pipe(
-      finalize(() => {
-        this.isLoading = false
+    this.configsService
+      .getData(pageEvent)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false
+        })
+      )
+      .subscribe({
+        next: (rsp) => {
+          this.configs = rsp.data
+          this.totalCount = rsp.totalCount
+        },
+        error: () => {
+          this.snackBar.open($localize`Unable to load configurations`, undefined, SnackbarDefaults.defaultError)
+        }
       })
-    ).subscribe((data: CIRAConfigResponse) => {
-      this.configs = data
-    }, () => {
-      this.snackBar.open($localize`Unable to load CIRA Configs`, undefined, SnackbarDefaults.defaultError)
-    })
   }
 
   isNoData (): boolean {
-    return !this.isLoading && this.configs.data.length === 0
+    return !this.isLoading && this.configs.length === 0
   }
 
   delete (name: string): void {
@@ -59,21 +68,26 @@ export class ConfigsComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
         this.isLoading = true
-        this.configsService.delete(name).pipe(
-          finalize(() => {
-            this.isLoading = false
+        this.configsService
+          .delete(name)
+          .pipe(
+            finalize(() => {
+              this.isLoading = false
+            })
+          )
+          .subscribe({
+            next: data => {
+              this.getData(this.pageEvent)
+              this.snackBar.open($localize`Configuration deleted successfully`, undefined, SnackbarDefaults.defaultSuccess)
+            },
+            error: err => {
+              if (err?.length > 0) {
+                this.snackBar.open(err, undefined, SnackbarDefaults.longError)
+              } else {
+                this.snackBar.open($localize`Unable to delete configuration`, undefined, SnackbarDefaults.defaultError)
+              }
+            }
           })
-        ).subscribe(data => {
-          this.getData(this.pageEvent)
-          this.snackBar.open($localize`CIRA config deleted successfully`, undefined, SnackbarDefaults.defaultSuccess)
-        },
-        err => {
-          if (err?.length > 0) {
-            this.snackBar.open(err, undefined, SnackbarDefaults.longError)
-          } else {
-            this.snackBar.open($localize`Unable to delete CIRA Config`, undefined, SnackbarDefaults.defaultError)
-          }
-        })
       }
     })
   }

@@ -12,29 +12,35 @@ import { SharedModule } from '../shared/shared.module'
 
 import { ProfilesComponent } from './profiles.component'
 import { ProfilesService } from './profiles.service'
+import { ActivationModes, DhcpModes, Profile, UserConsentModes } from './profiles.constants'
 
 describe('ProfilesComponent', () => {
   let component: ProfilesComponent
   let fixture: ComponentFixture<ProfilesComponent>
   let getDataSpy: jasmine.Spy
   let deleteSpy: jasmine.Spy
+  let profile: Profile
 
   beforeEach(async () => {
+    profile = {
+      profileName: 'profile1',
+      iderEnabled: true,
+      kvmEnabled: true,
+      solEnabled: true,
+      activation: ActivationModes.ADMIN.value,
+      userConsent: UserConsentModes.NONE.value,
+      generateRandomPassword: false,
+      amtPassword: 'P@ssw0rd',
+      generateRandomMEBxPassword: false,
+      mebxPassword: 'P@ssw0rd',
+      ciraConfigName: 'config1',
+      dhcpEnabled: DhcpModes.DHCP.value,
+      tags: ['acm'],
+      wifiConfigs: [{ priority: 1, profileName: 'wifi' }]
+    }
     const profilesService = jasmine.createSpyObj('ProfilesService', ['getData', 'delete'])
     getDataSpy = profilesService.getData.and.returnValue(of({
-      data: [{
-        activation: 'acmactivate',
-        ciraConfigName: 'ciraconfig1',
-        dhcpEnabled: true,
-        generateRandomMEBxPassword: false,
-        generateRandomPassword: false,
-        mebxPasswordLength: null,
-        passwordLength: null,
-        profileName: 'profile1',
-        tags: [],
-        wifiConfigs: [],
-        tlsMode: 1
-      }],
+      data: [profile],
       totalCount: 1
     }))
     deleteSpy = profilesService.delete.and.returnValue(of(null))
@@ -102,13 +108,5 @@ describe('ProfilesComponent', () => {
     expect(component.paginator.pageSize).toBe(25)
     expect(component.paginator.pageIndex).toBe(0)
     expect(component.paginator.showFirstLastButtons).toBe(true)
-  })
-  it('should parseTlsMode when known', () => {
-    const result = component.parseTlsMode(1)
-    expect(result).toBe(ProfilesService.TLS_MODES[0].label)
-  })
-  it('should parseTlsMode when unknown', () => {
-    const result = component.parseTlsMode(null as any)
-    expect(result).toBe('')
   })
 })

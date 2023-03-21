@@ -3,54 +3,44 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-// Tests the creation of a cira-config
-
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { ciraFixtures } from '../../fixtures//formEntry/cira'
-import { ciraConfig } from 'cypress/e2e/fixtures/api/cira'
-import { empty } from 'cypress/e2e/fixtures/api/general'
+import * as api from 'cypress/e2e/fixtures/api/cira'
+import * as formEntry from 'cypress/e2e/fixtures/formEntry/cira'
 
-// ---------------------------- Test section ----------------------------
+describe('Test CIRA Config Deletion', () => {
+  const allConfigs = [...formEntry.configs]
+  let remainingConfigs = [...allConfigs]
 
-describe('Test CIRA Config Page', () => {
-  beforeEach('Clear cache and login', () => {
+  beforeEach(() => {
     cy.setup()
+    api.interceptDelete(httpCodes.NO_CONTENT, null)
   })
 
-  it('deletes the default cira config', () => {
-    cy.myIntercept('DELETE', /.*ciraconfigs.*/, {
-      statusCode: httpCodes.NO_CONTENT
-    }).as('delete-config')
-
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.success.response
-    }).as('get-configs')
-
-    // Delete CIRA Config (but cancel)
+  it('should not delete when cancelled', () => {
+    api
+      .interceptGetAll(httpCodes.SUCCESS, { data: allConfigs, totalCount: allConfigs.length })
+      .as('api.GetAll')
     cy.goToPage('CIRA Configs')
-    cy.wait('@get-configs')
-
+    cy.wait('@api.GetAll')
     cy.get('mat-cell').contains('delete').click()
     cy.get('button').contains('No').click()
+  })
 
-    // Check that the config was not deleted
-    cy.get('mat-cell').contains(ciraFixtures.default.name)
-    cy.get('mat-cell').contains(Cypress.env('FQDN'))
-    cy.get('mat-cell').contains(Cypress.env('MPS_USERNAME'))
-
-    // Change api response
-    cy.myIntercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: empty.response
-    }).as('get-configs')
-
-    // Delete CIRA Config
-    cy.get('mat-cell').contains('delete').click()
-    cy.get('button').contains('Yes').click()
-    cy.wait('@delete-config')
-
-    // Check that the config was deleted properly
-    cy.contains(ciraFixtures.default.name).should('not.exist')
+  allConfigs.forEach((config) => {
+    it(`should delete ${config.configName}`, () => {
+      api
+        .interceptGetAll(httpCodes.SUCCESS, { data: [...remainingConfigs], totalCount: remainingConfigs.length })
+        .as('api.GetAll')
+      cy.goToPage('CIRA Configs')
+      cy.wait('@api.GetAll')
+      remainingConfigs = remainingConfigs.filter(cfg => cfg.configName !== config.configName)
+      api
+        .interceptGetAll(httpCodes.SUCCESS, { data: [...remainingConfigs], totalCount: remainingConfigs.length })
+        .as('api.GetAll')
+      // Delete
+      cy.get('mat-row').contains(config.configName).parent().contains('delete').click()
+      cy.get('button').contains('Yes').click()
+      cy.wait('@api.GetAll')
+    })
   })
 })

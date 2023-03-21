@@ -16,7 +16,7 @@
 <mat-card>
   <mat-card-content>
     <h3 [fxShow]='isNoData()' fxLayoutAlign='center'>No IEEE 8021x Configs</h3>
-    <mat-table [dataSource]='pagedConfigs.data' [fxHide]='isNoData()'>
+    <mat-table [dataSource]='configs' [fxHide]='isNoData()'>
       <ng-container matColumnDef='profileName'>
         <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
         <mat-cell *matCellDef='let element'> {{ element.profileName }} </mat-cell>
@@ -47,10 +47,10 @@
       <mat-header-row *matHeaderRowDef='displayedColumns'></mat-header-row>
       <mat-row *matRowDef='let row; columns: displayedColumns;' (click)='navigateTo(row.profileName)'></mat-row>
     </mat-table>
-    <div *ngIf='pagedConfigs.totalCount'>
+    <div *ngIf='totalCount'>
       <mat-paginator [pageSizeOptions]='[25, 50, 100]'
                      [pageSize]='25'
-                     [length]='pagedConfigs.totalCount'
+                     [length]='totalCount'
                      (page)='onPaginator($event)'
                      showFirstLastButtons>
       </mat-paginator>

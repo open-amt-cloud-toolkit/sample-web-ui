@@ -3,59 +3,36 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-import { empty } from 'cypress/e2e/fixtures/api/general'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { wirelessConfigs } from 'cypress/e2e/fixtures/api/wireless'
-import { wirelessFixtures } from 'cypress/e2e/fixtures/formEntry/wireless'
-import * as api8021x from '../../fixtures/api/ieee8021x'
+import * as api from 'cypress/e2e/fixtures/api/wireless'
+import * as formEntry from 'cypress/e2e/fixtures/formEntry/wireless'
+import * as wireless from 'src/app/wireless/wireless.constants'
+import * as api8021x from 'cypress/e2e/fixtures/api/ieee8021x'
 
-describe('create a wireless profile', () => {
+describe('Test Wireless Config Creation', () => {
   beforeEach('clear cache and login', () => {
     cy.setup()
+    api.interceptGetAll(httpCodes.SUCCESS, api.noConfigsResponse).as('api.GetAll')
+    api8021x.interceptGetAll(httpCodes.SUCCESS, api8021x.allConfigsResponse).as('api8021x.GetAll')
+    cy.goToPage('Wireless')
+    cy.get('button').contains('Add New').click()
+    cy.wait('@api8021x.GetAll')
   })
 
-  it('creates a default profile', () => {
-    api8021x
-      .interceptGetAll(httpCodes.SUCCESS, api8021x.wirelessConfigsResponse)
-      .as('intercept8021xGetAll')
-
-    cy.myIntercept('POST', 'wirelessconfigs', {
-      statusCode: httpCodes.CREATED,
-      body: wirelessConfigs.create.success.response
-    }).as('post-wireless')
-
-    cy.myIntercept('GET', 'wirelessconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: empty.response
-    }).as('get-wireless')
-
-    cy.goToPage('Wireless')
-    cy.wait('@get-wireless')
-
-    // change api response
-    cy.myIntercept('GET', 'wirelessconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: wirelessConfigs.getAll.success.response
-    }).as('get-wireless2')
-
-    cy.get('button').contains('Add New').click()
-    cy.wait('@intercept8021xGetAll')
-    cy.enterWirelessInfo(
-      wirelessFixtures.happyPath.profileName,
-      Cypress.env('WIFI_SSID'),
-      Cypress.env('WIFI_PSK_PASSPHRASE'),
-      wirelessFixtures.happyPath.authenticationMethod,
-      wirelessFixtures.happyPath.encryptionMethod
-    )
-    cy.get('button[type=submit]').click()
-
-    cy.wait('@post-wireless').then((req) => {
-      cy.wrap(req)
-        .its('response.statusCode')
-        .should('eq', httpCodes.CREATED)
-
-      // Check that the wireless config was successful
-      cy.get('mat-cell').contains(wirelessFixtures.happyPath.profileName)
+  const createdConfigs: wireless.Config[] = []
+  formEntry.configs.forEach((config) => {
+    it(`should create config ${config.profileName}`, () => {
+      createdConfigs.push(config)
+      api.interceptPost(httpCodes.CREATED, config).as('api.Post')
+      const expectedRsp = { data: createdConfigs, totalCount: createdConfigs.length }
+      api.interceptGetAll(httpCodes.SUCCESS, expectedRsp).as('api.GetAll')
+      cy.enterWirelessInfo(config)
+      cy.get('button[type=submit]').click()
+      cy.wait('@api.Post').its('response.statusCode').should('eq', httpCodes.CREATED)
+      cy.wait('@api.GetAll')
+      cy.get('mat-cell').contains(config.profileName)
+      cy.get('mat-cell').contains(wireless.AuthenticationMethods.labelForValue(config.authenticationMethod))
+      cy.get('mat-cell').contains(wireless.EncryptionMethods.labelForValue(config.encryptionMethod))
     })
   })
 })

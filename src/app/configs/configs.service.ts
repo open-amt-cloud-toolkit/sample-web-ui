@@ -8,8 +8,9 @@ import { Injectable } from '@angular/core'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
-import { CIRAConfig, CIRAConfigResponse, PageEventOptions } from 'src/models/models'
+import { PageEventOptions } from 'src/models/models'
 import { AuthService } from '../auth.service'
+import { Config, ConfigsResponse } from './configs.constants'
 
 @Injectable({
   providedIn: 'root'
@@ -21,14 +22,14 @@ export class ConfigsService {
 
   }
 
-  getData (pageEvent?: PageEventOptions): Observable<CIRAConfigResponse> {
+  getData (pageEvent?: PageEventOptions): Observable<ConfigsResponse> {
     let query = this.url
     if (pageEvent) {
       query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
     } else {
       query += '?$count=true'
     }
-    return this.http.get<CIRAConfigResponse>(query)
+    return this.http.get<ConfigsResponse>(query)
       .pipe(
         catchError((err) => {
           const errorMessages = this.authService.onError(err)
@@ -37,8 +38,8 @@ export class ConfigsService {
       )
   }
 
-  getRecord (name: string): Observable<CIRAConfig> {
-    return this.http.get<CIRAConfig>(`${this.url}/${name}`)
+  getRecord (name: string): Observable<Config> {
+    return this.http.get<Config>(`${this.url}/${name}`)
       .pipe(
         catchError((err) => {
           const errorMessages = this.authService.onError(err)
@@ -47,8 +48,8 @@ export class ConfigsService {
       )
   }
 
-  update (ciraConfig: CIRAConfig): Observable<CIRAConfig> {
-    return this.http.patch<CIRAConfig>(this.url, ciraConfig)
+  update (ciraConfig: Config): Observable<Config> {
+    return this.http.patch<Config>(this.url, ciraConfig)
       .pipe(
         catchError((err) => {
           const errorMessages = this.authService.onError(err)
@@ -57,8 +58,8 @@ export class ConfigsService {
       )
   }
 
-  create (ciraConfig: CIRAConfig): Observable<CIRAConfig> {
-    return this.http.post<CIRAConfig>(this.url, ciraConfig)
+  create (ciraConfig: Config): Observable<Config> {
+    return this.http.post<Config>(this.url, ciraConfig)
       .pipe(
         catchError((err) => {
           const errorMessages = this.authService.onError(err)

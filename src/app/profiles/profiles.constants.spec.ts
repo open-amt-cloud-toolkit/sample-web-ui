@@ -48,7 +48,7 @@ describe('Profile Constants', () => {
       })
     })
   })
-  describe('ActivationModes', () => {
+  describe('UserConsentModes', () => {
     UserConsentModes.all().forEach(m => {
       it(`should have label: ${m.label} for value: ${m.value}`, () => {
         expect(UserConsentModes.labelForValue(m.value)).toEqual(m.label)

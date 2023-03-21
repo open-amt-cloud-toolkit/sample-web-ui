@@ -3,68 +3,43 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-// Tests the creation of a cira-config
-
-import { badRequest, empty } from 'cypress/e2e/fixtures/api/general'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { ciraFixtures } from '../../fixtures/formEntry/cira'
-import { urlFixtures } from '../../fixtures/formEntry/urls'
-const baseUrl: string = Cypress.env('BASEURL')
+import * as formEntry from 'cypress/e2e/fixtures/formEntry/cira'
+import * as api from 'cypress/e2e/fixtures/api/cira'
+import * as cira from 'src/app/configs/configs.constants'
 
-// ---------------------------- Test section ----------------------------
-
-describe('Test CIRA Config Page', () => {
-  beforeEach('Clear cache and login', () => {
+describe('Test CIRA Config Creation Errors', () => {
+  let config: cira.Config
+  beforeEach('clear cache and login', () => {
     cy.setup()
-  })
-
-  beforeEach('fills out the config', () => {
-    cy.myIntercept('GET', 'ciracert', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraFixtures.MpsCertificate
-    }).as('certificate1')
-
-    cy.intercept('POST', 'ciraconfigs', {
-      statusCode: httpCodes.BAD_REQUEST,
-      body: badRequest.response
-    }).as('post-config1')
-
-    cy.intercept('GET', 'ciraconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: empty.response
-    }).as('get-configs')
-
+    api.interceptGetAll(httpCodes.SUCCESS, api.noConfigsResponse).as('api.GetAll')
+    api.interceptCiraCert(httpCodes.SUCCESS, formEntry.MpsCertificate).as('api.GetCiraCert')
     cy.goToPage('CIRA Configs')
-    cy.wait('@get-configs')
-
     cy.get('button').contains('Add New').click()
+    config = { ...formEntry.configs[0] }
   })
 
-  it('invalid config name', () => {
-    cy.enterCiraInfo(
-      ciraFixtures.wrong.name,
-      ciraFixtures.default.format,
-      ciraFixtures.default.addr,
-      Cypress.env('MPS_USERNAME')
-    )
-  })
-
-  it('invalid username', () => {
-    cy.enterCiraInfo(
-      ciraFixtures.wrong.name,
-      ciraFixtures.default.format,
-      ciraFixtures.default.addr,
-      ciraFixtures.wrong.username
-    )
-  })
-
-  afterEach('Check that the error occured', () => {
+  it('Invalid Config Name', () => {
+    config.configName = 'asdf -%^7'
+    cy.enterCiraInfo(config)
+    const errResponse = {
+      error: 'Bad Request',
+      message: 'CIRA profile name accepts letters, numbers and no spaces'
+    }
+    api.interceptPost(httpCodes.BAD_REQUEST, errResponse).as('api.Post')
     cy.get('button[type=submit]').click()
+    cy.wait('@api.Post').its('response.statusCode').should('eq', httpCodes.BAD_REQUEST)
+  })
 
-    cy.wait('@certificate1')
-    cy.wait('@post-config1').its('response.statusCode').should('eq', 400)
-
-    const url = baseUrl + urlFixtures.page.cira + '/' + urlFixtures.extensions.creation
-    cy.url().should('eq', url)
+  it('Invalid User Name', () => {
+    config.username = 'no spaces or$^MB@LS'
+    cy.enterCiraInfo(config)
+    const errResponse = {
+      error: 'Bad Request',
+      message: 'CIRA profile name accepts letters, numbers and no spaces'
+    }
+    api.interceptPost(httpCodes.BAD_REQUEST, errResponse).as('api.Post')
+    cy.get('button[type=submit]').click()
+    cy.wait('@api.Post').its('response.statusCode').should('eq', httpCodes.BAD_REQUEST)
   })
 })

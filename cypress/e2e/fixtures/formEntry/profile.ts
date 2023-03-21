@@ -3,237 +3,78 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-import Constants from '../../../../src/app/shared/config/Constants'
+import {
+  ActivationModes,
+  DhcpModes,
+  Profile,
+  TlsModes,
+  TlsSigningAuthorities,
+  UserConsentModes
+} from 'src/app/profiles/profiles.constants'
+import * as formEntryCIRA from 'cypress/e2e/fixtures/formEntry/cira'
+import * as formEntryIEEE8021x from 'cypress/e2e/fixtures/formEntry/ieee8021x'
+import * as formEntryWireless from 'cypress/e2e/fixtures/formEntry/wireless'
 
-const amtModes = ['ccmactivate', 'acmactivate']
-const dhcpEnabled = [true, false]
+const profiles: Profile[] = []
 
-const tlsModes: any = {
-  'CIRA (Cloud)': { profileValue: 'CIRA' },
-  'Server Authentication Only': { profileValue: 'server', value: 1 },
-  'Server & Non-TLS Authentication': { profileValue: 'server-nontls', value: 2 },
-  'Mutual TLS Authentication Only': { profileValue: 'mutualtls', value: 3 },
-  'Mutual and Non-TLS Authentication': { profileValue: 'mutual-nontls', value: 4 }
+const profile: Profile = {
+  profileName: '',
+  activation: '',
+  iderEnabled: true,
+  kvmEnabled: true,
+  solEnabled: true,
+  userConsent: '',
+  generateRandomPassword: false,
+  generateRandomMEBxPassword: false,
+  dhcpEnabled: true,
+  ieee8021xProfileName: formEntryIEEE8021x.wiredConfigs[0].profileName,
+  tags: []
 }
-const connectionMode = ['CIRA (Cloud)', 'Server Authentication Only', 'Server & Non-TLS Authentication', 'Mutual TLS Authentication Only', 'Mutual and Non-TLS Authentication']
-const ciraProfile = 'happyPath'
-const amtProfiles: any[] = []
-const wifiConfigs = [
-  [{}], // support non wifi config
-  [{
-    profileName: 'happyPath'
-  }]
-]
-amtModes.forEach((amtMode) => {
-  dhcpEnabled.forEach((dhcp) => {
-    connectionMode.forEach((conMode) => {
-      wifiConfigs.forEach((wifi) => {
-        const dhcpS = dhcp ? 'DHCP' : 'Static'
 
-        const profile: any = {
-          profileName: `${amtMode}-${dhcpS}-${tlsModes[conMode].profileValue as string}`,
-          activation: amtMode,
-          amtPassword: '', // Cypress.env('AMT_PASSWORD'),
-          mebxPassword: '', // Cypress.env('MEBX_PASSWORD'),
-          dhcpEnabled: dhcp,
-          userConsent: Constants.UserConsent_All,
-          iderEnabled: true,
-          kvmEnabled: true,
-          solEnabled: true
+ActivationModes.all().forEach((activationMode) => {
+  DhcpModes.all().forEach((dhcpMode) => {
+    [true, false].forEach((addWirelessProfiles) => {
+      let curProfileName = `${activationMode.value}-${dhcpMode.label}`
+      profile.activation = activationMode.value
+      profile.userConsent = UserConsentModes.ALL.value
+      profile.dhcpEnabled = dhcpMode.value
+      profile.wifiConfigs = []
+      if (addWirelessProfiles) {
+        // this combo does not work
+        if (dhcpMode !== DhcpModes.DHCP) {
+          return
         }
-        if (conMode === 'CIRA (Cloud)') {
-          profile.connectionMode = conMode
-          profile.ciraConfigName = ciraProfile
-        } else {
-          profile.connectionMode = 'TLS (Enterprise)'
-          profile.tlsConfig = conMode
-          profile.tlsMode = tlsModes[conMode].value
-        }
-        if ((wifi[0] as any).profileName) {
-          if (!dhcp) { return }
-          (profile.profileName as string) += '-WiFi'
-          profile.wifiConfigs = wifi
-        }
-        amtProfiles.push(profile)
+        curProfileName += '-WiFi'
+        let priority = 1
+        profile.wifiConfigs = formEntryWireless.configs
+          .slice(0, 2)
+          .map(cfg => ({
+              profileName: cfg.profileName,
+              priority: priority++
+          }))
+      }
+
+      // add a couple of TLS modes/authorities
+      delete profile.ciraConfigName
+      const options = [
+        { mode: TlsModes.MUTUAL, auth: TlsSigningAuthorities.SELF_SIGNED },
+        { mode: TlsModes.SERVER_NON_TLS, auth: TlsSigningAuthorities.MICROSOFT_CA }
+        ]
+      options.forEach(o => {
+        profile.profileName = `${curProfileName}-TLS${o.mode.value}-${o.auth.value}`
+        profile.tlsMode = o.mode.value
+        profile.tlsSigningAuthority = o.auth.value
+        profiles.push({ ...profile })
       })
+
+      // add a CIRA
+      delete profile.tlsMode
+      delete profile.tlsSigningAuthority
+      profile.profileName = `${curProfileName}-CIRA`
+      profile.ciraConfigName = formEntryCIRA.configs[0].configName
+      profiles.push({ ...profile })
     })
   })
 })
 
-const profileFixtures = {
-  happyPath: {
-    profileName: 'happyPath',
-    activation: 'ccmactivate',
-
-    mebxPassword: 'P@ssw0rd',
-    connectionMode: 'CIRA (Cloud)',
-    dhcpEnabled: true,
-    ciraConfig: 'happyPath',
-    userConsent: Constants.UserConsent_All,
-    iderEnabled: true,
-    kvmEnabled: true,
-    solEnabled: true,
-    wifiConfigs: [
-      {
-        priority: 1,
-        profileName: 'happyPath'
-      }
-    ]
-  },
-
-  wrong: {
-    name: 'bad name !',
-    amtPassword: 'password',
-    mebxPassword: '12345678'
-  },
-
-  check: {
-    network: {
-      dhcp: 'DHCP',
-      static: 'Static'
-    },
-
-    mode: {
-      acm: 'acmactivate',
-      ccm: 'ccmactivate'
-    }
-  },
-
-  totalCount: 100,
-  happyPathTls: {
-    profileName: 'happyTlspath',
-    activation: 'ccmactivate',
-    amtPassword: 'P@ssw0rd',
-    mebxPassword: 'P@ssw0rd',
-    dhcpEnabled: true,
-    connectionMode: 'TLS (Enterprise)',
-    tlsConfig: 'Server Authentication Only',
-    generateRandomPassword: false,
-    userConsent: Constants.UserConsent_All,
-    iderEnabled: true,
-    kvmEnabled: true,
-    solEnabled: true,
-    wifiConfigs: [
-      {
-        profileName: 'happyPath',
-        priority: 1
-      }
-    ]
-  },
-
-  happyPathStaticCIRA: {
-    profileName: 'happyPathStaticCIRA',
-    activation: 'ccmactivate',
-    amtPassword: 'P@ssw0rd',
-    mebxPassword: 'P@ssw0rd',
-    connectionMode: 'CIRA (Cloud)',
-    dhcpEnabled: false,
-    ciraConfig: 'happyPath',
-    userConsent: Constants.UserConsent_All,
-    iderEnabled: true,
-    kvmEnabled: true,
-    solEnabled: true,
-    wifiConfigs: [
-      {
-        profileName: 'happyPath',
-        priority: 1
-      }
-    ]
-  },
-
-  happyPathStaticCIRARandomPassword: {
-    profileName: 'happyPathStaticCIRARandomPassword',
-    activation: 'ccmactivate',
-    amtPassword: 'P@ssw0rd',
-    mebxPassword: 'P@ssw0rd',
-    connectionMode: 'CIRA (Cloud)',
-    dhcpEnabled: false,
-    ciraConfig: 'happyPath',
-    userConsent: Constants.UserConsent_All,
-    iderEnabled: true,
-    kvmEnabled: true,
-    solEnabled: true
-  },
-  patchWirelessConfigHappyPath: {
-    profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
-    generateRandomPassword: false,
-    generateRandomMEBxPassword: false,
-    tags: [],
-    dhcpEnabled: true,
-    tlsMode: 1,
-    tenantId: '',
-    wifiConfigs: [
-      {
-        profileName: 'happyPath',
-        priority: 1
-      }
-    ],
-    userConsent: Constants.UserConsent_All,
-    iderEnabled: true,
-    kvmEnabled: true,
-    solEnabled: true
-  },
-  patchServerAuthentication: {
-    profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
-    generateRandomPassword: false,
-    generateRandomMEBxPassword: false,
-    tags: [],
-    dhcpEnabled: true,
-    tlsMode: 1,
-    tenantId: '',
-    wifiConfigs: []
-  },
-  patchServerNonTLS: {
-    profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
-    generateRandomPassword: false,
-    generateRandomMEBxPassword: false,
-    tags: [],
-    dhcpEnabled: true,
-    tlsMode: 2,
-    tenantId: '',
-    wifiConfigs: []
-  },
-  patchMutualTLS: {
-    profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
-    generateRandomPassword: false,
-    generateRandomMEBxPassword: false,
-    tags: [],
-    dhcpEnabled: true,
-    tlsMode: 3,
-    tenantId: '',
-    wifiConfigs: []
-  },
-  patchMutualNonTLS: {
-    profileName: 'happyTlspath',
-    activation: 'acmactivate',
-    ciraConfigName: null,
-    generateRandomPassword: false,
-    generateRandomMEBxPassword: false,
-    tags: [],
-    dhcpEnabled: true,
-    tlsMode: 4,
-    tenantId: '',
-    wifiConfigs: []
-  },
-  patchSTATIC: {
-    profileName: 'happyTlspath',
-    activation: 'ccmactivate',
-    ciraConfigName: null,
-    generateRandomPassword: false,
-    generateRandomMEBxPassword: false,
-    tags: [],
-    dhcpEnabled: false,
-    tlsMode: 1,
-    tenantId: '',
-    wifiConfigs: []
-  }
-}
-export { profileFixtures, amtProfiles }
+export { profiles }

@@ -3,92 +3,46 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-// Tests the creation of a profile
-import { ciraConfig } from 'cypress/e2e/fixtures/api/cira'
-import { empty } from 'cypress/e2e/fixtures/api/general'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { profiles } from 'cypress/e2e/fixtures/api/profile'
-import { wirelessConfigs } from 'cypress/e2e/fixtures/api/wireless'
-import { amtProfiles } from '../../fixtures/formEntry/profile'
-import * as api8021x from '../../fixtures/api/ieee8021x'
-
-// ---------------------------- Test section ----------------------------
+import * as apiProfile from 'cypress/e2e/fixtures/api/profile'
+import * as apiWireless from 'cypress/e2e/fixtures/api/wireless'
+import * as api8021x from 'cypress/e2e/fixtures/api/ieee8021x'
+import * as apiCIRA from 'cypress/e2e/fixtures/api/cira'
+import * as formEntryProfile from 'cypress/e2e/fixtures/formEntry/profile'
+import * as profiles from 'src/app/profiles/profiles.constants'
 
 describe('Test Profile Page', () => {
   beforeEach('clear cache and login', () => {
     cy.setup()
-    // Stub the get and post requests
-    cy.myIntercept('GET', 'ciraconfigs?$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: ciraConfig.getAll.forProfile.response
-    }).as('get-configs')
-
-    cy.myIntercept('GET', 'wirelessconfigs?$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: wirelessConfigs.getAll.forProfile.response
-    }).as('get-wirelessConfigs')
-
-    api8021x
-      .interceptGetAll(httpCodes.SUCCESS, api8021x.wiredConfigsResponse)
-      .as('intercept8021xGetAll')
-
-    cy.myIntercept('POST', 'profiles', {
-      statusCode: httpCodes.CREATED,
-      body: profiles.create.success.response
-    }).as('post-profile')
-
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: empty.response
-    }).as('get-profiles')
-
+    apiCIRA.interceptGetAll(httpCodes.SUCCESS, apiCIRA.allConfigsResponse).as('apiCIRA.GetAll')
+    apiWireless.interceptGetAll(httpCodes.SUCCESS, apiWireless.allConfigsResponse).as('apiWireless.GetAll')
+    api8021x.interceptGetAll(httpCodes.SUCCESS, api8021x.allConfigsResponse).as('api8021x.GetAll')
+    apiProfile.interceptGetAll(httpCodes.SUCCESS, apiProfile.noConfigsResponse).as('apiProfile.GetAll')
     cy.goToPage('Profiles')
-    cy.wait('@get-profiles')
-
-    // change api response
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.success.response
-    }).as('get-profiles2')
-
     cy.get('button').contains('Add New').click()
-    cy.wait('@get-configs')
-    cy.wait('@get-wirelessConfigs')
-    cy.wait('@intercept8021xGetAll')
+    cy.wait('@apiCIRA.GetAll')
+    cy.wait('@apiWireless.GetAll')
+    cy.wait('@api8021x.GetAll')
   })
 
-  amtProfiles.forEach((amtProfile) => {
-    let connectProfile: any
-    if (amtProfile.ciraConfigName) {
-      connectProfile = amtProfile.ciraConfigName
-    } else if (amtProfile.tlsConfig) {
-      connectProfile = amtProfile.tlsConfig
-    }
-    it(`creates the profile - ${amtProfile.profileName as string}`, () => {
-      cy.log(amtProfile)
-      cy.enterProfileInfo(
-        amtProfile.profileName,
-        amtProfile.activation,
-        false,
-        false,
-        amtProfile.dhcpEnabled,
-        amtProfile.connectionMode,
-        connectProfile,
-        amtProfile.userConsent,
-        amtProfile.iderEnabled,
-        amtProfile.kvmEnabled,
-        amtProfile.solEnabled,
-        amtProfile.wifiConfigs
-      )
+  const createdConfigs: profiles.Profile[] = []
+  formEntryProfile.profiles.forEach((profile) => {
+    it(`should create profile ${profile.profileName}`, () => {
+      createdConfigs.push(profile)
+      apiProfile.interceptPost(httpCodes.CREATED, profile).as('apiProfile.Post')
+      const expectedRsp = { data: createdConfigs, totalCount: createdConfigs.length }
+      apiProfile.interceptGetAll(httpCodes.SUCCESS, expectedRsp).as('apiProfile.GetAll')
+      cy.enterProfileInfo(profile)
       cy.get('button[type=submit]').click()
-      if (!amtProfile.dhcpEnabled && amtProfile.connectionMode === 'CIRA (Cloud)') {
+      if (!profile.dhcpEnabled && profile.ciraConfigName) {
+        // handle static CIRA warning
         cy.get('button').contains('Continue').click()
       }
-      cy.wait('@post-profile').then((req) => {
-        cy.wrap(req)
-          .its('response.statusCode')
-          .should('eq', httpCodes.CREATED)
-      })
+      cy.wait('@apiProfile.Post').its('response.statusCode').should('eq', httpCodes.CREATED)
+      cy.wait('@apiProfile.GetAll')
+      cy.get('mat-cell').contains(profile.profileName)
+      const activationLabel = profiles.ActivationModes.labelForValue(profile.activation)
+      cy.get('mat-cell').contains(activationLabel)
     })
   })
 })

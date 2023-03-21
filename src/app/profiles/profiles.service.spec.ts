@@ -10,7 +10,7 @@ import { environment } from 'src/environments/environment'
 import { AuthService } from '../auth.service'
 
 import { ProfilesService } from './profiles.service'
-  import { Profile, ProfileResponse } from '../../models/models'
+import { ActivationModes, DhcpModes, Profile, ProfilesResponse, UserConsentModes } from './profiles.constants'
 
 describe('ProfilesService', () => {
   let service: ProfilesService
@@ -18,22 +18,23 @@ describe('ProfilesService', () => {
   let routerSpy
 
   const profileReq: Profile = {
-    profileName: 'profile1',
-    amtPassword: null,
-    activation: 'acmactivate',
-    ciraConfigName: 'config1',
-    dhcpEnabled: true,
-    mebxPassword: 'password',
-    generateRandomPassword: true,
-    generateRandomMEBxPassword: true,
-    tags: ['acm'],
-    ieee8021xProfileName: null,
-    wifiConfigs: [],
-    tlsMode: 1,
-    tlsSigningAuthority: 'SelfSigned'
+      profileName: 'profile1',
+      iderEnabled: true,
+      kvmEnabled: true,
+      solEnabled: true,
+      activation: ActivationModes.ADMIN.value,
+      userConsent: UserConsentModes.NONE.value,
+      generateRandomPassword: false,
+      amtPassword: 'P@ssw0rd',
+      generateRandomMEBxPassword: false,
+      mebxPassword: 'P@ssw0rd',
+      ciraConfigName: 'config1',
+      dhcpEnabled: DhcpModes.DHCP.value,
+      tags: ['acm'],
+      wifiConfigs: [{ priority: 1, profileName: 'wifi' }]
   }
 
-  const profileResponse: ProfileResponse = {
+  const profileResponse: ProfilesResponse = {
     data: [profileReq],
     totalCount: 1
   }

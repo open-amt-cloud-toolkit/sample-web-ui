@@ -3,45 +3,44 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-import { empty } from 'cypress/e2e/fixtures/api/general'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { wirelessConfigs } from 'cypress/e2e/fixtures/api/wireless'
-import { wirelessFixtures } from 'cypress/e2e/fixtures/formEntry/wireless'
+import * as api from 'cypress/e2e/fixtures/api/wireless'
+import * as formEntry from 'cypress/e2e/fixtures/formEntry/wireless'
 
-describe('test wireless profiles page', () => {
-  beforeEach('clear cache and login', () => {
+describe('Test Wireless Config Deletion', () => {
+  const allConfigs = [...formEntry.configs]
+  let remainingConfigs = [...allConfigs]
+
+  beforeEach(() => {
     cy.setup()
+    api.interceptDelete(httpCodes.NO_CONTENT, null)
   })
 
-  it('deletes the default profile', () => {
-    cy.myIntercept('DELETE', /.*wirelessconfigs.*/, {
-      statusCode: httpCodes.NO_CONTENT
-    }).as('delete-profile')
-    cy.myIntercept('GET', 'wirelessconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: wirelessConfigs.getAll.success.response
-    }).as('get-wireless')
-
+  it('should not delete when cancelled', () => {
+    api
+      .interceptGetAll(httpCodes.SUCCESS, { data: allConfigs, totalCount: allConfigs.length })
+      .as('api.GetAll')
     cy.goToPage('Wireless')
-    cy.wait('@get-wireless')
-
+    cy.wait('@api.GetAll')
     cy.get('mat-cell').contains('delete').click()
     cy.get('button').contains('No').click()
+  })
 
-    cy.get('mat-cell').contains(wirelessFixtures.happyPath.profileName)
-    cy.get('mat-cell').contains(wirelessFixtures.happyPath.authenticationMethod)
-    cy.get('mat-cell').contains(wirelessFixtures.happyPath.encryptionMethod)
-
-    cy.myIntercept('GET', 'wirelessconfigs?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: empty.response
-    }).as('get-wireless2')
-
-    cy.get('mat-cell').contains('delete').click()
-    cy.get('button').contains('Yes').click()
-    cy.wait('@delete-profile')
-    cy.wait('@get-wireless2')
-
-    cy.contains(wirelessFixtures.happyPath.profileName).should('not.exist')
+  allConfigs.forEach((config) => {
+    it(`should delete ${config.profileName}`, () => {
+      api
+        .interceptGetAll(httpCodes.SUCCESS, { data: [...remainingConfigs], totalCount: remainingConfigs.length })
+        .as('api.GetAll')
+      cy.goToPage('Wireless')
+      cy.wait('@api.GetAll')
+      remainingConfigs = remainingConfigs.filter(cfg => cfg.profileName !== config.profileName)
+      api
+        .interceptGetAll(httpCodes.SUCCESS, { data: [...remainingConfigs], totalCount: remainingConfigs.length })
+        .as('api.GetAll')
+      // Delete
+      cy.get('mat-row').contains(config.profileName).parent().contains('delete').click()
+      cy.get('button').contains('Yes').click()
+      cy.wait('@api.GetAll')
+    })
   })
 })

@@ -3,46 +3,46 @@
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************/
 
-// Tests the creation of a profile
-import { empty } from 'cypress/e2e/fixtures/api/general'
 import { httpCodes } from 'cypress/e2e/fixtures/api/httpCodes'
-import { profiles } from 'cypress/e2e/fixtures/api/profile'
-import { amtProfiles } from '../../fixtures/formEntry/profile'
+import * as apiProfile from 'cypress/e2e/fixtures/api/profile'
+import * as formEntryProfile from 'cypress/e2e/fixtures/formEntry/profile'
 
-// ---------------------------- Test section ----------------------------
+describe('Test Profiles Deletion', () => {
+  const allProfiles = [...formEntryProfile.profiles]
+  let remainingConfigs = [...allProfiles]
 
-describe('Test Profile Page', () => {
   beforeEach(() => {
     cy.setup()
-    // Stub the requests
-    cy.myIntercept('DELETE', /.*profiles.*/, {
-      statusCode: httpCodes.NO_CONTENT
-    }).as('delete-profile')
-    cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-      statusCode: httpCodes.SUCCESS,
-      body: profiles.getAll.success.response
-    }).as('get-profiles')
-    cy.goToPage('Profiles')
-    cy.wait('@get-profiles')
+    apiProfile
+      .interceptDelete(httpCodes.NO_CONTENT, null)
+      .as('apiProfile.Delete')
   })
 
   it('should not delete when cancelled', () => {
-    // Delete profile (but cancel)
+    apiProfile
+      .interceptGetAll(httpCodes.SUCCESS, { data: allProfiles, totalCount: allProfiles.length })
+      .as('apiProfile.GetAll')
+    cy.goToPage('Profiles')
+    cy.wait('@apiProfile.GetAll')
     cy.get('mat-cell').contains('delete').click()
     cy.get('button').contains('No').click()
   })
 
-  amtProfiles.forEach((profile: any) => {
-    it(`should delete ${profile.profileName as string}`, () => {
-      cy.myIntercept('GET', 'profiles?$top=25&$skip=0&$count=true', {
-        statusCode: httpCodes.SUCCESS,
-        body: empty.response
-      }).as('get-profiles4')
+  allProfiles.forEach((config) => {
+    it(`should delete ${config.profileName}`, () => {
+      apiProfile
+        .interceptGetAll(httpCodes.SUCCESS, { data: [...remainingConfigs], totalCount: remainingConfigs.length })
+        .as('apiProfile.GetAll')
+      cy.goToPage('Profiles')
+      cy.wait('@apiProfile.GetAll')
+      remainingConfigs = remainingConfigs.filter(cfg => cfg.profileName !== config.profileName)
+      apiProfile
+        .interceptGetAll(httpCodes.SUCCESS, { data: [...remainingConfigs], totalCount: remainingConfigs.length })
+        .as('apiProfile.GetAll')
       // Delete profile
-      cy.get('mat-row').contains(profile.profileName).parent().contains('delete').click()
+      cy.get('mat-row').contains(config.profileName).parent().contains('delete').click()
       cy.get('button').contains('Yes').click()
-      cy.wait('@delete-profile')
-      cy.wait('@get-profiles4')
+      cy.wait('@apiProfile.GetAll')
     })
   })
 })

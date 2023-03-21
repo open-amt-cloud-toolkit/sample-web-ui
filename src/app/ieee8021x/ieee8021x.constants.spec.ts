@@ -12,4 +12,7 @@ describe('Test AuthenticationProtocols Constants', () => {
       expect(AuthenticationProtocols.labelForValue(m.value)).toEqual(m.label)
     })
   })
+  it('labelForValue should return nothing for unknown/invalid protocol value', () => {
+    expect(AuthenticationProtocols.labelForValue(-2)).toBeFalsy()
+  })
 })

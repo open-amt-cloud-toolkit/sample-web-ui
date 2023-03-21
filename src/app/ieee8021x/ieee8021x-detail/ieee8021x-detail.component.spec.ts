@@ -30,11 +30,10 @@ describe('IEEE8021xDetailComponent', () => {
 
   beforeEach(async () => {
     const ieee8021xService = jasmine.createSpyObj('IEEE8021xService',
-      ['getRecord', 'update', 'create', 'refreshCountByInterface'])
+      ['getRecord', 'update', 'create'])
     ieee8021xGetRecordSpy = ieee8021xService.getRecord.and.returnValue(of({}))
     ieee8021xCreateSpy = ieee8021xService.create.and.returnValue(of({}))
     ieee8021xUpdateSpy = ieee8021xService.update.and.returnValue(of({}))
-    ieee8021xService.refreshCountByInterface.and.returnValue(of({}))
     await TestBed.configureTestingModule({
       imports: [BrowserAnimationsModule, SharedModule, RouterTestingModule.withRoutes([])],
       declarations: [IEEE8021xDetailComponent],
@@ -102,5 +101,14 @@ describe('IEEE8021xDetailComponent', () => {
   it('should support subsets of all autthentication protocols', () => {
     expect(AuthenticationProtocols.forWiredInterface().length).toBeGreaterThan(0)
     expect(AuthenticationProtocols.forWirelessInterface().length).toBeGreaterThan(0)
+  })
+
+  it('should adjust authentication protocols when interface value changes', () => {
+    component.ieee8021xForm.patchValue({ wiredInterface: true })
+    expect(component.authenticationProtocols).toEqual(AuthenticationProtocols.forWiredInterface())
+    component.ieee8021xForm.patchValue({ wiredInterface: false })
+    expect(component.authenticationProtocols).toEqual(AuthenticationProtocols.forWirelessInterface())
+    component.ieee8021xForm.patchValue({ wiredInterface: true })
+    expect(component.authenticationProtocols).toEqual(AuthenticationProtocols.forWiredInterface())
   })
 })

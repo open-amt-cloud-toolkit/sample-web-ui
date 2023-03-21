@@ -13,7 +13,7 @@ import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.c
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { IEEE8021xService } from './ieee8021x.service'
 import { MatLegacyPaginator as MatPaginator, LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator'
-import { AuthenticationProtocols, ConfigsResponse } from './ieee8021x.constants'
+import { AuthenticationProtocols, Config } from './ieee8021x.constants'
 
 @Component({
   selector: 'app-ieee8021x',
@@ -21,14 +21,11 @@ import { AuthenticationProtocols, ConfigsResponse } from './ieee8021x.constants'
   styleUrls: ['./ieee8021x.component.scss']
 })
 export class IEEE8021xComponent implements OnInit {
-  pagedConfigs: ConfigsResponse = {
-    data: [],
-    totalCount: 0
-  }
-
-  protocols = AuthenticationProtocols
+  configs: Config[] = []
   isLoading = true
+  totalCount: number = 0
   displayedColumns: string[] = ['profileName', 'authenticationProtocol', 'interface', 'remove']
+  protocols = AuthenticationProtocols
   pageEvent: PageEventOptions = {
     pageSize: 25,
     startsFrom: 0,
@@ -53,8 +50,9 @@ export class IEEE8021xComponent implements OnInit {
       .getData(pageEvent)
       .pipe(finalize(() => { this.isLoading = false }))
       .subscribe({
-        next: (pagedConfigs: ConfigsResponse) => {
-          this.pagedConfigs = pagedConfigs
+        next: (rsp) => {
+          this.configs = rsp.data
+          this.totalCount = rsp.totalCount
         },
         error: () => {
           this.snackBar.open($localize`Unable to load IEEE8021x Configs`, undefined, SnackbarDefaults.defaultError)
@@ -63,7 +61,7 @@ export class IEEE8021xComponent implements OnInit {
   }
 
   isNoData (): boolean {
-    return !this.isLoading && this.pagedConfigs.data.length === 0
+    return !this.isLoading && this.configs.length === 0
   }
 
   delete (name: string): void {
@@ -85,7 +83,7 @@ export class IEEE8021xComponent implements OnInit {
                 if (error?.length > 0) {
                   this.snackBar.open(error, undefined, SnackbarDefaults.longError)
                 } else {
-                  this.snackBar.open($localize`Unable to delete Configuration`, undefined, SnackbarDefaults.defaultError)
+                  this.snackBar.open($localize`Unable to delete configuration`, undefined, SnackbarDefaults.defaultError)
                 }
               }
             })
