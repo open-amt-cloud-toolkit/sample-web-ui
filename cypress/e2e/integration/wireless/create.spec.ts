@@ -15,9 +15,13 @@ describe('create a wireless profile', () => {
   })
 
   it('creates a default profile', () => {
-    api8021x
-      .interceptGetAll(httpCodes.SUCCESS, api8021x.wirelessConfigsResponse)
-      .as('intercept8021xGetAll')
+    // api8021x
+    //   .interceptGetAll(httpCodes.SUCCESS, api8021x.wirelessConfigsResponse)
+    //   .as('intercept8021xGetAll')
+    cy.myIntercept('GET', 'wirelessconfigs?$count=true', {
+      statusCode: httpCodes.SUCCESS,
+      body: wirelessConfigs.getAll.success.response
+    }).as('wirelessconfigsGetAll')
 
     cy.myIntercept('POST', 'wirelessconfigs', {
       statusCode: httpCodes.CREATED,
@@ -39,7 +43,7 @@ describe('create a wireless profile', () => {
     }).as('get-wireless2')
 
     cy.get('button').contains('Add New').click()
-    cy.wait('@intercept8021xGetAll')
+    // cy.wait('@wirelessconfigsGetAll')
     cy.enterWirelessInfo(
       wirelessFixtures.happyPath.profileName,
       Cypress.env('WIFI_SSID'),
