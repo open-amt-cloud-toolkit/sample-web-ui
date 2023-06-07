@@ -29,9 +29,6 @@ describe('Test Profile Page', () => {
       statusCode: httpCodes.SUCCESS,
       body: api8021x.allConfigsResponse
     }).as('intercept8021xGetAll')
-    // api8021x
-    //   .interceptGetAll(httpCodes.SUCCESS, api8021x.wiredConfigsResponse)
-    //   .as('intercept8021xGetAll')
 
     cy.myIntercept('POST', 'profiles', {
       statusCode: httpCodes.CREATED,
