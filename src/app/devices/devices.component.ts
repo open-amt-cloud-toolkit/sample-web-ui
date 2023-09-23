@@ -10,13 +10,15 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator'
 import { MatSelectChange } from '@angular/material/select'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
-import { catchError, finalize, delay, map, mergeMap } from 'rxjs/operators'
+import { catchError, delay, finalize, map, mergeMap } from 'rxjs/operators'
 import { BehaviorSubject, forkJoin, from, Observable, of, throwError } from 'rxjs'
 import { Device, DeviceResponse, PageEventOptions } from 'src/models/models'
 import { AddDeviceComponent } from '../shared/add-device/add-device.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { DevicesService } from './devices.service'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
+import { DeviceEditTagsComponent } from './edit-tags/edit-tags.component'
+import { caseInsensntiveCompare } from '../../utils'
 
 @Component({
   selector: 'app-devices',
@@ -32,6 +34,7 @@ export class DevicesComponent implements OnInit {
   public bulkActionResponses: any[] = []
   public isTrue: boolean = false
   public powerStates: any
+
   displayedColumns: string[] = ['select', 'hostname', 'guid', 'status', 'tags', 'actions', 'notification']
   pageEvent: PageEventOptions = {
     pageSize: 25,
@@ -89,8 +92,81 @@ export class DevicesComponent implements OnInit {
     })
   }
 
-  tagChange (event: MatSelectChange): void {
+  tagFilterChange (event: MatSelectChange): void {
     this.selectedTags.next(event.value)
+  }
+
+  bulkEditTags (): void {
+    // use a copy of the selected devices tags (not all the tags available)
+    const tagOccurencesMap = new Map<string, number>()
+    this.selection.selected.forEach(device => {
+      device.tags.forEach(tag => {
+        let numOccurences = tagOccurencesMap.get(tag)
+        if (numOccurences === undefined) {
+          numOccurences = 0
+        }
+        tagOccurencesMap.set(tag, (numOccurences + 1))
+      })
+    })
+
+    const originalTags: string[] = []
+    const editedTags: string[] = []
+    for (const [tag, numOccurences] of tagOccurencesMap) {
+      if (numOccurences === this.selection.selected.length) {
+        originalTags.push(tag)
+        editedTags.push(tag)
+      }
+    }
+    editedTags.sort(caseInsensntiveCompare)
+
+    const dialogRef = this.dialog.open(DeviceEditTagsComponent, { data: editedTags })
+    dialogRef.afterClosed().subscribe(tagsChanged => {
+      if (tagsChanged) {
+        // figure out which tags were added and/or removed
+        const addedTags = editedTags.filter(t => !originalTags.includes(t))
+        const removedTags = originalTags.filter(t => !editedTags.includes(t))
+
+        const requests: Array<Observable<any>> = []
+        this.isLoading = true
+        this.selection.selected.forEach(device => {
+          device.tags = device.tags.filter(t => !removedTags.includes(t))
+          addedTags.forEach(t => { device.tags.push(t) })
+          device.tags.sort(caseInsensntiveCompare)
+          const req = this.devicesService
+            .updateDevice(device)
+            .pipe(
+              catchError(err => of({ err }))
+            )
+          requests.push(req)
+        })
+
+        forkJoin(requests).subscribe(result => {
+          this.isLoading = false
+          result.forEach(res => {
+            (this.devices.data.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
+          })
+          this.resetResponse()
+          this.getData(this.pageEvent)
+        })
+      }
+    })
+  }
+
+  editTagsForDevice (deviceId: string): void {
+    const device = this.devices.data.find(d => d.guid === deviceId) as Device
+    // use a copy of the tags
+    const editedTags = [...device.tags]
+    const dialogRef = this.dialog.open(DeviceEditTagsComponent, { data: editedTags })
+    dialogRef.afterClosed().subscribe(tagsChanged => {
+      if (tagsChanged) {
+        device.tags = editedTags.sort(caseInsensntiveCompare)
+        this.devicesService
+          .updateDevice(device)
+          .subscribe(res => {
+            this.getData(this.pageEvent)
+          })
+      }
+    })
   }
 
   isAllSelected (): boolean {
