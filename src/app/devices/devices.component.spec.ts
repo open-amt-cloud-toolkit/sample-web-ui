@@ -15,25 +15,35 @@ import { DevicesService } from './devices.service'
 import { Device } from '../../models/models'
 
 describe('DevicesComponent', () => {
-  let device: Device
+  let device01: Device
+  let device02: Device
   let component: DevicesComponent
   let fixture: ComponentFixture<DevicesComponent>
   let getDevicesSpy: jasmine.Spy
+  let updateDeviceSpy: jasmine.Spy
   let getTagsSpy: jasmine.Spy
   let getPowerStateSpy: jasmine.Spy
   let sendPowerActionSpy: jasmine.Spy
   let sendDeactivateSpy: jasmine.Spy
 
   beforeEach(async () => {
-    device = {
+    device01 = {
       hostname: 'device01',
       friendlyName: '',
       icon: 1,
       connectionStatus: true,
       guid: '12324-4243-ewdsd',
-      tags: ['']
+      tags: ['tagA', 'tagCommon01']
     }
-    const devicesService = jasmine.createSpyObj('DevicesService', ['getDevices', 'getTags', 'getPowerState', 'PowerStates', 'sendPowerAction', 'bulkPowerAction', 'sendDeactivate', 'sendBulkDeactivate'])
+    device02 = {
+      hostname: 'device02',
+      friendlyName: '',
+      icon: 1,
+      connectionStatus: true,
+      guid: '12324-4243-ewdsd',
+      tags: ['tagB', 'tagCommon01']
+    }
+    const devicesService = jasmine.createSpyObj('DevicesService', ['getDevices', 'updateDevice', 'getTags', 'getPowerState', 'PowerStates', 'sendPowerAction', 'bulkPowerAction', 'sendDeactivate', 'sendBulkDeactivate'])
     devicesService.PowerStates.and.returnValue({
       2: 'On',
       3: 'Sleep',
@@ -44,7 +54,8 @@ describe('DevicesComponent', () => {
       9: 'Power Cycle',
       13: 'Off'
     })
-    getDevicesSpy = devicesService.getDevices.and.returnValue(of({ data: [device], totalCount: 1 }))
+    getDevicesSpy = devicesService.getDevices.and.returnValue(of({ data: [device01, device02], totalCount: 1 }))
+    updateDeviceSpy = devicesService.updateDevice.and.callFake((device: any) => { return of(device) })
     getTagsSpy = devicesService.getTags.and.returnValue(of([]))
     getPowerStateSpy = devicesService.getPowerState.and.returnValue(of({ powerstate: 2 }))
     sendPowerActionSpy = devicesService.sendPowerAction.and.returnValue(of({ Body: { ReturnValueStr: 'SUCCESS' } }))
@@ -84,7 +95,7 @@ describe('DevicesComponent', () => {
     expect(result).toBeFalse()
   })
   it('should determine if all selected (true)', () => {
-    component.selection.select(component.devices.data[0])
+    component.devices.data.forEach(d => component.selection.select(d))
     const result = component.isAllSelected()
     expect(result).toBeTrue()
   })
@@ -125,10 +136,7 @@ describe('DevicesComponent', () => {
     (component.devices.data[0] as any).StatusMessage = 'SUCCESS'
     component.resetResponse()
     tick(5001)
-    const result = component.devices.data.every((val: any) =>
-      val.StatusMessage === ''
-    )
-    expect(result).toBeTrue()
+    expect((component.devices.data[0] as any).StatusMessage).toEqual('')
   }))
   it('should fire bulk power action', () => {
     const resetResponseSpy = spyOn(component, 'resetResponse')
@@ -140,7 +148,7 @@ describe('DevicesComponent', () => {
   })
   it('should fire send power action', () => {
     const resetSpy = spyOn(component, 'resetResponse')
-    component.sendPowerAction(device.guid, 2)
+    component.sendPowerAction(device01.guid, 2)
     expect(sendPowerActionSpy).toHaveBeenCalled()
     expect(resetSpy).toHaveBeenCalled()
   })
@@ -151,7 +159,7 @@ describe('DevicesComponent', () => {
   })
 
   it('should clear the selection when unselect the master toggle', () => {
-    component.selection.select(component.devices.data[0])
+    component.devices.data.forEach(d => component.selection.select(d))
     component.masterToggle()
     expect(component.selection.selected).toEqual([])
   })
@@ -159,7 +167,7 @@ describe('DevicesComponent', () => {
   it('should fire deactivate action', () => {
     const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
     const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
-    component.sendDeactivate(device.guid)
+    component.sendDeactivate(device01.guid)
     fixture.detectChanges()
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
@@ -175,5 +183,26 @@ describe('DevicesComponent', () => {
     expect(dialogSpy).toHaveBeenCalled()
     expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
     expect(sendDeactivateSpy).toHaveBeenCalledTimes(1)
+  })
+  it('should fire bulk edit tags', () => {
+    expect(component.devices.data.length).toBeGreaterThan(0)
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+    component.devices.data.forEach(d => component.selection.select(d))
+    component.bulkEditTags()
+    fixture.detectChanges()
+    expect(dialogSpy).toHaveBeenCalled()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
+    expect(updateDeviceSpy).toHaveBeenCalledTimes(2)
+  })
+  it('should fire device edit tags', () => {
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null })
+    const dialogSpy = spyOn(TestBed.get(MatDialog), 'open').and.returnValue(dialogRefSpyObj)
+    component.devices.data.forEach(d => component.selection.select(d))
+    component.editTagsForDevice(device01.guid)
+    fixture.detectChanges()
+    expect(dialogSpy).toHaveBeenCalled()
+    expect(dialogRefSpyObj.afterClosed).toHaveBeenCalled()
+    expect(updateDeviceSpy).toHaveBeenCalledTimes(1)
   })
 })
