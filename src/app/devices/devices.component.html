@@ -8,13 +8,13 @@
       <span i18n>Add a Device</span>
     </button>
   </div>
-  <div *ngIf="!selection.isEmpty()">
+  <div *ngIf="!selectedDevices.isEmpty()">
     <button mat-button (click)="bulkEditTags()">
       <mat-icon>edit</mat-icon>
       <span i18n>Edit Tags</span>
     </button>
   </div>
-  <div *ngIf="!selection.isEmpty()">
+  <div *ngIf="!selectedDevices.isEmpty()">
     <button mat-icon-button matTooltip="Power up selected devices" (click)="bulkPowerAction(2)">
       <mat-icon>power</mat-icon>
     </button>
@@ -29,7 +29,7 @@
     </button>
   </div>
 </mat-toolbar>
-<mat-progress-bar mode='indeterminate' *ngIf="isLoading!==false"></mat-progress-bar>
+<mat-progress-bar mode='indeterminate' *ngIf="isLoading"></mat-progress-bar>
 
 <mat-card>
   <mat-card-header>
@@ -37,7 +37,7 @@
       <div class="flex flex-33 justify-end">
         <mat-form-field data-cy="filterTags">
           <mat-label>Filter Tags</mat-label>
-          <mat-select (selectionChange)="tagFilterChange($event)" name="tag" multiple>
+          <mat-select [(ngModel)]="filteredTags" (selectionChange)="tagFilterChange($event)" name="tag" multiple>
             <mat-option *ngFor="let tag of tags" [value]="tag">
               {{tag}}
             </mat-option>
@@ -47,18 +47,27 @@
     </div>
   </mat-card-header>
   <mat-card-content>
-    <h3 *ngIf="isNoData()" class="flex justify-center">No Devices</h3>
+    <h3 *ngIf="isNoData()" class="flex justify-center">
+      <span *ngIf="!filteredTags.length">No Devices</span>
+      <span *ngIf="filteredTags.length">No Devices Match Filter Selection</span>
+    </h3>
 
-    <mat-table [dataSource]="devices.data" *ngIf="!isNoData()">
+    <mat-table [dataSource]="devices" *ngIf="!isNoData()">
 
       <!-- select Column -->
       <ng-container matColumnDef="select">
         <mat-header-cell *matHeaderCellDef>
-          <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()">
+          <mat-checkbox
+            (change)="$event ? masterToggle() : null"
+            [checked]="areAllDevicesSelected()"
+            [indeterminate]="areOnlySomeDevicesSelected()">
           </mat-checkbox>
         </mat-header-cell>
-        <mat-cell *matCellDef="let row">
-          <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null" [checked]="selection.isSelected(row)">
+        <mat-cell *matCellDef="let device">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="$event ? selectedDevices.toggle(device) : null"
+            [checked]="selectedDevices.isSelected(device)">
           </mat-checkbox>
         </mat-cell>
       </ng-container>
@@ -108,7 +117,7 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef> Actions</mat-header-cell>
         <mat-cell *matCellDef="let element">
-          <div *ngIf="!selection.isSelected(element)">
+          <div *ngIf="!selectedDevices.isSelected(element)">
             <button mat-icon-button matTooltip="Power up the device" (click)="$event.stopPropagation(); sendPowerAction(element.guid,2)">
               <mat-icon>power</mat-icon>
             </button>
@@ -137,8 +146,8 @@
       <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="navigateTo(row.guid)"></mat-row>
     </mat-table>
 
-    <div *ngIf="devices.totalCount">
-      <mat-paginator [pageSizeOptions]="[25, 50, 100]" [pageSize]="25" [length]="devices.totalCount" (page)="pageChanged($event)" showFirstLastButtons>
+    <div *ngIf="totalCount">
+      <mat-paginator [pageSizeOptions]="[25, 50, 100]" [pageSize]="25" [length]="totalCount" (page)="pageChanged($event)" showFirstLastButtons>
       </mat-paginator>
     </div>
   </mat-card-content>

@@ -10,9 +10,9 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator'
 import { MatSelectChange } from '@angular/material/select'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
-import { catchError, delay, finalize, map, mergeMap } from 'rxjs/operators'
-import { BehaviorSubject, forkJoin, from, Observable, of, throwError } from 'rxjs'
-import { Device, DeviceResponse, PageEventOptions } from 'src/models/models'
+import { catchError, delay, finalize, map } from 'rxjs/operators'
+import { forkJoin, from, Observable, of, throwError } from 'rxjs'
+import { Device, PageEventOptions } from 'src/models/models'
 import { AddDeviceComponent } from '../shared/add-device/add-device.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { DevicesService } from './devices.service'
@@ -26,17 +26,18 @@ import { caseInsensntiveCompare } from '../../utils'
   styleUrls: ['./devices.component.scss']
 })
 export class DevicesComponent implements OnInit {
-  public devices: DeviceResponse = { data: [], totalCount: 0 }
+  public devices: Device[] = []
+  public totalCount: number = 0
   public isLoading = true
   public tags: string[] = []
-  public selectedTags = new BehaviorSubject<string[]>([])
-  public selection: SelectionModel<Device>
+  public filteredTags: string[] = []
+  public selectedDevices: SelectionModel<Device>
   public bulkActionResponses: any[] = []
   public isTrue: boolean = false
   public powerStates: any
 
   displayedColumns: string[] = ['select', 'hostname', 'guid', 'status', 'tags', 'actions', 'notification']
-  pageEvent: PageEventOptions = {
+  pageEventOptions: PageEventOptions = {
     pageSize: 25,
     startsFrom: 0,
     count: 'true'
@@ -45,78 +46,78 @@ export class DevicesComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator
 
   constructor (public snackBar: MatSnackBar, public dialog: MatDialog, public readonly router: Router, private readonly devicesService: DevicesService) {
-    const initialSelection: Device[] = []
-    const allowMultiSelect = true
-    this.selection = new SelectionModel<any>(allowMultiSelect, initialSelection)
+    this.selectedDevices = new SelectionModel<Device>(true, [])
     this.powerStates = this.devicesService.PowerStates
   }
 
   ngOnInit (): void {
-    this.getData(this.pageEvent)
+    this.getTagsThenDevices()
   }
 
-  getData (pageEvent: PageEventOptions): void {
-    const tags = this.devicesService.getTags()
-    forkJoin({ tags }).pipe(
-      catchError((err) => {
-        this.snackBar.open($localize`Error loading devices`, undefined, SnackbarDefaults.defaultError)
-        return throwError(err)
-      }), finalize(() => {
-        this.isLoading = false
+  // in order to maintain tag filtering when editing tags,
+  // the tags need to be retrieved first,
+  // then the filter selection (re) established
+  // so the device query reflects the tag filter correctly
+  getTagsThenDevices (): void {
+    this.devicesService.getTags()
+      .pipe(
+        catchError((err) => {
+          this.snackBar.open($localize`Error loading tags`, undefined, SnackbarDefaults.defaultError)
+          return throwError(err)
+        }), finalize(() => {
+          this.getDevices()
+        }))
+      .subscribe(tags => {
+        this.tags = tags
+        this.filteredTags = this.filteredTags.filter(t => tags.includes(t))
       })
-    ).subscribe(data => {
-      this.tags = data.tags
-      // this.isLoading = false
-    })
+  }
 
-    this.selectedTags.pipe(
-      mergeMap(tags => {
-        this.isLoading = true
-        return this.devicesService.getDevices({ ...pageEvent, tags })
+  getDevices (): void {
+    this.isLoading = true
+    this.devicesService.getDevices({ ...this.pageEventOptions, tags: this.filteredTags })
+      .pipe(
+        catchError((err) => {
+          this.snackBar.open($localize`Error loading devices`, undefined, SnackbarDefaults.defaultError)
+          return throwError(err)
+        }),
+        finalize(() => {
+          const prevSelected = this.selectedDevices.selected.map(d => d.guid)
+          this.selectedDevices.clear()
+          const stillSelected = this.devices.filter(d => prevSelected.includes(d.guid))
+          this.selectedDevices.select(...stillSelected)
+          this.isLoading = false
+        }))
+      .subscribe(res => {
+        this.devices = res.data
+        this.totalCount = res.totalCount
+        const deviceIds = this.devices.filter(z => z.connectionStatus).map(x => x.guid)
+        from(deviceIds)
+          .pipe(
+            map(id => {
+              return this.devicesService.getPowerState(id).pipe(map(result => {
+                return { powerstate: result.powerstate, guid: id }
+              }))
+            }))
+          .subscribe(results => {
+            results.subscribe(x => {
+              (this.devices.find(y => y.guid === x.guid) as any).powerstate = x.powerstate
+            })
+          })
       })
-    ).subscribe(devices => {
-      this.devices = devices
-      const deviceIds = this.devices.data.filter(z => z.connectionStatus).map(x => x.guid)
-      from(deviceIds).pipe(
-        map(id => {
-          return this.devicesService.getPowerState(id).pipe(map(result => {
-            return { powerstate: result.powerstate, guid: id }
-          }))
-        })
-      ).subscribe(results => {
-        results.subscribe(x => {
-          (devices.data.find(y => y.guid === x.guid) as any).powerstate = x.powerstate
-        })
-      })
-      this.isLoading = false
-    })
   }
 
   tagFilterChange (event: MatSelectChange): void {
-    this.selectedTags.next(event.value)
+    this.filteredTags = event.value
+    this.getDevices()
   }
 
   bulkEditTags (): void {
-    // use a copy of the selected devices tags (not all the tags available)
-    const tagOccurencesMap = new Map<string, number>()
-    this.selection.selected.forEach(device => {
-      device.tags.forEach(tag => {
-        let numOccurences = tagOccurencesMap.get(tag)
-        if (numOccurences === undefined) {
-          numOccurences = 0
-        }
-        tagOccurencesMap.set(tag, (numOccurences + 1))
-      })
+    let originalTags: string[] = this.selectedDevices.selected[0].tags.slice()
+    this.selectedDevices.selected.forEach(device => {
+      originalTags = originalTags.filter(t => device.tags.includes(t))
     })
-
-    const originalTags: string[] = []
-    const editedTags: string[] = []
-    for (const [tag, numOccurences] of tagOccurencesMap) {
-      if (numOccurences === this.selection.selected.length) {
-        originalTags.push(tag)
-        editedTags.push(tag)
-      }
-    }
+    const editedTags: string[] = originalTags.slice()
     editedTags.sort(caseInsensntiveCompare)
 
     const dialogRef = this.dialog.open(DeviceEditTagsComponent, { data: editedTags })
@@ -128,9 +129,9 @@ export class DevicesComponent implements OnInit {
 
         const requests: Array<Observable<any>> = []
         this.isLoading = true
-        this.selection.selected.forEach(device => {
+        this.selectedDevices.selected.forEach(device => {
           device.tags = device.tags.filter(t => !removedTags.includes(t))
-          addedTags.forEach(t => { device.tags.push(t) })
+          device.tags.push(...addedTags.filter(t => !device.tags.includes(t)))
           device.tags.sort(caseInsensntiveCompare)
           const req = this.devicesService
             .updateDevice(device)
@@ -143,18 +144,17 @@ export class DevicesComponent implements OnInit {
         forkJoin(requests).subscribe(result => {
           this.isLoading = false
           result.forEach(res => {
-            (this.devices.data.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
+            (this.devices.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
           })
           this.resetResponse()
-          this.getData(this.pageEvent)
+          this.getTagsThenDevices()
         })
       }
     })
   }
 
   editTagsForDevice (deviceId: string): void {
-    const device = this.devices.data.find(d => d.guid === deviceId) as Device
-    // use a copy of the tags
+    const device = this.devices.find(d => d.guid === deviceId) as Device
     const editedTags = [...device.tags]
     const dialogRef = this.dialog.open(DeviceEditTagsComponent, { data: editedTags })
     dialogRef.afterClosed().subscribe(tagsChanged => {
@@ -162,28 +162,30 @@ export class DevicesComponent implements OnInit {
         device.tags = editedTags.sort(caseInsensntiveCompare)
         this.devicesService
           .updateDevice(device)
-          .subscribe(res => {
-            this.getData(this.pageEvent)
+          .subscribe(() => {
+            this.getTagsThenDevices()
           })
       }
     })
   }
 
-  isAllSelected (): boolean {
-    const numSelected = this.selection.selected.length
-    const numRows = this.devices.data.length
-    return numSelected === numRows
+  areOnlySomeDevicesSelected (): boolean {
+    return !this.areAllDevicesSelected() && this.selectedDevices.selected.length > 0
+  }
+
+  areAllDevicesSelected (): boolean {
+    return this.selectedDevices.selected.length === this.devices.length
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle (): void {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.devices.data.forEach(row => this.selection.select(row))
+    this.areAllDevicesSelected()
+      ? this.selectedDevices.clear()
+      : this.devices.forEach(device => this.selectedDevices.select(device))
   }
 
   isNoData (): boolean {
-    return !this.isLoading && this.devices.data.length === 0
+    return !this.isLoading && this.devices.length === 0
   }
 
   async navigateTo (path: string): Promise<void> {
@@ -204,7 +206,7 @@ export class DevicesComponent implements OnInit {
   bulkPowerAction (action: number): void {
     const requests: Array<Observable<any>> = []
     this.isLoading = true
-    this.selection.selected.forEach(z => {
+    this.selectedDevices.selected.forEach(z => {
       requests.push(this.devicesService.sendPowerAction(z.guid, action).pipe(
         catchError(err => of({ err })),
         map(i => ({
@@ -218,7 +220,7 @@ export class DevicesComponent implements OnInit {
     forkJoin(requests).subscribe(result => {
       this.isLoading = false
       result.forEach(res => {
-        (this.devices.data.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
+        (this.devices.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
       })
       this.resetResponse()
     })
@@ -228,16 +230,16 @@ export class DevicesComponent implements OnInit {
     this.isLoading = true
     this.devicesService.sendPowerAction(deviceId, action).pipe(
       catchError((): any => {
-        (this.devices.data.find(x => x.guid === deviceId) as any).StatusMessage = 'ERROR'
+        (this.devices.find(x => x.guid === deviceId) as any).StatusMessage = 'ERROR'
       }),
       finalize(() => {
         this.isLoading = false
       })
     ).subscribe(data => {
-      (this.devices.data.find(x => x.guid === deviceId) as any).StatusMessage = data.Body.ReturnValueStr
+      (this.devices.find(x => x.guid === deviceId) as any).StatusMessage = data.Body.ReturnValueStr
       this.resetResponse()
       this.devicesService.getPowerState(deviceId).pipe(delay(2000)).subscribe(z => {
-        (this.devices.data.find(y => y.guid === deviceId) as any).powerstate = z.powerstate
+        (this.devices.find(y => y.guid === deviceId) as any).powerstate = z.powerstate
       })
     }, err => {
       console.error(err)
@@ -255,13 +257,13 @@ export class DevicesComponent implements OnInit {
           })
         ).subscribe({
           next: (data) => {
-            (this.devices.data.find(x => x.guid === deviceId) as any).StatusMessage = data.status
+            (this.devices.find(x => x.guid === deviceId) as any).StatusMessage = data.status
             setTimeout(() => {
-              this.getData(this.pageEvent)
+              this.getTagsThenDevices()
             }, 3000)
           },
           error: (err) => {
-            (this.devices.data.find(x => x.guid === deviceId) as any).StatusMessage = 'ERROR'
+            (this.devices.find(x => x.guid === deviceId) as any).StatusMessage = 'ERROR'
             console.error(err)
           }
         })
@@ -275,7 +277,7 @@ export class DevicesComponent implements OnInit {
       if (result === true) {
         const requests: Array<Observable<any>> = []
         this.isLoading = true
-        this.selection.selected.forEach(z => {
+        this.selectedDevices.selected.forEach(z => {
           requests.push(this.devicesService.sendDeactivate(z.guid).pipe(
             catchError(err => of({ err })),
             map(i => ({
@@ -287,10 +289,10 @@ export class DevicesComponent implements OnInit {
         forkJoin(requests).subscribe(result => {
           this.isLoading = false
           result.forEach(res => {
-            (this.devices.data.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
+            (this.devices.find(i => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
           })
           setTimeout(() => {
-            this.getData(this.pageEvent)
+            this.getTagsThenDevices()
           }, 3000)
         })
       }
@@ -299,7 +301,7 @@ export class DevicesComponent implements OnInit {
 
   resetResponse (): void {
     setTimeout(() => {
-      const found: any = this.devices.data.find((item: any) => item.StatusMessage === 'SUCCESS')
+      const found: any = this.devices.find((item: any) => item.StatusMessage === 'SUCCESS')
       if (found) {
         found.StatusMessage = ''
       }
@@ -314,12 +316,8 @@ export class DevicesComponent implements OnInit {
   }
 
   pageChanged (event: PageEvent): void {
-    this.pageEvent = {
-      ...this.pageEvent,
-      pageSize: event.pageSize,
-      startsFrom: event.pageIndex * event.pageSize
-    }
-
-    this.getData(this.pageEvent)
+    this.pageEventOptions.pageSize = event.pageSize
+    this.pageEventOptions.startsFrom = event.pageIndex * event.pageSize
+    this.getTagsThenDevices()
   }
 }
