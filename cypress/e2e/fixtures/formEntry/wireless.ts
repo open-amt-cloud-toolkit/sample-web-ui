@@ -5,7 +5,7 @@
 
 const wirelessFixtures = {
   happyPath: {
-    profileName: 'happyPath',
+    profileName: 'happyPathWireless',
     authenticationMethod: 'WPA2 PSK',
     encryptionMethod: 'CCMP',
     linkPolicy: [14, 16]
