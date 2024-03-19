@@ -17,22 +17,22 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+      uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
       with:
         egress-policy: audit
 
     - name: Checkout
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
       with:
           persist-credentials: false
     - name: Use Node.js 20.x
-      uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8 # v4.0.1
+      uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
       with:
         node-version: "20.x"
     - run: npm ci
     - run: npm run build
     - name: Docker Login
-      uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+      uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
       with:
         registry: vprodemo.azurecr.io
         username: ${{ secrets.DOCKER_USERNAME }}
@@ -58,7 +58,7 @@ jobs:
           echo "next=none" >> "$GITHUB_OUTPUT"
         fi
 
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
       if: ${{ steps.version.outputs.next != 'none' }}
       with:
         repository: open-amt-cloud-toolkit/e2e-testing
