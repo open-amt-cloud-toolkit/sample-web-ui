@@ -23,7 +23,6 @@ import {
   MatAutocompleteSelectedEvent
 } from '@angular/material/autocomplete'
 import { IEEE8021xService } from '../../ieee8021x/ieee8021x.service'
-import * as Cira from '../../configs/configs.constants'
 import * as IEEE8021x from '../../ieee8021x/ieee8021x.constants'
 import {
   ActivationModes, Profile,
@@ -31,6 +30,7 @@ import {
   UserConsentModes,
   WiFiConfig
 } from '../profiles.constants'
+import { CIRAConfig } from 'src/models/models'
 
 const NO_WIFI_CONFIGS = 'No Wifi Configs Found'
 
@@ -49,7 +49,7 @@ export class ProfileDetailComponent implements OnInit {
   tlsModes = TlsModes.all()
   tlsSigningAuthorities = TlsSigningAuthorities.all()
   tlsDefaultSigningAuthority = TlsSigningAuthorities.SELF_SIGNED
-  ciraConfigurations: Cira.Config[] = []
+  ciraConfigurations: CIRAConfig[] = []
   tags: string[] = []
   selectedWifiConfigs: WiFiConfig[] = []
   amtInputType = 'password'
