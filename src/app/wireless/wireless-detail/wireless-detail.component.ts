@@ -99,17 +99,11 @@ export class WirelessDetailComponent implements OnInit {
         }))
         .subscribe({
           next: () => {
-            this.snackBar.open(
-              $localize`Profile ${reqType} successfully`,
-              undefined,
-              SnackbarDefaults.defaultSuccess)
+            this.snackBar.open($localize`Profile ${reqType} successfully`, undefined, SnackbarDefaults.defaultSuccess)
             void this.router.navigate(['/wireless'])
           },
           error: err => {
-            this.snackBar.open(
-              $localize`Error creating/updating wireless profile`,
-              undefined,
-              SnackbarDefaults.defaultError)
+            this.snackBar.open($localize`Error creating/updating wireless profile`, undefined, SnackbarDefaults.defaultError)
             this.errorMessages = err
           }
         })
