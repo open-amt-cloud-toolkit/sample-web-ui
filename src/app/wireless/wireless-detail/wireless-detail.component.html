@@ -37,14 +37,22 @@
             <mat-icon *ngIf="pskInputType !== 'text'">visibility_off</mat-icon>
           </button>
         </mat-form-field>
-        <mat-form-field class="flex flex-1" *ngIf='showIEEE8021x'>
+        @if(showIEEE8021x){
+        @if(iee8021xConfigNames.length > 0){
+        <mat-form-field class="flex flex-1">
           <mat-label>802.1x Configuration</mat-label>
           <mat-select formControlName='ieee8021xProfileName'>
-            <mat-option *ngFor='let cfgName of iee8021xConfigNames' [value]='cfgName'>
+            @for(cfgName of iee8021xConfigNames;track cfgName){
+            <mat-option [value]='cfgName'>
               {{cfgName}}
             </mat-option>
+            }
           </mat-select>
         </mat-form-field>
+        } @else {
+        <mat-error i18n>No 802.1x configurations found. Please create one before creating a wireless profile that uses 802.1x.</mat-error>
+        }
+        }
         <mat-form-field class="flex flex-1">
           <mat-label>Encryption Method</mat-label>
           <mat-select formControlName="encryptionMethod" required>

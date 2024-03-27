@@ -42,6 +42,7 @@ import { EventLogComponent } from './devices/event-log/event-log.component'
 import { IEEE8021xComponent } from './ieee8021x/ieee8021x.component'
 import { IEEE8021xDetailComponent } from './ieee8021x/ieee8021x-detail/ieee8021x-detail.component'
 import { DeviceEditTagsComponent } from './devices/edit-tags/edit-tags.component'
+import { ToolkitPipe } from './shared/pipes/authentication.pipe'
 
 // const MQTT_SERVICE_OPTIONS: IMqttServiceOptions = { protocol: 'wss' }
 
@@ -70,7 +71,8 @@ import { DeviceEditTagsComponent } from './devices/edit-tags/edit-tags.component
     DeviceEnableKvmComponent,
     DeviceEnableSolComponent,
     DeviceEditTagsComponent,
-    EventLogComponent
+    EventLogComponent,
+    ToolkitPipe
   ],
   imports: [
     MomentModule,

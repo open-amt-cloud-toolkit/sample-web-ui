@@ -24,7 +24,9 @@
       <!-- network config Column -->
       <ng-container matColumnDef="networkConfig">
         <mat-header-cell *matHeaderCellDef> Network Config </mat-header-cell>
-        <mat-cell *matCellDef="let element"> <span *ngIf="element.dhcpEnabled">DHCP</span> <span *ngIf="!element.dhcpEnabled">Static</span>
+        <mat-cell *matCellDef="let element">
+          <span *ngIf="element.dhcpEnabled">DHCP</span>
+          <span *ngIf="!element.dhcpEnabled">Static</span>
         </mat-cell>
       </ng-container>
 
@@ -33,7 +35,7 @@
         <mat-header-cell *matHeaderCellDef> Connection Config </mat-header-cell>
         <mat-cell *matCellDef="let element">
           <span>{{ element.ciraConfigName }}</span>
-          <span>{{ parseTlsMode(element.tlsMode) }}</span>
+          <span>{{ element.tlsMode | toolkit:tlsModes }}</span>
         </mat-cell>
       </ng-container>
 

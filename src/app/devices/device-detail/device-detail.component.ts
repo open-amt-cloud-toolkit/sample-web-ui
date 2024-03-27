@@ -10,7 +10,7 @@ import { ActivatedRoute, Router } from '@angular/router'
 import { of, throwError } from 'rxjs'
 import { catchError, finalize } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
-import { AmtFeaturesResponse, AuditLogResponse, EventLog, HardwareInformation, IPSAlarmClockOccurrence, Device, AmtFeaturesRequest } from 'src/models/models'
+import { AMTFeaturesResponse, EventLog, HardwareInformation, IPSAlarmClockOccurrence, Device, AMTFeaturesRequest, AuditLogResponse } from 'src/models/models'
 import { DevicesService } from '../devices.service'
 
 @Component({
@@ -22,7 +22,7 @@ export class DeviceDetailComponent implements OnInit {
   public auditLogData: AuditLogResponse = { totalCnt: 0, records: [] }
   public hwInfo?: HardwareInformation
   public amtVersion: any
-  public amtFeatures: AmtFeaturesResponse = { KVM: false, SOL: false, IDER: false, redirection: false, optInState: 0, userConsent: 'none' }
+  public amtFeatures: AMTFeaturesResponse = { KVM: false, SOL: false, IDER: false, redirection: false, optInState: 0, userConsent: 'none' }
   public isLoading = false
   public deviceId: string = ''
   public targetOS: any
@@ -209,7 +209,7 @@ export class DeviceDetailComponent implements OnInit {
 
   setAmtFeatures (): void {
     this.isLoading = true
-    this.devicesService.setAmtFeatures(this.deviceId, this.amtEnabledFeatures.value as AmtFeaturesRequest).pipe(finalize(() => {
+    this.devicesService.setAmtFeatures(this.deviceId, this.amtEnabledFeatures.value as AMTFeaturesRequest).pipe(finalize(() => {
       this.isLoading = false
     })).subscribe((results: any) => {
       this.snackBar.open($localize`${results.status}`, undefined, SnackbarDefaults.defaultSuccess)

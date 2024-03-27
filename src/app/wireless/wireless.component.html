@@ -24,14 +24,14 @@
       <ng-container matColumnDef="authmethod">
         <mat-header-cell *matHeaderCellDef> Authentication </mat-header-cell>
         <mat-cell *matCellDef="let element">
-          {{ authenticationMethods.labelForValue(element.authenticationMethod ) }}
+          {{ element.authenticationMethod | toolkit:authenticationMethods }}
         </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="encryptionMethod">
         <mat-header-cell *matHeaderCellDef> Encryption </mat-header-cell>
         <mat-cell *matCellDef="let element">
-          {{ encryptionMethods.labelForValue(element.encryptionMethod ) }}
+          {{ element.encryptionMethod | toolkit:encryptionMethods }}
         </mat-cell>
       </ng-container>
 

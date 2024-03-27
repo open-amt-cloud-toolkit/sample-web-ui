@@ -14,7 +14,7 @@ import { SharedModule } from 'src/app/shared/shared.module'
 import { RouterTestingModule } from '@angular/router/testing'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { MatDialog } from '@angular/material/dialog'
-import { userConsentData, userConsentResponse } from 'src/models/models'
+import { UserConsentData, UserConsentResponse } from 'src/models/models'
 
 describe('SolComponent', () => {
   let component: SolComponent
@@ -29,8 +29,8 @@ describe('SolComponent', () => {
   let tokenSpy: jasmine.Spy
   let snackBarSpy: jasmine.Spy
   let router: Router
-  let userConsentData: userConsentData
-  let userConsentResponse: userConsentResponse
+  let userConsentData: UserConsentData
+  let userConsentResponse: UserConsentResponse
   let optInCodeResponseSpy: jasmine.Spy
   let displayErrorSpy: jasmine.Spy
   let devicesService: jasmine.SpyObj<DevicesService>
@@ -42,7 +42,7 @@ describe('SolComponent', () => {
     devicesService.TargetOSMap = { 0: 'Unknown' } as any
     setAmtFeaturesSpy = devicesService.setAmtFeatures.and.returnValue(of({ userConsent: 'none', KVM: true, SOL: true, IDER: true, redirection: true, optInState: 0 }))
     getAMTFeaturesSpy = devicesService.getAMTFeatures.and.returnValue(of({ userConsent: 'none', KVM: true, SOL: true, IDER: true, redirection: true, optInState: 0 }))
-    const reqUserConsentResponse: userConsentResponse = {} as any
+    const reqUserConsentResponse: UserConsentResponse = {} as any
     reqUserConsentCodeSpy = devicesService.reqUserConsentCode.and.returnValue(of(reqUserConsentResponse))
     cancelUserConsentCodeSpy = devicesService.cancelUserConsentCode.and.returnValue(of(reqUserConsentResponse))
     getPowerStateSpy = devicesService.getPowerState.and.returnValue(of({ powerstate: 2 }))

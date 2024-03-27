@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 import { finalize } from 'rxjs/operators'
-import { CIRAConfigResponse, PageEventOptions } from 'src/models/models'
+import { CIRAConfig, DataWithCount, PageEventOptions } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { ConfigsService } from './configs.service'
@@ -20,7 +20,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator'
   styleUrls: ['./configs.component.scss']
 })
 export class ConfigsComponent implements OnInit {
-  public configs: CIRAConfigResponse = { data: [], totalCount: 0 }
+  public configs: DataWithCount<CIRAConfig> = { data: [], totalCount: 0 }
   public isLoading = true
   displayedColumns: string[] = ['name', 'mpsserver', 'port', 'username', 'certname', 'rootcert', 'remove']
   pageEvent: PageEventOptions = {
@@ -42,7 +42,7 @@ export class ConfigsComponent implements OnInit {
       finalize(() => {
         this.isLoading = false
       })
-    ).subscribe((data: CIRAConfigResponse) => {
+    ).subscribe((data: DataWithCount<CIRAConfig>) => {
       this.configs = data
     }, () => {
       this.snackBar.open($localize`Unable to load CIRA Configs`, undefined, SnackbarDefaults.defaultError)

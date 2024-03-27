@@ -9,7 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar'
 import SnackbarDefaults from '../../shared/config/snackBarDefault'
 import { AuthService } from 'src/app/auth.service'
 import { AboutComponent } from '../about/about.component'
-import { MpsVersion, RpsVersion } from 'src/models/models'
+import { MPSVersion, RPSVersion } from 'src/models/models'
 
 @Component({
   selector: 'app-toolbar',
@@ -18,8 +18,8 @@ import { MpsVersion, RpsVersion } from 'src/models/models'
 })
 export class ToolbarComponent implements OnInit {
   isLoggedIn = false
-  public rpsVersions?: RpsVersion
-  public mpsVersions?: MpsVersion
+  public rpsVersions?: RPSVersion
+  public mpsVersions?: MPSVersion
 
   constructor (public snackBar: MatSnackBar, public dialog: MatDialog, public authService: AuthService) {
   }

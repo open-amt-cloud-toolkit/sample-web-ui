@@ -8,7 +8,7 @@ import { Injectable } from '@angular/core'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
-import { DomainsResponse, Domain, PageEventOptions } from 'src/models/models'
+import { DataWithCount, Domain, PageEventOptions } from 'src/models/models'
 import { AuthService } from '../auth.service'
 
 @Injectable({
@@ -20,14 +20,14 @@ export class DomainsService {
 
   }
 
-  getData (pageEvent?: PageEventOptions): Observable<DomainsResponse> {
+  getData (pageEvent?: PageEventOptions): Observable<DataWithCount<Domain>> {
     let query = this.url
     if (pageEvent) {
       query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
     } else {
       query += '?$count=true'
     }
-    return this.http.get<DomainsResponse>(query)
+    return this.http.get<DataWithCount<Domain>>(query)
       .pipe(
         catchError((err) => {
           const errorMessages = this.authService.onError(err)

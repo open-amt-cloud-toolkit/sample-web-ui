@@ -19,18 +19,11 @@ import { MatChipInputEvent } from '@angular/material/chips'
 import { WirelessService } from 'src/app/wireless/wireless.service'
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop'
 import { forkJoin, Observable, of } from 'rxjs'
-import {
-  MatAutocompleteSelectedEvent
-} from '@angular/material/autocomplete'
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete'
 import { IEEE8021xService } from '../../ieee8021x/ieee8021x.service'
-import * as IEEE8021x from '../../ieee8021x/ieee8021x.constants'
-import {
-  ActivationModes, Profile,
-  TlsModes, TlsSigningAuthorities,
-  UserConsentModes,
-  WiFiConfig
-} from '../profiles.constants'
-import { CIRAConfig } from 'src/models/models'
+import { ActivationModes, Profile, TlsModes, TlsSigningAuthorities, UserConsentModes, WiFiConfig } from '../profiles.constants'
+import { CIRAConfig, FormOption } from 'src/models/models'
+import { Config } from 'src/app/ieee8021x/ieee8021x.constants'
 
 const NO_WIFI_CONFIGS = 'No Wifi Configs Found'
 
@@ -44,11 +37,12 @@ export class ProfileDetailComponent implements OnInit {
   pageTitle = 'New Profile'
   isLoading = false
   isEdit = false
-  activationModes = ActivationModes.all()
-  userConsentModes = UserConsentModes.all()
-  tlsModes = TlsModes.all()
-  tlsSigningAuthorities = TlsSigningAuthorities.all()
-  tlsDefaultSigningAuthority = TlsSigningAuthorities.SELF_SIGNED
+  activationModes = ActivationModes
+  userConsentModes = UserConsentModes
+  tlsModes = TlsModes
+  tlsSigningAuthorities = TlsSigningAuthorities
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  tlsDefaultSigningAuthority: FormOption<string> = TlsSigningAuthorities.find(x => x.value === 'SelfSigned')!
   ciraConfigurations: CIRAConfig[] = []
   tags: string[] = []
   selectedWifiConfigs: WiFiConfig[] = []
@@ -61,7 +55,7 @@ export class ProfileDetailComponent implements OnInit {
     width: '450px'
   }
 
-  iee8021xConfigurations: IEEE8021x.Config[] = []
+  iee8021xConfigurations: Config[] = []
   showIEEE8021xConfigurations: boolean = false
   wirelessConfigurations: string[] = []
   showWirelessConfigurations: boolean = false
@@ -86,7 +80,7 @@ export class ProfileDetailComponent implements OnInit {
   ) {
     this.profileForm = fb.group({
       profileName: [null, Validators.required],
-      activation: [ActivationModes.ADMIN.value, Validators.required],
+      activation: ['acmactivate', Validators.required],
       generateRandomPassword: [true, Validators.required],
       amtPassword: [{ value: null, disabled: true }],
       generateRandomMEBxPassword: [true, Validators.required],
@@ -102,7 +96,7 @@ export class ProfileDetailComponent implements OnInit {
       tlsSigningAuthority: [null],
       version: [null],
       // userConsent default depends on activation
-      userConsent: [UserConsentModes.NONE.value, Validators.required],
+      userConsent: ['None', Validators.required],
       iderEnabled: [true, Validators.required],
       kvmEnabled: [true, Validators.required],
       solEnabled: [true, Validators.required]
@@ -143,9 +137,9 @@ export class ProfileDetailComponent implements OnInit {
   }
 
   activationChange (value: string): void {
-    if (value === ActivationModes.CLIENT.value) {
+    if (value === 'ccmactivate') {
       this.profileForm.controls.userConsent.disable()
-      this.profileForm.controls.userConsent.setValue(UserConsentModes.ALL.value)
+      this.profileForm.controls.userConsent.setValue('All')
       this.profileForm.controls.userConsent.clearValidators()
       this.profileForm.controls.mebxPassword.disable()
       this.profileForm.controls.mebxPassword.setValue(null)
@@ -251,7 +245,7 @@ export class ProfileDetailComponent implements OnInit {
       this.profileForm.controls.mebxPassword.disable()
       this.profileForm.controls.mebxPassword.setValue(null)
       this.profileForm.controls.mebxPassword.clearValidators()
-    } else if (this.profileForm.controls.activation.value === ActivationModes.ADMIN.value) {
+    } else if (this.profileForm.controls.activation.value === 'acmactivate') {
       this.profileForm.controls.mebxPassword.enable()
       this.profileForm.controls.mebxPassword.setValidators(Validators.required)
     }
