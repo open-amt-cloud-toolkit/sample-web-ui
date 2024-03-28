@@ -9,7 +9,7 @@ import { BehaviorSubject, Observable } from 'rxjs'
 import { catchError, map } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
 import { Router } from '@angular/router'
-import { ValidatorError, MpsVersion, RpsVersion } from 'src/models/models'
+import { ValidatorError, MPSVersion, RPSVersion } from 'src/models/models'
 
 @Injectable({
   providedIn: 'root'
@@ -57,7 +57,7 @@ export class AuthService {
   }
 
   getMPSVersion (): Observable<any> {
-    return this.http.get<MpsVersion>(`${environment.mpsServer}/api/v1/version`)
+    return this.http.get<MPSVersion>(`${environment.mpsServer}/api/v1/version`)
       .pipe(
         catchError((err) => {
           throw err
@@ -66,7 +66,7 @@ export class AuthService {
   }
 
   getRPSVersion (): Observable<any> {
-    return this.http.get<RpsVersion>(`${environment.rpsServer}/api/v1/admin/version`)
+    return this.http.get<RPSVersion>(`${environment.rpsServer}/api/v1/admin/version`)
       .pipe(
         catchError((err) => {
           throw err

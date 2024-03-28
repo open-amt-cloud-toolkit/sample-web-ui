@@ -11,7 +11,6 @@ import { of } from 'rxjs'
 import { SharedModule } from 'src/app/shared/shared.module'
 import { WirelessService } from '../wireless.service'
 import * as IEEE8021x from 'src/app/ieee8021x/ieee8021x.constants'
-
 import { WirelessDetailComponent } from './wireless-detail.component'
 import { IEEE8021xService } from '../../ieee8021x/ieee8021x.service'
 import { AuthenticationMethods, EncryptionMethods } from '../wireless.constants'

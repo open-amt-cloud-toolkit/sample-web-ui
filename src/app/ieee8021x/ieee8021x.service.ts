@@ -8,9 +8,9 @@ import { Injectable } from '@angular/core'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
-import { PageEventOptions } from 'src/models/models'
+import { DataWithCount, PageEventOptions } from 'src/models/models'
 import { AuthService } from '../auth.service'
-import { Config, ConfigsResponse } from './ieee8021x.constants'
+import { Config } from './ieee8021x.constants'
 
 @Injectable({
   providedIn: 'root'
@@ -20,14 +20,14 @@ export class IEEE8021xService {
   private readonly url = `${environment.rpsServer}/api/v1/admin/ieee8021xconfigs`
   constructor (private readonly http: HttpClient, private readonly authService: AuthService) { }
 
-  getData (pageEvent?: PageEventOptions): Observable<ConfigsResponse> {
+  getData (pageEvent?: PageEventOptions): Observable<DataWithCount<Config>> {
     let query = this.url
     if (pageEvent) {
       query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
     } else {
       query += '?$count=true'
     }
-    return this.http.get<ConfigsResponse>(query)
+    return this.http.get<DataWithCount<Config>>(query)
       .pipe(
         catchError((err) => {
           const errorMessages = this.authService.onError(err)

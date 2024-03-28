@@ -24,6 +24,7 @@ import { Profile, TlsModes } from './profiles.constants'
 export class ProfilesComponent implements OnInit {
   profiles: Profile[] = []
   isLoading = true
+  tlsModes = TlsModes
   totalCount: number = 0
   displayedColumns: string[] = ['name', 'networkConfig', 'connectionConfig', 'activation', 'remove']
   pageEvent: PageEventOptions = {
@@ -95,10 +96,6 @@ export class ProfilesComponent implements OnInit {
           })
       }
     })
-  }
-
-  parseTlsMode (val: number): string {
-    return TlsModes.labelForValue(val)
   }
 
   pageChanged (event: PageEvent): void {
