@@ -9,7 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 
 import { finalize } from 'rxjs/operators'
-import { DomainsResponse, PageEventOptions } from 'src/models/models'
+import { DataWithCount, Domain, PageEventOptions } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { DomainsService } from './domains.service'
@@ -21,7 +21,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator'
 })
 
 export class DomainsComponent implements OnInit {
-  public domains: DomainsResponse = { data: [], totalCount: 0 }
+  public domains: DataWithCount<Domain> = { data: [], totalCount: 0 }
   public isLoading = true
   public myDate: string = ''
   private readonly millisecondsInADay = 86400000
@@ -47,11 +47,15 @@ export class DomainsComponent implements OnInit {
         finalize(() => {
           this.isLoading = false
         })
-      ).subscribe((data: DomainsResponse) => {
-        this.domains = data
-        this.expirationWarning()
-      }, () => {
-        this.snackBar.open($localize`Unable to load domains`, undefined, SnackbarDefaults.defaultError)
+      ).subscribe({
+        complete: () => {},
+        next: (data: DataWithCount<Domain>) => {
+          this.domains = data
+          this.expirationWarning()
+        },
+        error: () => {
+          this.snackBar.open($localize`Unable to load domains`, undefined, SnackbarDefaults.defaultError)
+        }
       })
   }
 

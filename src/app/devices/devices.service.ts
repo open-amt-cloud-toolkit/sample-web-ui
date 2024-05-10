@@ -9,10 +9,8 @@ import { Observable, Subject } from 'rxjs'
 import { catchError, map } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
 import {
-  AmtFeaturesResponse,
-  AuditLogResponse,
+  AMTFeaturesResponse,
   Device,
-  DeviceResponse,
   DeviceStats,
   EventLog,
   HardwareInformation,
@@ -20,9 +18,11 @@ import {
   PageEventOptions,
   PowerState,
   RedirectionToken,
-  userConsentResponse,
+  UserConsentResponse,
   RedirectionStatus,
-  AmtFeaturesRequest
+  AMTFeaturesRequest,
+  DataWithCount,
+  AuditLogResponse
 } from 'src/models/models'
 import { caseInsensntiveCompare } from '../../utils'
 
@@ -204,8 +204,8 @@ export class DevicesService {
       )
   }
 
-  getAMTFeatures (guid: string): Observable<AmtFeaturesResponse> {
-    return this.http.get<AmtFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${guid}`)
+  getAMTFeatures (guid: string): Observable<AMTFeaturesResponse> {
+    return this.http.get<AMTFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${guid}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -291,14 +291,14 @@ export class DevicesService {
       )
   }
 
-  getDevices (pageEvent: PageEventOptions): Observable<DeviceResponse> {
+  getDevices (pageEvent: PageEventOptions): Observable<DataWithCount<Device>> {
     let query = `${environment.mpsServer}/api/v1/devices`
     if (pageEvent?.tags && pageEvent.tags.length > 0) {
       query += `?tags=${pageEvent.tags.join(',')}&$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
     } else {
       query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
     }
-    return this.http.get<DeviceResponse>(query)
+    return this.http.get<DataWithCount<Device>>(query)
       .pipe(
         catchError((err) => {
           throw err
@@ -316,13 +316,13 @@ export class DevicesService {
       )
   }
 
-  setAmtFeatures (deviceId: string, payload: AmtFeaturesRequest = {
+  setAmtFeatures (deviceId: string, payload: AMTFeaturesRequest = {
     userConsent: 'none',
     enableKVM: true,
     enableSOL: true,
     enableIDER: true
-  }): Observable<AmtFeaturesResponse> {
-    return this.http.post<AmtFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${deviceId}`, payload)
+  }): Observable<AMTFeaturesResponse> {
+    return this.http.post<AMTFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${deviceId}`, payload)
       .pipe(
         catchError((err) => {
           throw err
@@ -348,8 +348,8 @@ export class DevicesService {
       )
   }
 
-  reqUserConsentCode (deviceId: string): Observable<userConsentResponse> {
-    return this.http.get<userConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`)
+  reqUserConsentCode (deviceId: string): Observable<UserConsentResponse> {
+    return this.http.get<UserConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -357,8 +357,8 @@ export class DevicesService {
       )
   }
 
-  cancelUserConsentCode (deviceId: string): Observable<userConsentResponse> {
-    return this.http.get<userConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/cancel/${deviceId}`)
+  cancelUserConsentCode (deviceId: string): Observable<UserConsentResponse> {
+    return this.http.get<UserConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/cancel/${deviceId}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -366,9 +366,9 @@ export class DevicesService {
       )
   }
 
-  sendUserConsentCode (deviceId: string, userConsentCode: number): Observable<userConsentResponse> {
+  sendUserConsentCode (deviceId: string, userConsentCode: number): Observable<UserConsentResponse> {
     const payload = { consentCode: userConsentCode }
-    return this.http.post<userConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`, payload)
+    return this.http.post<UserConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`, payload)
       .pipe(
         catchError((err) => {
           throw err

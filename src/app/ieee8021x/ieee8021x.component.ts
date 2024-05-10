@@ -8,12 +8,12 @@ import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 import { finalize } from 'rxjs/operators'
-import { PageEventOptions } from 'src/models/models'
+import { DataWithCount, PageEventOptions } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { IEEE8021xService } from './ieee8021x.service'
 import { MatPaginator, PageEvent } from '@angular/material/paginator'
-import { AuthenticationProtocols, ConfigsResponse } from './ieee8021x.constants'
+import { AuthenticationProtocols, Config } from './ieee8021x.constants'
 
 @Component({
   selector: 'app-ieee8021x',
@@ -21,7 +21,7 @@ import { AuthenticationProtocols, ConfigsResponse } from './ieee8021x.constants'
   styleUrls: ['./ieee8021x.component.scss']
 })
 export class IEEE8021xComponent implements OnInit {
-  pagedConfigs: ConfigsResponse = {
+  pagedConfigs: DataWithCount<Config> = {
     data: [],
     totalCount: 0
   }
@@ -53,7 +53,7 @@ export class IEEE8021xComponent implements OnInit {
       .getData(pageEvent)
       .pipe(finalize(() => { this.isLoading = false }))
       .subscribe({
-        next: (pagedConfigs: ConfigsResponse) => {
+        next: (pagedConfigs: DataWithCount<Config>) => {
           this.pagedConfigs = pagedConfigs
         },
         error: () => {

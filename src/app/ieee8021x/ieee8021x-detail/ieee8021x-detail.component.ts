@@ -10,8 +10,9 @@ import { ActivatedRoute, Router } from '@angular/router'
 import { finalize } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { IEEE8021xService } from '../ieee8021x.service'
-import { AuthenticationProtocol, AuthenticationProtocols, Config } from '../ieee8021x.constants'
+import { AuthenticationProtocols, Config } from '../ieee8021x.constants'
 import { Observable } from 'rxjs'
+import { FormOption } from 'src/models/models'
 
 @Component({
   selector: 'app-ieee8021x-detail',
@@ -23,7 +24,7 @@ export class IEEE8021xDetailComponent implements OnInit {
   pageTitle = 'New IEEE8021x Config'
   isLoading: boolean = false
   isEdit: boolean = false
-  authenticationProtocols: AuthenticationProtocol[] = []
+  authenticationProtocols: Array<FormOption<number>> = []
   errorMessages: any[] = []
   profileNameMaxLen = 32
   pxeTimeoutMin = 0 // disables timeout
@@ -37,32 +38,23 @@ export class IEEE8021xDetailComponent implements OnInit {
     public router: Router,
     public ieee8021xService: IEEE8021xService) {
     this.ieee8021xForm = fb.group({
-      profileName: [
-        null,
-        [Validators.required, Validators.maxLength(this.profileNameMaxLen), Validators.pattern('[a-zA-Z0-9]*')]
-      ],
-      authenticationProtocol: [
-        null,
-        [Validators.required, this.protocolValidator]
-      ],
-      pxeTimeout: [
-        this.pxeTimeoutDefault,
-        [Validators.required, Validators.min(this.pxeTimeoutMin), Validators.max(this.pxeTimeoutMax)]
-      ],
-      wiredInterface: [
-        null,
-        [Validators.required]
-      ],
+      profileName: [null, [Validators.required, Validators.maxLength(this.profileNameMaxLen), Validators.pattern('[a-zA-Z0-9]*')]],
+      authenticationProtocol: [null, [Validators.required, this.protocolValidator]],
+      pxeTimeout: [this.pxeTimeoutDefault, [Validators.required, Validators.min(this.pxeTimeoutMin), Validators.max(this.pxeTimeoutMax)]],
+      wiredInterface: [true, [Validators.required]],
       version: [null]
     })
-    // add custom validation to enforce protcols appropriate to interface type
-    // unable to add this protocolValidator in the declaration becuase it causes circular form reference problems
+    // default to wired interface
+    this.authenticationProtocols = AuthenticationProtocols.filter(z => z.mode === 'wired' || z.mode === 'both')
+
+    // add custom validation to enforce protocols appropriate to interface type
+    // unable to add this protocolValidator in the declaration because it causes circular form reference problems
     this.ieee8021xForm.controls.authenticationProtocol.addValidators(this.protocolValidator())
     this.ieee8021xForm.controls.wiredInterface.valueChanges.subscribe((isWired) => {
       if (isWired) {
-        this.authenticationProtocols = AuthenticationProtocols.forWiredInterface()
+        this.authenticationProtocols = AuthenticationProtocols.filter(z => z.mode === 'wired' || z.mode === 'both')
       } else {
-        this.authenticationProtocols = AuthenticationProtocols.forWirelessInterface()
+        this.authenticationProtocols = AuthenticationProtocols.filter(z => z.mode === 'both')
       }
       this.ieee8021xForm.controls.authenticationProtocol.updateValueAndValidity()
     })

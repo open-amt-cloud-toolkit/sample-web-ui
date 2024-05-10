@@ -12,7 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar'
 import { DevicesService } from '../devices.service'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { environment } from 'src/environments/environment'
-import { AmtFeaturesRequest, AmtFeaturesResponse, PowerState, userConsentData, userConsentResponse } from 'src/models/models'
+import { AMTFeaturesRequest, AMTFeaturesResponse, PowerState, UserConsentData, UserConsentResponse } from 'src/models/models'
 import { DeviceUserConsentComponent } from '../device-user-consent/device-user-consent.component'
 import { PowerUpAlertComponent } from 'src/app/shared/power-up-alert/power-up-alert.component'
 import { DeviceEnableSolComponent } from '../device-enable-sol/device-enable-sol.component'
@@ -25,7 +25,7 @@ import { DeviceEnableSolComponent } from '../device-enable-sol/device-enable-sol
 })
 export class SolComponent implements OnInit, OnDestroy {
   results: any
-  amtFeatures?: AmtFeaturesResponse
+  amtFeatures?: AMTFeaturesResponse
   isLoading: boolean = false
   deviceId: string = ''
   powerState: PowerState = { powerstate: 0 }
@@ -99,14 +99,14 @@ export class SolComponent implements OnInit, OnDestroy {
     this.getPowerState(this.deviceId).pipe(
       switchMap((powerState) => this.handlePowerState(powerState)),
       switchMap((result) => result === null ? of() : this.getAMTFeatures()),
-      switchMap((results: AmtFeaturesResponse) => this.handleAMTFeaturesResponse(results)),
+      switchMap((results: AMTFeaturesResponse) => this.handleAMTFeaturesResponse(results)),
       switchMap((result: boolean | any) =>
         iif(() => result === false,
           defer(() => of(null)),
           defer(() => this.checkUserConsent())
         )),
       switchMap((result: any) => this.handleUserConsentDecision(result)),
-      switchMap((result: any | userConsentResponse) => this.handleUserConsentResponse(result))
+      switchMap((result: any | UserConsentResponse) => this.handleUserConsentResponse(result))
     ).subscribe().add(() => {
       this.isLoading = false
     })
@@ -139,7 +139,7 @@ export class SolComponent implements OnInit, OnDestroy {
     )
   }
 
-  handleAMTFeaturesResponse (results: AmtFeaturesResponse): Observable<any> {
+  handleAMTFeaturesResponse (results: AMTFeaturesResponse): Observable<any> {
     this.amtFeatures = results
     if (this.amtFeatures.SOL) {
       return of(true)
@@ -157,7 +157,7 @@ export class SolComponent implements OnInit, OnDestroy {
             this.cancelEnableSolResponse()
             return of(false)
           } else {
-            const payload: AmtFeaturesRequest = {
+            const payload: AMTFeaturesRequest = {
               userConsent: this.amtFeatures?.userConsent ?? '',
               enableKVM: this.amtFeatures?.KVM ?? false,
               enableSOL: true,
@@ -169,7 +169,7 @@ export class SolComponent implements OnInit, OnDestroy {
       )
   }
 
-  getAMTFeatures (): Observable<AmtFeaturesResponse> {
+  getAMTFeatures (): Observable<AMTFeaturesResponse> {
     this.isLoading = true
     return this.devicesService.getAMTFeatures(this.deviceId)
   }
@@ -215,7 +215,7 @@ export class SolComponent implements OnInit, OnDestroy {
     return of(true)
   }
 
-  handleUserConsentResponse (result: any | userConsentResponse): Observable<any> {
+  handleUserConsentResponse (result: any | UserConsentResponse): Observable<any> {
     if (result == null) return of(null)
 
       // show user consent dialog if the user consent has been requested successfully
@@ -227,7 +227,7 @@ export class SolComponent implements OnInit, OnDestroy {
                 // if clicked outside the dialog, call to cancel previous requested user consent code
               this.cancelUserConsentCode(this.deviceId)
             } else {
-              this.afterUserConsentDialogClosed(result as userConsentData)
+              this.afterUserConsentDialogClosed(result as UserConsentData)
             }
           return of(null)
         })
@@ -257,8 +257,8 @@ export class SolComponent implements OnInit, OnDestroy {
     return userConsentDialog.afterClosed()
   }
 
-  afterUserConsentDialogClosed (data: userConsentData): void {
-    const response: userConsentResponse = data?.results
+  afterUserConsentDialogClosed (data: UserConsentData): void {
+    const response: UserConsentResponse = data?.results
     // On success to send or cancel to previous requested user consent code
     const method = response.Header.Action.substring(response.Header.Action.lastIndexOf('/') + 1, response.Header.Action.length)
     if (method === 'CancelOptInResponse') {
@@ -268,7 +268,7 @@ export class SolComponent implements OnInit, OnDestroy {
     }
   }
 
-  cancelOptInCodeResponse (result: userConsentResponse): void {
+  cancelOptInCodeResponse (result: UserConsentResponse): void {
     this.isLoading = false
     if (result.Body?.ReturnValue === 0) {
       this.displayError($localize`SOL cannot be accessed - requested user consent code is cancelled`)
@@ -277,7 +277,7 @@ export class SolComponent implements OnInit, OnDestroy {
     }
   }
 
-  sendOptInCodeResponse (result: userConsentResponse): void {
+  sendOptInCodeResponse (result: UserConsentResponse): void {
     if (result.Body?.ReturnValue === 0) {
       this.readyToLoadSol = true
     } else if (result.Body?.ReturnValue === 2066) {
@@ -290,7 +290,7 @@ export class SolComponent implements OnInit, OnDestroy {
     }
   }
 
-  reqUserConsentCode (guid: string): Observable<userConsentResponse> {
+  reqUserConsentCode (guid: string): Observable<UserConsentResponse> {
     return this.devicesService.reqUserConsentCode(guid).pipe(catchError((err) => {
       // Cannot access SOL if request to user consent code fails
       this.isLoading = false
@@ -306,7 +306,7 @@ export class SolComponent implements OnInit, OnDestroy {
         return of(err)
       }), finalize(() => {
         this.isLoading = false
-      })).subscribe((data: userConsentResponse) => {
+      })).subscribe((data: UserConsentResponse) => {
         if (data.Body?.ReturnValue === 0) {
           this.displayWarning($localize`SOL cannot be accessed - previously requested user consent code is cancelled`)
         } else {
