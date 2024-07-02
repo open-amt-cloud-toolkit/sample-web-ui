@@ -12,13 +12,24 @@
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <mat-card-content class="flex-row flex-wrap">
           <mat-form-field class="flex flex-1">
-            <input formControlName="userId" matInput name="userId" placeholder="Username">
-            <mat-error i18n=@@field.required>This field is required</mat-error>
+            <input formControlName="userId" matInput name="userId" placeholder="Username" />
+            <mat-error i18n="@@field.required">This field is required</mat-error>
           </mat-form-field>
           <mat-form-field class="flex flex-1">
-            <input formControlName="password" [type]="loginPassInputType" matInput name="Password" placeholder="Password" minlength="7">
-            <mat-error i18n=@@field.required>This field is required</mat-error>
-            <button mat-icon-button matSuffix type="button" matTooltip="Show / Hide Password" (click)="toggleLoginPassVisibility()">
+            <input
+              formControlName="password"
+              [type]="loginPassInputType"
+              matInput
+              name="Password"
+              placeholder="Password"
+              minlength="7" />
+            <mat-error i18n="@@field.required">This field is required</mat-error>
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              matTooltip="Show / Hide Password"
+              (click)="toggleLoginPassVisibility()">
               @if (loginPassInputType !== 'text') {
                 <mat-icon>visibility</mat-icon>
               } @else {
@@ -44,8 +55,8 @@
         </mat-card-actions>
       </form>
       <mat-card-footer>
-        <div style="margin:12px">
-          <div> © {{currentYear}} Intel Corporation </div>
+        <div style="margin: 12px">
+          <div>© {{ currentYear }} Intel Corporation</div>
         </div>
       </mat-card-footer>
     </mat-card>

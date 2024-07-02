@@ -1,7 +1,7 @@
 /*********************************************************************
-* Copyright (c) Intel Corporation 2022
-* SPDX-License-Identifier: Apache-2.0
-**********************************************************************/
+ * Copyright (c) Intel Corporation 2022
+ * SPDX-License-Identifier: Apache-2.0
+ **********************************************************************/
 
 // This file can be replaced during build by using the `fileReplacements` array.
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
@@ -9,9 +9,9 @@
 
 export const environment = {
   production: false,
-  cloud: true,
-  mpsServer: 'http://localhost:3000',
-  rpsServer: 'http://localhost:8081',
+  cloud: false,
+  mpsServer: 'http://localhost:8181',
+  rpsServer: 'http://localhost:8181',
   vault: 'http://localhost/vault'
 }
 

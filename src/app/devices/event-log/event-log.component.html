@@ -1,6 +1,4 @@
-<mat-toolbar>
-  Event Log ({{eventLogData.length}} entries)
-</mat-toolbar>
+<mat-toolbar> Event Log ({{ eventLogData.length }} entries) </mat-toolbar>
 @if (isLoading !== false) {
   <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 }
@@ -8,7 +6,7 @@
   <mat-card-content>
     @if (isNoData()) {
       <h3 class="flex justify-center">No Event Log</h3>
-    } @else{
+    } @else {
       <mat-table [dataSource]="dataSource">
         <ng-container matColumnDef="Event">
           <mat-header-cell *matHeaderCellDef> Event </mat-header-cell>
@@ -20,10 +18,12 @@
         </ng-container>
         <ng-container matColumnDef="timestamp">
           <mat-header-cell *matHeaderCellDef> Time </mat-header-cell>
-          <mat-cell *matCellDef="let element"> {{ element.Time | amDateFormat:'LLL' }} ({{ element.Time | amTimeAgo:true }} ago) </mat-cell>
+          <mat-cell *matCellDef="let element">
+            {{ element.Time | amDateFormat: 'LLL' }} ({{ element.Time | amTimeAgo: true }} ago)
+          </mat-cell>
         </ng-container>
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
       </mat-table>
     }
   </mat-card-content>
