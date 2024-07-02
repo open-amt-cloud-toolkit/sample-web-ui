@@ -7,7 +7,7 @@ import { Component, Input, OnInit } from '@angular/core'
 import { MatCardModule } from '@angular/material/card'
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'
 import { ActivatedRoute, Router } from '@angular/router'
-import { catchError, finalize, throwError } from 'rxjs'
+import { Subscription, catchError, finalize, throwError } from 'rxjs'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { DevicesService } from '../devices.service'
 import { FormBuilder } from '@angular/forms'
@@ -31,12 +31,20 @@ export class HardwareInformationComponent implements OnInit {
   public hwInfo?: HardwareInformation
   public targetOS: any
 
-  constructor (public snackBar: MatSnackBar, public readonly activatedRoute: ActivatedRoute, public readonly router: Router, private readonly devicesService: DevicesService, public fb: FormBuilder) {
+  private subscription: Subscription = new Subscription()
+
+  constructor (
+    public snackBar: MatSnackBar,
+    public readonly activatedRoute: ActivatedRoute,
+    public readonly router: Router,
+    private readonly devicesService: DevicesService,
+    public fb: FormBuilder
+  ) {
     this.targetOS = this.devicesService.TargetOSMap
-}
+  }
 
   ngOnInit (): void {
-    this.devicesService.getHardwareInformation(this.deviceId).pipe(
+    this.subscription = this.devicesService.getHardwareInformation(this.deviceId).pipe(
       catchError(err => {
         this.snackBar.open($localize`Error retrieving HW Info`, undefined, SnackbarDefaults.defaultError)
         return throwError(err)
@@ -47,5 +55,9 @@ export class HardwareInformationComponent implements OnInit {
         this.hwInfo = results
       }
     )
+  }
+
+  ngOnDestroy (): void {
+    this.subscription.unsubscribe()
   }
 }
