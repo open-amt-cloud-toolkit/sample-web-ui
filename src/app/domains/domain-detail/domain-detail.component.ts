@@ -20,13 +20,14 @@ import { MatList, MatListItem } from '@angular/material/list'
 import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
 import { MatToolbar } from '@angular/material/toolbar'
+import { environment } from 'src/environments/environment'
 
 @Component({
-    selector: 'app-domain-detail',
-    templateUrl: './domain-detail.component.html',
-    styleUrls: ['./domain-detail.component.scss'],
-    standalone: true,
-    imports: [MatToolbar, MatProgressBar, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatList, MatListItem, MatIcon, ReactiveFormsModule, MatCardContent, MatFormField, MatInput, MatError, MatHint, MatButton, MatIconButton, MatSuffix, MatTooltip, MatCardActions]
+  selector: 'app-domain-detail',
+  templateUrl: './domain-detail.component.html',
+  styleUrls: ['./domain-detail.component.scss'],
+  standalone: true,
+  imports: [MatToolbar, MatProgressBar, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatList, MatListItem, MatIcon, ReactiveFormsModule, MatCardContent, MatFormField, MatInput, MatError, MatHint, MatButton, MatIconButton, MatSuffix, MatTooltip, MatCardActions]
 })
 export class DomainDetailComponent implements OnInit {
   public domainForm: FormGroup
@@ -35,7 +36,9 @@ export class DomainDetailComponent implements OnInit {
   public isEdit = false
   public certPassInputType = 'password'
   public errorMessages: string[] = []
-  constructor (public snackBar: MatSnackBar, public fb: FormBuilder, private readonly activeRoute: ActivatedRoute, public router: Router, public domainsService: DomainsService) {
+  cloudMode = environment.cloud
+
+  constructor(public snackBar: MatSnackBar, public fb: FormBuilder, private readonly activeRoute: ActivatedRoute, public router: Router, public domainsService: DomainsService) {
     this.domainForm = fb.group({
       profileName: [null, Validators.required],
       domainSuffix: [null, Validators.required],
@@ -45,7 +48,7 @@ export class DomainDetailComponent implements OnInit {
     })
   }
 
-  ngOnInit (): void {
+  ngOnInit(): void {
     this.activeRoute.params.subscribe(params => {
       // hmm -- this would actually prevent editing of a domain called new
       if (params.name != null && params.name !== '') {
@@ -54,19 +57,26 @@ export class DomainDetailComponent implements OnInit {
           finalize(() => {
             this.isLoading = false
           })).subscribe(data => {
-          this.isEdit = true
-          this.domainForm.controls.profileName.disable()
-          this.pageTitle = data.profileName
-          this.domainForm.patchValue(data)
-        },
-        err => {
-          this.errorMessages = err
-        })
+            this.isEdit = true
+            this.domainForm.controls.profileName.disable()
+            this.pageTitle = data.profileName
+            this.domainForm.patchValue(data)
+          },
+            error => {
+              if (this.cloudMode === true) {
+                this.errorMessages = error
+              } else {
+                this.errorMessages = []
+                for (var err of error) {
+                  this.errorMessages.push(err.error.error)
+                }
+              }
+            })
       }
     })
   }
 
-  onSubmit (): void {
+  onSubmit(): void {
     const result: Domain = Object.assign({}, this.domainForm.getRawValue())
     result.provisioningCertStorageFormat = 'string'
     if (this.domainForm.valid) {
@@ -89,14 +99,21 @@ export class DomainDetailComponent implements OnInit {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         this.router.navigate(['/domains'])
       },
-      err => {
-        this.snackBar.open($localize`Error creating/updating domain profile`, undefined, SnackbarDefaults.defaultError)
-        this.errorMessages = err
-      })
+        error => {
+          this.snackBar.open($localize`Error creating/updating domain profile`, undefined, SnackbarDefaults.defaultError)
+          if (this.cloudMode === true) {
+            this.errorMessages = error
+          } else {
+            this.errorMessages = []
+            for (var err of error) {
+              this.errorMessages.push(err.error.error)
+            }
+          }
+        })
     }
   }
 
-  onFileSelected (e: Event): void {
+  onFileSelected(e: Event): void {
     if (typeof (FileReader) !== 'undefined') {
       const reader = new FileReader()
 
@@ -117,11 +134,11 @@ export class DomainDetailComponent implements OnInit {
     }
   }
 
-  toggleCertPassVisibility (): void {
+  toggleCertPassVisibility(): void {
     this.certPassInputType = this.certPassInputType === 'password' ? 'text' : 'password'
   }
 
-  async cancel (): Promise<void> {
+  async cancel(): Promise<void> {
     await this.router.navigate(['/domains'])
   }
 }

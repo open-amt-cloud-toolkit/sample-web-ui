@@ -130,7 +130,7 @@ export class ProfileDetailComponent implements OnInit {
     direct: 'DIRECT'
   }
 
-  constructor (
+  constructor(
     public snackBar: MatSnackBar,
     public fb: FormBuilder,
     public router: Router,
@@ -172,7 +172,7 @@ export class ProfileDetailComponent implements OnInit {
     })
   }
 
-  ngOnInit (): void {
+  ngOnInit(): void {
     this.getIEEE8021xConfigs()
     this.getWirelessConfigs()
     this.getCiraConfigs()
@@ -207,7 +207,7 @@ export class ProfileDetailComponent implements OnInit {
     })
   }
 
-  setConnectionMode (data: Profile): void {
+  setConnectionMode(data: Profile): void {
     if (data.tlsMode != null) {
       this.profileForm.controls.connectionMode.setValue(this.connectionMode.tls)
     } else if (data.ciraConfigName != null) {
@@ -215,7 +215,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  activationChange (value: string): void {
+  activationChange(value: string): void {
     if (value === ActivationModes.CLIENT.value) {
       this.profileForm.controls.userConsent.disable()
       this.profileForm.controls.userConsent.setValue(UserConsentModes.ALL.value)
@@ -236,7 +236,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  getAmtProfile (name: string): void {
+  getAmtProfile(name: string): void {
     this.isLoading = true
     this.profilesService
       .getRecord(name)
@@ -254,23 +254,37 @@ export class ProfileDetailComponent implements OnInit {
           this.setConnectionMode(data)
         },
         error: (error) => {
-          this.errorMessages = error
+          if (this.cloudMode === true) {
+            this.errorMessages = error
+          } else {
+            this.errorMessages = []
+            for (var err of error) {
+              this.errorMessages.push(err.error.error)
+            }
+          }
         }
       })
   }
 
-  getCiraConfigs (): void {
+  getCiraConfigs(): void {
     this.configsService.getData().subscribe({
       next: (ciraCfgRsp) => {
         this.ciraConfigurations = ciraCfgRsp.data
       },
       error: (error) => {
-        this.errorMessages = error
+        if (this.cloudMode === true) {
+          this.errorMessages = error
+        } else {
+          this.errorMessages = []
+          for (var err of error) {
+            this.errorMessages.push(err.error.error)
+          }
+        }
       }
     })
   }
 
-  getIEEE8021xConfigs (): void {
+  getIEEE8021xConfigs(): void {
     this.ieee8021xService.getData().subscribe({
       next: (rsp) => {
         this.iee8021xConfigurations = rsp.data.filter((c) => c.wiredInterface)
@@ -287,24 +301,32 @@ export class ProfileDetailComponent implements OnInit {
     })
   }
 
-  getWirelessConfigs (): void {
+  getWirelessConfigs(): void {
     this.wirelessService.getData().subscribe({
       next: (data) => {
         this.wirelessConfigurations = data.data.map((item) => item.profileName)
         this.showWirelessConfigurations = this.wirelessConfigurations.length > 0
       },
-      error: (err) => {
-        console.error(JSON.stringify(err))
-        if (err instanceof Array) {
-          this.errorMessages = err
+      error: (error) => {
+        if (this.cloudMode === true) {
+          if (error instanceof Array) {
+            this.errorMessages = error
+          } else {
+            this.errorMessages.push(JSON.stringify(error))
+          }
         } else {
-          this.errorMessages.push(JSON.stringify(err))
+          this.errorMessages = []
+          for (var err of error) {
+            this.errorMessages.push(err.error.error)
+          }
         }
+        console.log(error)
+
       }
     })
   }
 
-  generateRandomPasswordChange (value: boolean): void {
+  generateRandomPasswordChange(value: boolean): void {
     if (value) {
       this.profileForm.controls.amtPassword.disable()
       this.profileForm.controls.amtPassword.setValue(null)
@@ -315,7 +337,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  generateRandomMEBxPasswordChange (value: boolean): void {
+  generateRandomMEBxPasswordChange(value: boolean): void {
     if (value) {
       this.profileForm.controls.mebxPassword.disable()
       this.profileForm.controls.mebxPassword.setValue(null)
@@ -326,7 +348,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  generateRandomPassword (length: number = 16): string {
+  generateRandomPassword(length: number = 16): string {
     const charset: RegExp = /[a-zA-Z0-9!$%]/
     const requirements: RegExp[] = [
       /[a-z]/,
@@ -361,25 +383,25 @@ export class ProfileDetailComponent implements OnInit {
     return password
   }
 
-  generateAMTPassword (): void {
+  generateAMTPassword(): void {
     const password = this.generateRandomPassword()
     this.profileForm.controls.amtPassword.setValue(password)
   }
 
-  generateMEBXPassword (): void {
+  generateMEBXPassword(): void {
     const password = this.generateRandomPassword()
     this.profileForm.controls.mebxPassword.setValue(password)
   }
 
-  toggleAMTPassVisibility (): void {
+  toggleAMTPassVisibility(): void {
     this.amtInputType = this.amtInputType === 'password' ? 'text' : 'password'
   }
 
-  toggleMEBXPassVisibility (): void {
+  toggleMEBXPassVisibility(): void {
     this.mebxInputType = this.mebxInputType === 'password' ? 'text' : 'password'
   }
 
-  dhcpEnabledChange (isEnabled: boolean): void {
+  dhcpEnabledChange(isEnabled: boolean): void {
     if (isEnabled) {
       this.profileForm.controls.ipSyncEnabled.disable()
       this.profileForm.controls.ipSyncEnabled.setValue(true)
@@ -392,7 +414,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  connectionModeChange (value: string): void {
+  connectionModeChange(value: string): void {
     if (this.cloudMode) {
       if (value === this.connectionMode.tls) {
         this.profileForm.controls.ciraConfigName.clearValidators()
@@ -416,7 +438,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  selectWifiProfile (event: MatAutocompleteSelectedEvent): void {
+  selectWifiProfile(event: MatAutocompleteSelectedEvent): void {
     if (event.option.value !== NO_WIFI_CONFIGS) {
       const selectedProfiles = this.selectedWifiConfigs.map((wifi) => wifi.profileName)
       if (!selectedProfiles.includes(event.option.value as string)) {
@@ -429,7 +451,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  localWifiSyncChange (isEnabled: boolean): void {
+  localWifiSyncChange(isEnabled: boolean): void {
     if (isEnabled) {
       this.profileForm.controls.localWifiSyncEnabled.disable()
       this.profileForm.controls.localWifiSyncEnabled.setValue(true)
@@ -440,23 +462,23 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  search (value: string): string[] {
+  search(value: string): string[] {
     const filterValue = value.toLowerCase()
     const filteredValues = this.wirelessConfigurations.filter((config) => config.toLowerCase().includes(filterValue))
     return filteredValues.length > 0 ? filteredValues : [NO_WIFI_CONFIGS]
   }
 
-  isSelectable (wifiOption: string): any {
+  isSelectable(wifiOption: string): any {
     return {
       'no-results': wifiOption === NO_WIFI_CONFIGS
     }
   }
 
-  async cancel (): Promise<void> {
+  async cancel(): Promise<void> {
     await this.router.navigate(['/profiles'])
   }
 
-  removeWifiProfile (wifiProfile: WiFiConfig): void {
+  removeWifiProfile(wifiProfile: WiFiConfig): void {
     const index = this.selectedWifiConfigs.indexOf(wifiProfile)
 
     if (index >= 0) {
@@ -465,12 +487,12 @@ export class ProfileDetailComponent implements OnInit {
     this.updatePriorities()
   }
 
-  drop (event: CdkDragDrop<string[]>): void {
+  drop(event: CdkDragDrop<string[]>): void {
     moveItemInArray(this.selectedWifiConfigs, event.previousIndex, event.currentIndex)
     this.updatePriorities()
   }
 
-  updatePriorities (): void {
+  updatePriorities(): void {
     let index = 1
     this.selectedWifiConfigs.map((x) => {
       x.priority = index++
@@ -478,7 +500,7 @@ export class ProfileDetailComponent implements OnInit {
     })
   }
 
-  add (event: MatChipInputEvent): void {
+  add(event: MatChipInputEvent): void {
     const value = (event.value || '').trim()
     if (value !== '' && !this.tags.includes(value)) {
       this.tags.push(value)
@@ -487,7 +509,7 @@ export class ProfileDetailComponent implements OnInit {
     event.chipInput?.clear()
   }
 
-  remove (tag: string): void {
+  remove(tag: string): void {
     const index = this.tags.indexOf(tag)
 
     if (index >= 0) {
@@ -495,17 +517,17 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  CIRAStaticWarning (): Observable<any> {
+  CIRAStaticWarning(): Observable<any> {
     const dialog = this.dialog.open(StaticCIRAWarningComponent, this.matDialogConfig)
     return dialog.afterClosed()
   }
 
-  randPasswordWarning (): Observable<any> {
+  randPasswordWarning(): Observable<any> {
     const dialog = this.dialog.open(RandomPassAlertComponent, this.matDialogConfig)
     return dialog.afterClosed()
   }
 
-  confirm (): void {
+  confirm(): void {
     // Warn user of risk if using random generated passwords
     // Warn user of risk if CIRA configuration and static network are selected simultaneously
     if (this.profileForm.valid) {
@@ -532,7 +554,7 @@ export class ProfileDetailComponent implements OnInit {
     }
   }
 
-  onSubmit (): void {
+  onSubmit(): void {
     this.isLoading = true
     const result: Profile = Object.assign({}, this.profileForm.getRawValue())
     result.tags = this.tags
@@ -563,7 +585,14 @@ export class ProfileDetailComponent implements OnInit {
           void this.router.navigate(['/profiles'])
         },
         error: (error) => {
-          this.errorMessages = error
+          if (this.cloudMode === true) {
+            this.errorMessages = error
+          } else {
+            this.errorMessages = []
+            for (var err of error) {
+              this.errorMessages.push(err.error.error)
+            }
+          }
         }
       })
   }

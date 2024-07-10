@@ -22,6 +22,8 @@ import { MatIcon } from '@angular/material/icon'
 import { MatList, MatListItem } from '@angular/material/list'
 import { MatCard, MatCardContent, MatCardActions } from '@angular/material/card'
 import { MatToolbar } from '@angular/material/toolbar'
+import { environment } from 'src/environments/environment'
+
 
 @Component({
     selector: 'app-wireless-detail',
@@ -44,6 +46,7 @@ export class WirelessDetailComponent implements OnInit {
   isLoading: boolean = true
   isEdit: boolean = false
   errorMessages: any[] = []
+  cloudMode = environment.cloud
 
   constructor (
     public snackBar: MatSnackBar,
@@ -122,12 +125,19 @@ export class WirelessDetailComponent implements OnInit {
               SnackbarDefaults.defaultSuccess)
             void this.router.navigate(['/wireless'])
           },
-          error: err => {
+          error: error => {
             this.snackBar.open(
               $localize`Error creating/updating wireless profile`,
               undefined,
               SnackbarDefaults.defaultError)
-            this.errorMessages = err
+              if (this.cloudMode === true) {
+                this.errorMessages = error
+                } else {
+                this.errorMessages = []
+                for (var err of error) {
+                this.errorMessages.push(err.error.error) 
+                }
+                }
           }
         })
     }
@@ -143,8 +153,15 @@ export class WirelessDetailComponent implements OnInit {
             this.add8021xConfigurations(cfgNames)
           }
         },
-        error: err => {
-          this.errorMessages = err
+        error: error => {
+          if (this.cloudMode === true) {
+            this.errorMessages = error
+            } else {
+            this.errorMessages = []
+            for (var err of error) {
+            this.errorMessages.push(err.error.error) 
+            }
+            }
         }
       })
   }

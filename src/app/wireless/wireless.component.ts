@@ -20,13 +20,14 @@ import { MatProgressBar } from '@angular/material/progress-bar'
 import { MatIcon } from '@angular/material/icon'
 import { MatButton, MatIconButton } from '@angular/material/button'
 import { MatToolbar } from '@angular/material/toolbar'
+import { environment } from 'src/environments/environment'
 
 @Component({
-    selector: 'app-wireless',
-    templateUrl: './wireless.component.html',
-    styleUrls: ['./wireless.component.scss'],
-    standalone: true,
-    imports: [MatToolbar, MatButton, MatIcon, MatProgressBar, MatCard, MatCardContent, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
+  selector: 'app-wireless',
+  templateUrl: './wireless.component.html',
+  styleUrls: ['./wireless.component.scss'],
+  standalone: true,
+  imports: [MatToolbar, MatButton, MatIcon, MatProgressBar, MatCard, MatCardContent, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
 })
 export class WirelessComponent implements OnInit {
   configs: Config[] = []
@@ -35,6 +36,7 @@ export class WirelessComponent implements OnInit {
   displayedColumns: string[] = ['name', 'authmethod', 'encryptionMethod', 'ssid', 'remove']
   authenticationMethods = AuthenticationMethods
   encryptionMethods = EncryptionMethods
+  cloudMode = environment.cloud
   pageEvent: PageEventOptions = {
     pageSize: 25,
     startsFrom: 0,
@@ -43,13 +45,13 @@ export class WirelessComponent implements OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator
 
-  constructor (public snackBar: MatSnackBar, public readonly wirelessService: WirelessService, public router: Router, public dialog: MatDialog) { }
+  constructor(public snackBar: MatSnackBar, public readonly wirelessService: WirelessService, public router: Router, public dialog: MatDialog) { }
 
-  ngOnInit (): void {
+  ngOnInit(): void {
     this.getData(this.pageEvent)
   }
 
-  getData (pageEvent: PageEventOptions): void {
+  getData(pageEvent: PageEventOptions): void {
     this.wirelessService
       .getData(pageEvent)
       .pipe(
@@ -68,11 +70,11 @@ export class WirelessComponent implements OnInit {
       })
   }
 
-  isNoData (): boolean {
+  isNoData(): boolean {
     return !this.isLoading && this.configs.length === 0
   }
 
-  delete (name: string): void {
+  delete(name: string): void {
     const dialogRef = this.dialog.open(AreYouSureDialogComponent)
 
     dialogRef.afterClosed().subscribe(result => {
@@ -81,18 +83,28 @@ export class WirelessComponent implements OnInit {
         this.wirelessService
           .delete(name)
           .pipe(
-          finalize(() => {
-            this.isLoading = false
-          })
-        )
+            finalize(() => {
+              this.isLoading = false
+            })
+          )
           .subscribe({
-             next: data => {
+            next: data => {
               this.getData(this.pageEvent)
               this.snackBar.open($localize`Configuration deleted successfully`, undefined, SnackbarDefaults.defaultSuccess)
             },
             error: err => {
-              if (err?.length > 0) {
-                this.snackBar.open(err as string, undefined, SnackbarDefaults.longError)
+              var errorMessages: string[]
+              if (this.cloudMode === true) {
+                errorMessages = err
+              } else {
+                errorMessages = []
+                for (var error of err) {
+                  errorMessages.push(error.error.error)
+                }
+              }
+
+              if (errorMessages?.length > 0) {
+                this.snackBar.open(errorMessages[0], undefined, SnackbarDefaults.longError)
               } else {
                 this.snackBar.open($localize`Unable to delete configuration`, undefined, SnackbarDefaults.defaultError)
               }
@@ -102,7 +114,7 @@ export class WirelessComponent implements OnInit {
     })
   }
 
-  pageChanged (event: PageEvent): void {
+  pageChanged(event: PageEvent): void {
     this.pageEvent = {
       ...this.pageEvent,
       pageSize: event.pageSize,
@@ -111,7 +123,7 @@ export class WirelessComponent implements OnInit {
     this.getData(this.pageEvent)
   }
 
-  async navigateTo (path: string = 'new'): Promise<void> {
+  async navigateTo(path: string = 'new'): Promise<void> {
     await this.router.navigate([`/wireless/${path}`])
   }
 }

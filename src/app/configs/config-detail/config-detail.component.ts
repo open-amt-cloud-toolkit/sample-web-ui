@@ -23,13 +23,14 @@ import { MatList, MatListItem } from '@angular/material/list'
 import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
 import { MatToolbar } from '@angular/material/toolbar'
+import { environment } from 'src/environments/environment'
 
 @Component({
-    selector: 'app-config-detail',
-    templateUrl: './config-detail.component.html',
-    styleUrls: ['./config-detail.component.scss'],
-    standalone: true,
-    imports: [MatToolbar, MatProgressBar, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatList, MatListItem, MatIcon, ReactiveFormsModule, MatCardContent, MatFormField, MatInput, MatError, MatHint, MatRadioGroup, MatRadioButton, MatSlideToggle, MatCardActions, MatButton]
+  selector: 'app-config-detail',
+  templateUrl: './config-detail.component.html',
+  styleUrls: ['./config-detail.component.scss'],
+  standalone: true,
+  imports: [MatToolbar, MatProgressBar, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatList, MatListItem, MatIcon, ReactiveFormsModule, MatCardContent, MatFormField, MatInput, MatError, MatHint, MatRadioGroup, MatRadioButton, MatSlideToggle, MatCardActions, MatButton]
 })
 export class ConfigDetailComponent implements OnInit {
   public configForm: FormGroup
@@ -37,7 +38,8 @@ export class ConfigDetailComponent implements OnInit {
   public pageTitle = 'New CIRA Config'
   public isEdit = false
   public errorMessages: string[] = []
-  constructor (
+  cloudMode = environment.cloud
+  constructor(
     public snackBar: MatSnackBar,
     public fb: FormBuilder,
     private readonly activeRoute: ActivatedRoute,
@@ -60,7 +62,7 @@ export class ConfigDetailComponent implements OnInit {
   // IP ADDRESS REGEX
   // ^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$
 
-  ngOnInit (): void {
+  ngOnInit(): void {
     this.activeRoute.params.subscribe((params) => {
       if (params.name) {
         this.isLoading = true
@@ -82,7 +84,14 @@ export class ConfigDetailComponent implements OnInit {
               })
             },
             (error) => {
-              this.errorMessages = error
+              if (this.cloudMode === true) {
+                this.errorMessages = error
+              } else {
+                this.errorMessages = []
+                for (var err of error) {
+                  this.errorMessages.push(err.error.error)
+                }
+              }
             }
           )
       }
@@ -96,17 +105,17 @@ export class ConfigDetailComponent implements OnInit {
     )
   }
 
-  serverAddressChange (value: string): void {
+  serverAddressChange(value: string): void {
     if (this.configForm.controls.serverAddressFormat?.value === '3') {
       this.configForm.controls.commonName?.setValue(value)
     }
   }
 
-  async cancel (): Promise<void> {
+  async cancel(): Promise<void> {
     await this.router.navigate(['/ciraconfigs'])
   }
 
-  serverAddressFormatChange (value: number): void {
+  serverAddressFormatChange(value: number): void {
     if (value === 3) {
       // ipv4
       this.configForm.controls.commonName?.enable()
@@ -117,7 +126,7 @@ export class ConfigDetailComponent implements OnInit {
     }
   }
 
-  shouldShowRegenPass (): boolean {
+  shouldShowRegenPass(): boolean {
     return !this.isEdit
   }
 
@@ -127,7 +136,7 @@ export class ConfigDetailComponent implements OnInit {
       .replace('-----END CERTIFICATE-----', '')
       .replace(/\s/g, '')
 
-  onSubmit (): void {
+  onSubmit(): void {
     if (this.configForm.valid) {
       this.isLoading = true
       const result: CIRAConfig = Object.assign({}, this.configForm.getRawValue())
@@ -166,8 +175,14 @@ export class ConfigDetailComponent implements OnInit {
             this.router.navigate(['/ciraconfigs'])
           },
           (error) => {
-            console.error('error', error)
-            this.errorMessages = error
+            if (this.cloudMode === true) {
+              this.errorMessages = error
+            } else {
+              this.errorMessages = []
+              for (var err of error) {
+                this.errorMessages.push(err.error.error)
+              }
+            }
           }
         )
     }

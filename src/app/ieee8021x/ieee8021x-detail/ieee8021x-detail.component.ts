@@ -23,6 +23,7 @@ import { MatList, MatListItem } from '@angular/material/list'
 import { MatCard, MatCardSubtitle, MatCardContent, MatCardActions } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
 import { MatToolbar } from '@angular/material/toolbar'
+import { environment } from 'src/environments/environment'
 
 @Component({
     selector: 'app-ieee8021x-detail',
@@ -42,6 +43,7 @@ export class IEEE8021xDetailComponent implements OnInit {
   pxeTimeoutMin = 0 // disables timeout
   pxeTimeoutMax = (60 * 60 * 24) // one day
   pxeTimeoutDefault = (60 * 2) // two mninutes
+  cloudMode: boolean = environment.cloud
 
   constructor (
     public snackBar: MatSnackBar,
@@ -145,7 +147,14 @@ export class IEEE8021xDetailComponent implements OnInit {
           },
           error: error => {
             this.snackBar.open($localize`Error creating/updating ieee8021x profile`, undefined, SnackbarDefaults.defaultError)
-            this.errorMessages = error
+            if (this.cloudMode === true) {
+              this.errorMessages = error
+            } else {
+              this.errorMessages = []
+              for (var err of error) {
+                this.errorMessages.push(err.error.error)  
+              }
+            }
           }
         })
     }
