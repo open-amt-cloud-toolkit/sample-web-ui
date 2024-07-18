@@ -1,9 +1,22 @@
-## [3.10.1](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.10.0...v3.10.1) (2024-07-11)
-
+## [3.11.1](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.11.0...v3.11.1) (2024-07-16)
 
 ### Bug Fixes
 
-* user consent flow for redirection ([#2004](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2004)) ([7fa1633](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/7fa163335ee945fa7538798615aa347280fd64a8))
+- update audit log paging to use paginator correctly ([#2017](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2017)) ([c9141f8](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/c9141f8f27a77057587d2035f80711a0d24f7294))
+
+# [3.11.0](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.10.2...v3.11.0) (2024-07-16)
+
+### Features
+
+- adds wsman explorer call filter ([#2000](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2000)) ([71b0986](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/71b09860fdcf9d3bbf4a6345be4b2acfc2088a78))
+
+## [3.10.2](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.10.1...v3.10.2) (2024-07-15)
+
+## [3.10.1](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.10.0...v3.10.1) (2024-07-11)
+
+### Bug Fixes
+
+- user consent flow for redirection ([#2004](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2004)) ([7fa1633](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/7fa163335ee945fa7538798615aa347280fd64a8))
 
 # [3.10.0](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.9.1...v3.10.0) (2024-07-10)
 

@@ -9,10 +9,10 @@ import { Observable, Subject } from 'rxjs'
 import { catchError, map } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
 import {
-  AmtFeaturesResponse,
+  AMTFeaturesResponse,
   AuditLogResponse,
   Device,
-  DeviceResponse,
+  DataWithCount,
   DeviceStats,
   EventLog,
   HardwareInformation,
@@ -20,9 +20,9 @@ import {
   PageEventOptions,
   PowerState,
   RedirectionToken,
-  userConsentResponse,
+  UserConsentResponse,
   RedirectionStatus,
-  AmtFeaturesRequest
+  AMTFeaturesRequest
 } from 'src/models/models'
 import { caseInsensitiveCompare } from '../../utils'
 
@@ -209,8 +209,8 @@ export class DevicesService {
     )
   }
 
-  getAMTFeatures(guid: string): Observable<AmtFeaturesResponse> {
-    return this.http.get<AmtFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${guid}`).pipe(
+  getAMTFeatures(guid: string): Observable<AMTFeaturesResponse> {
+    return this.http.get<AMTFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${guid}`).pipe(
       catchError((err) => {
         throw err
       })
@@ -318,14 +318,14 @@ export class DevicesService {
     )
   }
 
-  getDevices(pageEvent: PageEventOptions): Observable<DeviceResponse> {
+  getDevices(pageEvent: PageEventOptions): Observable<DataWithCount<Device>> {
     let query = `${environment.mpsServer}/api/v1/devices`
     if (pageEvent?.tags && pageEvent.tags.length > 0) {
       query += `?tags=${pageEvent.tags.join(',')}&$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
     } else {
       query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
     }
-    return this.http.get<DeviceResponse>(query).pipe(
+    return this.http.get<DataWithCount<Device>>(query).pipe(
       catchError((err) => {
         throw err
       })
@@ -343,15 +343,15 @@ export class DevicesService {
 
   setAmtFeatures(
     deviceId: string,
-    payload: AmtFeaturesRequest = {
+    payload: AMTFeaturesRequest = {
       userConsent: 'none',
       enableKVM: true,
       enableSOL: true,
       enableIDER: true
     }
-  ): Observable<AmtFeaturesResponse> {
+  ): Observable<AMTFeaturesResponse> {
     return this.http
-      .post<AmtFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${deviceId}`, payload)
+      .post<AMTFeaturesResponse>(`${environment.mpsServer}/api/v1/amt/features/${deviceId}`, payload)
       .pipe(
         catchError((err) => {
           throw err
@@ -375,17 +375,17 @@ export class DevicesService {
     )
   }
 
-  reqUserConsentCode(deviceId: string): Observable<userConsentResponse> {
-    return this.http.get<userConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`).pipe(
+  reqUserConsentCode(deviceId: string): Observable<UserConsentResponse> {
+    return this.http.get<UserConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`).pipe(
       catchError((err) => {
         throw err
       })
     )
   }
 
-  cancelUserConsentCode(deviceId: string): Observable<userConsentResponse> {
+  cancelUserConsentCode(deviceId: string): Observable<UserConsentResponse> {
     return this.http
-      .get<userConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/cancel/${deviceId}`)
+      .get<UserConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/cancel/${deviceId}`)
       .pipe(
         catchError((err) => {
           throw err
@@ -393,10 +393,10 @@ export class DevicesService {
       )
   }
 
-  sendUserConsentCode(deviceId: string, userConsentCode: number): Observable<userConsentResponse> {
+  sendUserConsentCode(deviceId: string, userConsentCode: number): Observable<UserConsentResponse> {
     const payload = { consentCode: userConsentCode }
     return this.http
-      .post<userConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`, payload)
+      .post<UserConsentResponse>(`${environment.mpsServer}/api/v1/amt/userConsentCode/${deviceId}`, payload)
       .pipe(
         catchError((err) => {
           throw err

@@ -32,11 +32,6 @@ export interface DeviceInfo {
   ipAddress: string
   lastUpdated?: Date
 }
-export interface DeviceResponse {
-  data: Device[]
-  totalCount: number
-}
-
 export interface DeviceStats {
   totalCount: number
   connectedCount: number
@@ -51,12 +46,24 @@ export interface Domain {
   expirationDate: Date
 }
 
-export interface DomainsResponse {
-  data: Domain[]
-  totalCount: number
+export interface WirelessConfig {
+  profileName: string
+  authenticationMethod: number
+  encryptionMethod: number
+  ssid: string
+  pskPassphrase?: string
+  ieee8021xProfileName?: string
+  version?: string
 }
 
-/**  @deprecated see src/app/configs/configs.constants */
+export interface IEEE8021xConfig {
+  profileName: string
+  authenticationProtocol: number
+  pxeTimeout: number
+  wiredInterface: boolean
+  version?: string
+}
+
 export interface CIRAConfig {
   configName: string
   mpsServerAddress: string
@@ -68,12 +75,6 @@ export interface CIRAConfig {
   authMethod: number
   mpsRootCertificate: string
   proxyDetails: string
-}
-
-/**  @deprecated see src/app/configs/configs.constants */
-export interface CIRAConfigResponse {
-  data: CIRAConfig[]
-  totalCount: number
 }
 
 export interface AuditLog {
@@ -116,7 +117,7 @@ export interface APIResponse {
   message: string
 }
 
-export interface AmtFeaturesResponse {
+export interface AMTFeaturesResponse {
   userConsent: string
   optInState: number
   redirection: boolean
@@ -124,7 +125,7 @@ export interface AmtFeaturesResponse {
   SOL: boolean
   IDER: boolean
 }
-export interface AmtFeaturesRequest {
+export interface AMTFeaturesRequest {
   userConsent: string
   enableKVM: boolean
   enableSOL: boolean
@@ -311,12 +312,12 @@ export interface Body {
   ReturnValueStr: string
 }
 
-export interface userConsentResponse {
+export interface UserConsentResponse {
   Header: Header
   Body: Body
 }
 
-export interface userConsentData {
+export interface UserConsentData {
   deviceId: string
   results: any
 }
@@ -346,6 +347,7 @@ export interface RedirectionStatus {
 
 export interface FormOption<T> {
   value: T
+  mode?: string
   label: string
 }
 
@@ -354,11 +356,11 @@ export interface DataWithCount<T> {
   totalCount: number
 }
 
-export interface MpsVersion {
+export interface MPSVersion {
   serviceVersion: string
 }
 
-export interface RpsVersion {
+export interface RPSVersion {
   serviceVersion: string
   protocolVersion: string
 }

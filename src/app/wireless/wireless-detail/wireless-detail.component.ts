@@ -11,7 +11,7 @@ import { finalize } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { WirelessService } from '../wireless.service'
 import { IEEE8021xService } from '../../ieee8021x/ieee8021x.service'
-import { AuthenticationMethods, Config, EncryptionMethods } from '../wireless.constants'
+import { AuthenticationMethods, EncryptionMethods } from '../wireless.constants'
 import { MatTooltip } from '@angular/material/tooltip'
 import { MatIconButton, MatButton } from '@angular/material/button'
 import { MatOption } from '@angular/material/core'
@@ -22,6 +22,7 @@ import { MatIcon } from '@angular/material/icon'
 import { MatList, MatListItem } from '@angular/material/list'
 import { MatCard, MatCardContent, MatCardActions } from '@angular/material/card'
 import { MatToolbar } from '@angular/material/toolbar'
+import { WirelessConfig } from 'src/models/models'
 
 @Component({
   selector: 'app-wireless-detail',
@@ -56,8 +57,8 @@ export class WirelessDetailComponent implements OnInit {
   public pskInputType = 'password'
   public pskMinLen = 8
   public pskMaxLen = 32
-  public authenticationMethods = AuthenticationMethods.allExceptIEEE8021X()
-  public encryptionModes = EncryptionMethods.all()
+  public authenticationMethods = AuthenticationMethods.filter((m) => m.mode === 'PSK')
+  public encryptionModes = EncryptionMethods
   public iee8021xConfigNames: Set<string> = new Set<string>()
   showPSKPassPhrase = false
   showIEEE8021x = false
@@ -114,15 +115,7 @@ export class WirelessDetailComponent implements OnInit {
   onSubmit(): void {
     if (this.wirelessForm.valid) {
       this.isLoading = true
-      // adjust PSK and 8021x based on authentication method
-      const value: number = this.wirelessForm.controls.authenticationMethod.value
-      if (!AuthenticationMethods.isPSK(value)) {
-        this.wirelessForm.controls.pskPassphrase.setValue(null)
-      }
-      if (!AuthenticationMethods.isIEEE8021X(value)) {
-        this.wirelessForm.controls.ieee8021xProfileName.setValue(null)
-      }
-      const result: Config = Object.assign({}, this.wirelessForm.getRawValue())
+      const result: WirelessConfig = Object.assign({}, this.wirelessForm.getRawValue())
       let request
       let reqType: string
       if (this.isEdit) {
@@ -157,8 +150,8 @@ export class WirelessDetailComponent implements OnInit {
 
   getIEEE8021xConfigs(): void {
     this.ieee8021xService.getData().subscribe({
-      next: (rsp) => {
-        const cfgNames = rsp.data.filter((c) => !c.wiredInterface).map((c) => c.profileName)
+      next: (ieeeConfigs) => {
+        const cfgNames = ieeeConfigs.data.filter((c) => !c.wiredInterface).map((c) => c.profileName)
         if (cfgNames.length > 0) {
           this.add8021xConfigurations(cfgNames)
         }
@@ -170,26 +163,26 @@ export class WirelessDetailComponent implements OnInit {
   }
 
   add8021xConfigurations(names: string[]): void {
-    this.authenticationMethods = AuthenticationMethods.all()
+    this.authenticationMethods = AuthenticationMethods
     const sorted = [...this.iee8021xConfigNames, ...names].sort()
     this.iee8021xConfigNames = new Set(sorted)
   }
 
   onAuthenticationMethodChange(value: number): void {
     const controls = this.wirelessForm.controls
-    if (AuthenticationMethods.isPSK(value)) {
-      this.showPSKPassPhrase = true
+    this.showPSKPassPhrase = value === 4 || value === 6
+    if (this.showPSKPassPhrase) {
       controls.pskPassphrase.addValidators(Validators.required)
     } else {
-      this.showPSKPassPhrase = false
+      controls.pskPassphrase.setValue(null)
       controls.pskPassphrase.removeValidators(Validators.required)
     }
     controls.pskPassphrase.updateValueAndValidity()
-    if (AuthenticationMethods.isIEEE8021X(value)) {
-      this.showIEEE8021x = true
+    this.showIEEE8021x = value === 5 || value === 7
+    if (this.showIEEE8021x) {
       controls.ieee8021xProfileName.addValidators(Validators.required)
     } else {
-      this.showIEEE8021x = false
+      controls.ieee8021xProfileName.setValue(null)
       controls.ieee8021xProfileName.removeValidators(Validators.required)
     }
     controls.ieee8021xProfileName.updateValueAndValidity()
