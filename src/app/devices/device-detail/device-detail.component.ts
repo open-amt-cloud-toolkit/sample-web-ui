@@ -35,6 +35,7 @@ import { HardwareInformationComponent } from '../hardware-information/hardware-i
 import { SolComponent } from '../sol/sol.component'
 import { KvmComponent } from '../kvm/kvm.component'
 import { GeneralComponent } from '../general/general.component'
+import { NetworkSettingsComponent } from '../network-settings/network-settings.component'
 
 @Component({
   selector: 'app-device-detail',
@@ -90,7 +91,8 @@ import { GeneralComponent } from '../general/general.component'
     MatDatepicker,
     MatSlideToggle,
     MomentModule,
-    DatePipe
+    DatePipe,
+    NetworkSettingsComponent
   ]
 })
 export class DeviceDetailComponent implements OnInit {
@@ -139,6 +141,12 @@ export class DeviceDetailComponent implements OnInit {
       description: 'Manage device alarms',
       component: 'alarms',
       icon: 'alarm'
+    },
+    {
+      name: 'Network Settings',
+      description: 'View network settings',
+      component: 'network-settings',
+      icon: 'lan'
     }
   ]
 
