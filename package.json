@@ -54,7 +54,7 @@
     "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-license-header": "^0.6.1",
-    "jasmine-core": "~5.1.2",
+    "jasmine-core": "~5.2.0",
     "jasmine-spec-reporter": "~7.0.0",
     "karma": "~6.4.3",
     "karma-chrome-launcher": "~3.2.0",
@@ -65,8 +65,8 @@
     "prettier-config-standard": "^7.0.0",
     "prettier-plugin-multiline-arrays": "^3.0.6",
     "ts-node": "~10.9.2",
-    "typescript": "^5.5.3",
-    "typescript-eslint": "8.0.0-alpha.44"
+    "typescript": "^5.5.4",
+    "typescript-eslint": "8.0.0-alpha.51"
   },
   "optionalDependencies": {
     "cypress": "^13.13.1"
