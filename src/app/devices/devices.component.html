@@ -25,7 +25,7 @@
       <button mat-icon-button matTooltip="Restart selected devices" (click)="bulkPowerAction(5)">
         <mat-icon>restart_alt</mat-icon>
       </button>
-      <button mat-icon-button matTooltip="Deactivate selected devices" (click)="bulkDeactivate()">
+      <button mat-icon-button [matTooltip]="deleteDeviceLabel" (click)="bulkDeactivate()">
         <mat-icon>delete</mat-icon>
       </button>
     </div>
