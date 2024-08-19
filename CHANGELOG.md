@@ -1,3 +1,24 @@
+## [3.14.3](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.14.2...v3.14.3) (2024-08-19)
+
+
+### Bug Fixes
+
+* bulk delete is now throttled ([d113890](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/d113890db7d48815bd2f5ce757b4e0e62195e6b2)), closes [#2116](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2116) [#2117](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2117)
+
+## [3.14.2](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.14.1...v3.14.2) (2024-08-19)
+
+
+### Bug Fixes
+
+* remove disabled attribute from tag and instead use disableRipple ([#2115](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2115)) ([aee2cf0](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/aee2cf0ee40ec9f35697a1975c7793a2f33e9808))
+
+## [3.14.1](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.14.0...v3.14.1) (2024-08-19)
+
+
+### Bug Fixes
+
+* tooltip for bulk action ([9e61594](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/9e61594c6f2026b0009df4d1f550382de03d9570)), closes [#2112](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2112)
+
 # [3.14.0](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.13.1...v3.14.0) (2024-08-15)
 
 
