@@ -8,8 +8,9 @@ import { Injectable } from '@angular/core'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
-import { DataWithCount, PageEventOptions, WirelessConfig } from 'src/models/models'
+import { DataWithCount, WirelessConfig } from 'src/models/models'
 import { AuthService } from '../auth.service'
+import { PageEvent } from '@angular/material/paginator'
 
 @Injectable({
   providedIn: 'root'
@@ -21,10 +22,10 @@ export class WirelessService {
     private readonly authService: AuthService
   ) {}
 
-  getData(pageEvent?: PageEventOptions): Observable<DataWithCount<WirelessConfig>> {
+  getData(pageEvent?: PageEvent): Observable<DataWithCount<WirelessConfig>> {
     let query = this.url
     if (pageEvent) {
-      query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
+      query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.pageIndex}&$count=true`
     } else {
       query += '?$count=true'
     }

@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-import { Component, OnInit, ViewChild } from '@angular/core'
+import { AfterViewInit, Component, OnInit, signal, ViewChild } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 
 import { finalize } from 'rxjs/operators'
-import { DataWithCount, Domain, PageEventOptions } from 'src/models/models'
+import { DataWithCount, Domain } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { DomainsService } from './domains.service'
@@ -25,7 +25,8 @@ import {
   MatHeaderRowDef,
   MatHeaderRow,
   MatRowDef,
-  MatRow
+  MatRow,
+  MatTableDataSource
 } from '@angular/material/table'
 import { MatCard, MatCardContent } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
@@ -60,8 +61,9 @@ import { MatToolbar } from '@angular/material/toolbar'
   ]
 })
 export class DomainsComponent implements OnInit {
-  public domains: DataWithCount<Domain> = { data: [], totalCount: 0 }
-  public isLoading = true
+  public domainsDataSource = new MatTableDataSource<Domain>([])
+  public totalCount = 0
+  public isLoading = signal(true)
   public myDate = ''
   private readonly millisecondsInADay = 86400000
   private readonly warningPeriodInDays = 60
@@ -71,10 +73,10 @@ export class DomainsComponent implements OnInit {
     'expirationDate',
     'remove'
   ]
-  pageEvent: PageEventOptions = {
+  pageEvent: PageEvent = {
     pageSize: 25,
-    startsFrom: 0,
-    count: 'true'
+    pageIndex: 0,
+    length: 0
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator
@@ -90,17 +92,18 @@ export class DomainsComponent implements OnInit {
     this.getData(this.pageEvent)
   }
 
-  getData(pageEvent: PageEventOptions): void {
+  getData(pageEvent: PageEvent): void {
     this.domainsService
       .getData(pageEvent)
       .pipe(
         finalize(() => {
-          this.isLoading = false
+          this.isLoading.set(false)
         })
       )
       .subscribe({
         next: (data: DataWithCount<Domain>) => {
-          this.domains = data
+          this.domainsDataSource.data = data.data
+          this.totalCount = data.totalCount
           this.expirationWarning()
         },
         error: () => {
@@ -110,7 +113,7 @@ export class DomainsComponent implements OnInit {
   }
 
   isNoData(): boolean {
-    return !this.isLoading && this.domains.data.length === 0
+    return !this.isLoading && this.domainsDataSource.data.length === 0
   }
 
   delete(name: string): void {
@@ -118,12 +121,12 @@ export class DomainsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
-        this.isLoading = true
+        this.isLoading.set(true)
         this.domainsService
           .delete(name)
           .pipe(
             finalize(() => {
-              this.isLoading = false
+              this.isLoading.set(false)
             })
           )
           .subscribe({
@@ -142,7 +145,7 @@ export class DomainsComponent implements OnInit {
   pageChanged(event: PageEvent): void {
     this.pageEvent = {
       ...this.pageEvent,
-      startsFrom: event.pageIndex * event.pageSize,
+      pageIndex: event.pageIndex * event.pageSize,
       pageSize: event.pageSize
     }
     this.getData(this.pageEvent)
@@ -176,7 +179,7 @@ export class DomainsComponent implements OnInit {
     let countExp = 0
     const today = new Date()
 
-    for (const domain of this.domains.data) {
+    for (const domain of this.domainsDataSource.data) {
       const expDate = new Date(domain.expirationDate)
       if (expDate < today) {
         countExp++

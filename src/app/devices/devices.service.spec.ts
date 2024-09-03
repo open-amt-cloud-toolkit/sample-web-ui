@@ -105,7 +105,7 @@ describe('DevicesService', () => {
 
   it('should return all devices', (done) => {
     httpClientSpy.get.and.returnValue(of(deviceListResponse))
-    service.getDevices({ pageSize: 25, startsFrom: 0, count: 'true' }).subscribe((response) => {
+    service.getDevices({ pageSize: 25, pageIndex: 0, length: 0 }).subscribe((response) => {
       expect(response).toEqual(deviceListResponse)
       done()
     })
@@ -116,7 +116,7 @@ describe('DevicesService', () => {
 
   it('should return all devices filtered by tags', (done) => {
     httpClientSpy.get.and.returnValue(of(deviceListResponse))
-    service.getDevices({ pageSize: 25, startsFrom: 0, count: 'true', tags: ['test'] }).subscribe((response) => {
+    service.getDevices({ pageSize: 25, pageIndex: 0, length: 0 }, ['test']).subscribe((response) => {
       expect(response).toEqual(deviceListResponse)
       done()
     })
@@ -127,7 +127,7 @@ describe('DevicesService', () => {
 
   it('should NOT return devices when error received', (done) => {
     httpClientSpy.get.and.returnValue(throwError(error))
-    service.getDevices({ pageSize: 25, startsFrom: 0, count: 'true' }).subscribe(null, (err) => {
+    service.getDevices({ pageSize: 25, pageIndex: 0, length: 0 }).subscribe(null, (err) => {
       expect(error).toEqual(err)
       done()
     })

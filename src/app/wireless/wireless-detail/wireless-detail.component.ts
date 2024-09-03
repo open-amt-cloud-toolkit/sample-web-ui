@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, signal } from '@angular/core'
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { ActivatedRoute, Router } from '@angular/router'
@@ -64,7 +64,7 @@ export class WirelessDetailComponent implements OnInit {
   showIEEE8021x = false
   isLoading = true
   isEdit = false
-  errorMessages: any[] = []
+  errorMessages = signal([])
 
   constructor(
     public snackBar: MatSnackBar,
@@ -142,7 +142,7 @@ export class WirelessDetailComponent implements OnInit {
               undefined,
               SnackbarDefaults.defaultError
             )
-            this.errorMessages = err
+            this.errorMessages.set(err)
           }
         })
     }

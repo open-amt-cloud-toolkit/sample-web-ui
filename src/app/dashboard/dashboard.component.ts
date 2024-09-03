@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, signal } from '@angular/core'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { throwError } from 'rxjs'
 import { catchError, finalize } from 'rxjs/operators'
@@ -34,7 +34,7 @@ import { MatProgressBar } from '@angular/material/progress-bar'
   ]
 })
 export class DashboardComponent implements OnInit {
-  public isLoading = true
+  public isLoading = signal(true)
   public stats?: DeviceStats
 
   constructor(
@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isLoading = true
+    this.isLoading.set(true)
     this.devicesService
       .getStats()
       .pipe(
@@ -53,7 +53,7 @@ export class DashboardComponent implements OnInit {
           return throwError(err)
         }),
         finalize(() => {
-          this.isLoading = false
+          this.isLoading.set(false)
         })
       )
       .subscribe((data) => {

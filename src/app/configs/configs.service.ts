@@ -8,8 +8,9 @@ import { Injectable } from '@angular/core'
 import { Observable, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { environment } from 'src/environments/environment'
-import { CIRAConfig, DataWithCount, PageEventOptions } from 'src/models/models'
+import { CIRAConfig, DataWithCount } from 'src/models/models'
 import { AuthService } from '../auth.service'
+import { PageEvent } from '@angular/material/paginator'
 
 @Injectable({
   providedIn: 'root'
@@ -22,10 +23,10 @@ export class ConfigsService {
     private readonly http: HttpClient
   ) {}
 
-  getData(pageEvent?: PageEventOptions): Observable<DataWithCount<CIRAConfig>> {
+  getData(pageEvent?: PageEvent): Observable<DataWithCount<CIRAConfig>> {
     let query = this.url
     if (pageEvent) {
-      query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
+      query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.pageIndex}&$count=true`
     } else {
       query += '?$count=true'
     }

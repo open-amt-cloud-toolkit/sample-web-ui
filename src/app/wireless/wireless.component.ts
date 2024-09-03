@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-import { Component, OnInit, ViewChild } from '@angular/core'
+import { AfterViewInit, Component, effect, OnInit, signal, untracked, ViewChild } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 import { finalize } from 'rxjs/operators'
-import { PageEventOptions, WirelessConfig } from 'src/models/models'
+import { WirelessConfig } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { WirelessService } from './wireless.service'
@@ -24,7 +24,8 @@ import {
   MatHeaderRowDef,
   MatHeaderRow,
   MatRowDef,
-  MatRow
+  MatRow,
+  MatTableDataSource
 } from '@angular/material/table'
 import { MatCard, MatCardContent } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
@@ -32,6 +33,7 @@ import { MatIcon } from '@angular/material/icon'
 import { MatButton, MatIconButton } from '@angular/material/button'
 import { MatToolbar } from '@angular/material/toolbar'
 import { ToolkitPipe } from '../shared/pipes/toolkit.pipe'
+import { AsyncPipe } from '@angular/common'
 
 @Component({
   selector: 'app-wireless',
@@ -40,6 +42,7 @@ import { ToolkitPipe } from '../shared/pipes/toolkit.pipe'
   standalone: true,
   imports: [
     ToolkitPipe,
+    AsyncPipe,
     MatToolbar,
     MatButton,
     MatIcon,
@@ -61,9 +64,9 @@ import { ToolkitPipe } from '../shared/pipes/toolkit.pipe'
   ]
 })
 export class WirelessComponent implements OnInit {
-  configs: WirelessConfig[] = []
-  isLoading = true
-  totalCount = 0
+  configs = new MatTableDataSource<WirelessConfig>([])
+  isLoading = signal(true)
+  totalCount = signal(0)
   displayedColumns: string[] = [
     'name',
     'authmethod',
@@ -73,10 +76,10 @@ export class WirelessComponent implements OnInit {
   ]
   authenticationMethods = AuthenticationMethods
   encryptionMethods = EncryptionMethods
-  pageEvent: PageEventOptions = {
+  pageEvent: PageEvent = {
     pageSize: 25,
-    startsFrom: 0,
-    count: 'true'
+    pageIndex: 0,
+    length: 0
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator
@@ -92,18 +95,19 @@ export class WirelessComponent implements OnInit {
     this.getData(this.pageEvent)
   }
 
-  getData(pageEvent: PageEventOptions): void {
+  getData(pageEvent: PageEvent): void {
     this.wirelessService
       .getData(pageEvent)
       .pipe(
         finalize(() => {
-          this.isLoading = false
+          this.isLoading.set(false)
         })
       )
       .subscribe({
         next: (rsp) => {
-          this.configs = rsp.data
-          this.totalCount = rsp.totalCount
+          this.configs.data = rsp.data
+
+          this.totalCount.set(rsp.totalCount)
         },
         error: () => {
           this.snackBar.open($localize`Unable to load configurations`, undefined, SnackbarDefaults.defaultError)
@@ -112,7 +116,7 @@ export class WirelessComponent implements OnInit {
   }
 
   isNoData(): boolean {
-    return !this.isLoading && this.configs.length === 0
+    return !this.isLoading() && this.configs.data.length === 0
   }
 
   delete(name: string): void {
@@ -120,12 +124,12 @@ export class WirelessComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
-        this.isLoading = true
+        this.isLoading.set(true)
         this.wirelessService
           .delete(name)
           .pipe(
             finalize(() => {
-              this.isLoading = false
+              this.isLoading.set(false)
             })
           )
           .subscribe({
@@ -153,7 +157,8 @@ export class WirelessComponent implements OnInit {
     this.pageEvent = {
       ...this.pageEvent,
       pageSize: event.pageSize,
-      startsFrom: event.pageIndex * event.pageSize
+      pageIndex: event.pageIndex * event.pageSize,
+      length: 5
     }
     this.getData(this.pageEvent)
   }

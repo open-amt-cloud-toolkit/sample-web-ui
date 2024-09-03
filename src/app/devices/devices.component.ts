@@ -4,7 +4,7 @@
  **********************************************************************/
 
 import { SelectionModel } from '@angular/cdk/collections'
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core'
+import { AfterViewInit, Component, OnInit, signal, ViewChild } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
 import { MatPaginator, PageEvent } from '@angular/material/paginator'
 import { MatSelectChange, MatSelect } from '@angular/material/select'
@@ -12,7 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router, RouterModule } from '@angular/router'
 import { catchError, concatMap, delay, finalize, map } from 'rxjs/operators'
 import { forkJoin, from, Observable, of, throwError } from 'rxjs'
-import { Device, PageEventOptions } from 'src/models/models'
+import { Device } from 'src/models/models'
 import { AddDeviceComponent } from '../shared/add-device/add-device.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { DevicesService } from './devices.service'
@@ -93,7 +93,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
   public devices: MatTableDataSource<Device> = new MatTableDataSource<Device>()
 
   public totalCount = 0
-  public isLoading = true
+  public isLoading = signal(true)
   public tags: string[] = []
   public filteredTags: string[] = []
   public selectedDevices: SelectionModel<Device>
@@ -112,10 +112,10 @@ export class DevicesComponent implements OnInit, AfterViewInit {
     'notification'
   ]
 
-  pageEventOptions: PageEventOptions = {
+  pageEvent: PageEvent = {
     pageSize: 25,
-    startsFrom: 0,
-    count: 'true'
+    pageIndex: 0,
+    length: 0
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator
@@ -145,7 +145,6 @@ export class DevicesComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.devices.paginator = this.paginator
     this.devices.sort = this.sort
   }
 
@@ -177,9 +176,9 @@ export class DevicesComponent implements OnInit, AfterViewInit {
   }
 
   getDevices(): void {
-    this.isLoading = true
+    this.isLoading.set(true)
     this.devicesService
-      .getDevices({ ...this.pageEventOptions, tags: this.filteredTags })
+      .getDevices({ ...this.pageEvent }, this.filteredTags)
       .pipe(
         catchError((err) => {
           this.snackBar.open($localize`Error loading devices`, undefined, SnackbarDefaults.defaultError)
@@ -190,7 +189,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
           this.selectedDevices.clear()
           const stillSelected = this.devices.data.filter((d) => prevSelected.includes(d.guid))
           this.selectedDevices.select(...stillSelected)
-          this.isLoading = false
+          this.isLoading.set(false)
         })
       )
       .subscribe((res) => {
@@ -239,7 +238,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
         const removedTags = originalTags.filter((t) => !editedTags.includes(t))
 
         const requests: Observable<any>[] = []
-        this.isLoading = true
+        this.isLoading.set(true)
         this.selectedDevices.selected.forEach((device) => {
           device.tags = device.tags.filter((t) => !removedTags.includes(t))
           device.tags.push(...addedTags.filter((t) => !device.tags.includes(t)))
@@ -249,7 +248,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
         })
 
         forkJoin(requests).subscribe((result) => {
-          this.isLoading = false
+          this.isLoading.set(false)
           result.forEach((res) => {
             ;(this.devices.data.find((i) => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
           })
@@ -313,7 +312,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
 
   bulkPowerAction(action: number): void {
     const requests: Observable<any>[] = []
-    this.isLoading = true
+    this.isLoading.set(true)
     this.selectedDevices.selected.forEach((z) => {
       requests.push(
         this.devicesService.sendPowerAction(z.guid, action).pipe(
@@ -328,7 +327,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
     })
 
     forkJoin(requests).subscribe((result) => {
-      this.isLoading = false
+      this.isLoading.set(false)
       result.forEach((res) => {
         ;(this.devices.data.find((i) => i.guid === res.guid) as any).StatusMessage = res.StatusMessage
       })
@@ -337,7 +336,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
   }
 
   sendPowerAction(deviceId: string, action: number): void {
-    this.isLoading = true
+    this.isLoading.set(true)
     this.devicesService
       .sendPowerAction(deviceId, action)
       .pipe(
@@ -345,7 +344,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
           ;(this.devices.data.find((x) => x.guid === deviceId) as any).StatusMessage = 'ERROR'
         }),
         finalize(() => {
-          this.isLoading = false
+          this.isLoading.set(false)
         })
       )
       .subscribe({
@@ -369,12 +368,12 @@ export class DevicesComponent implements OnInit, AfterViewInit {
     const dialogRef = this.dialog.open(AreYouSureDialogComponent)
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
-        this.isLoading = true
+        this.isLoading.set(true)
         this.devicesService
           .sendDeactivate(deviceId)
           .pipe(
             finalize(() => {
-              this.isLoading = false
+              this.isLoading.set(false)
             })
           )
           .subscribe({
@@ -402,7 +401,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
         const requests: Observable<any>[] = []
-        this.isLoading = true
+        this.isLoading.set(true)
         from(this.selectedDevices.selected)
           .pipe(
             concatMap((device) =>
@@ -422,7 +421,7 @@ export class DevicesComponent implements OnInit, AfterViewInit {
             },
             error: () => {},
             complete: () => {
-              this.isLoading = false
+              this.isLoading.set(false)
               setTimeout(() => {
                 this.getTagsThenDevices()
               }, 1500)
@@ -459,8 +458,8 @@ export class DevicesComponent implements OnInit, AfterViewInit {
   }
 
   pageChanged(event: PageEvent): void {
-    this.pageEventOptions.pageSize = event.pageSize
-    this.pageEventOptions.startsFrom = event.pageIndex * event.pageSize
+    this.pageEvent.pageSize = event.pageSize
+    this.pageEvent.pageIndex = event.pageIndex * event.pageSize
     this.getTagsThenDevices()
   }
 }

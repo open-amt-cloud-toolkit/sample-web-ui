@@ -17,7 +17,6 @@ import {
   EventLog,
   HardwareInformation,
   IPSAlarmClockOccurrence,
-  PageEventOptions,
   PowerState,
   RedirectionToken,
   UserConsentResponse,
@@ -26,6 +25,7 @@ import {
   DiskInformation
 } from 'src/models/models'
 import { caseInsensitiveCompare } from '../../utils'
+import { PageEvent } from '@angular/material/paginator'
 
 @Injectable({
   providedIn: 'root'
@@ -368,12 +368,12 @@ export class DevicesService {
     )
   }
 
-  getDevices(pageEvent: PageEventOptions): Observable<DataWithCount<Device>> {
+  getDevices(pageEvent: PageEvent, tags?: string[]): Observable<DataWithCount<Device>> {
     let query = `${environment.mpsServer}/api/v1/devices`
-    if (pageEvent?.tags && pageEvent.tags.length > 0) {
-      query += `?tags=${pageEvent.tags.join(',')}&$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
+    if (tags && tags.length > 0) {
+      query += `?tags=${tags.join(',')}&$top=${pageEvent.pageSize}&$skip=${pageEvent.pageIndex}&$count=true`
     } else {
-      query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.startsFrom}&$count=${pageEvent.count}`
+      query += `?$top=${pageEvent.pageSize}&$skip=${pageEvent.pageIndex}&$count=true`
     }
     return this.http.get<DataWithCount<Device>>(query).pipe(
       catchError((err) => {

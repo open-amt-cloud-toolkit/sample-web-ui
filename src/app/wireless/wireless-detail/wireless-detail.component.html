@@ -7,7 +7,7 @@
   <mat-card class="flex flex-50">
     @if (errorMessages.length > 0) {
       <mat-list>
-        @for (item of errorMessages; track item) {
+        @for (item of errorMessages(); track item) {
           <mat-list-item>
             <mat-icon color="warn" mat-list-icon>error</mat-icon>
             {{ item }}

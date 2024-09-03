@@ -13,8 +13,6 @@ import { DataWithCount, FormOption } from '../../models/models'
 //   IPv6 = 4,
 //   FQDN = 201,
 
-export type AuthMethod = FormOption<number>
-
 export const AuthMethods = {
   MUTUAL: { value: 1, label: 'Mutual Authentication' },
   USERNAME_PASSWORD: { value: 2, label: 'Username Password Authentication' },

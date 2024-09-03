@@ -303,13 +303,6 @@ export interface ValidatorError {
   value: string
 }
 
-export interface PageEventOptions {
-  pageSize: number
-  startsFrom: number
-  count: string
-  tags?: string[]
-}
-
 export interface Header {
   To: string
   RelatesTo: string

@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-import { Component, OnInit, ViewChild } from '@angular/core'
+import { AfterViewInit, Component, OnInit, signal, ViewChild } from '@angular/core'
 import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 import { finalize } from 'rxjs/operators'
-import { PageEventOptions } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { ProfilesService } from './profiles.service'
@@ -24,7 +23,8 @@ import {
   MatHeaderRowDef,
   MatHeaderRow,
   MatRowDef,
-  MatRow
+  MatRow,
+  MatTableDataSource
 } from '@angular/material/table'
 import { MatCard, MatCardContent } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
@@ -61,8 +61,8 @@ import { ToolkitPipe } from '../shared/pipes/toolkit.pipe'
   ]
 })
 export class ProfilesComponent implements OnInit {
-  profiles: Profile[] = []
-  isLoading = true
+  profiles = new MatTableDataSource<Profile>([])
+  isLoading = signal(true)
   totalCount = 0
   tlsModes = TlsModes
   displayedColumns: string[] = [
@@ -72,10 +72,10 @@ export class ProfilesComponent implements OnInit {
     'activation',
     'remove'
   ]
-  pageEvent: PageEventOptions = {
+  pageEvent: PageEvent = {
     pageSize: 25,
-    startsFrom: 0,
-    count: 'true'
+    pageIndex: 0,
+    length: 0
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator
@@ -91,18 +91,19 @@ export class ProfilesComponent implements OnInit {
     this.getData(this.pageEvent)
   }
 
-  getData(pageEvent: PageEventOptions): void {
+  getData(pageEvent: PageEvent): void {
     this.profilesService
       .getData(pageEvent)
       .pipe(
         finalize(() => {
-          this.isLoading = false
+          this.isLoading.set(false)
         })
       )
       .subscribe({
         next: (rsp) => {
-          this.profiles = rsp.data
+          this.profiles.data = rsp.data
           this.totalCount = rsp.totalCount
+          this.paginator.length = rsp.totalCount
         },
         error: () => {
           this.snackBar.open($localize`Unable to load configurations`, undefined, SnackbarDefaults.defaultError)
@@ -111,7 +112,7 @@ export class ProfilesComponent implements OnInit {
   }
 
   isNoData(): boolean {
-    return !this.isLoading && this.profiles.length === 0
+    return !this.isLoading() && this.profiles.data.length === 0
   }
 
   delete(name: string): void {
@@ -119,12 +120,12 @@ export class ProfilesComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result === true) {
-        this.isLoading = true
+        this.isLoading.set(true)
         this.profilesService
           .delete(name)
           .pipe(
             finalize(() => {
-              this.isLoading = false
+              this.isLoading.set(false)
             })
           )
           .subscribe({
@@ -148,7 +149,7 @@ export class ProfilesComponent implements OnInit {
     this.pageEvent = {
       ...this.pageEvent,
       pageSize: event.pageSize,
-      startsFrom: event.pageIndex * event.pageSize
+      pageIndex: event.pageIndex * event.pageSize
     }
     this.getData(this.pageEvent)
   }

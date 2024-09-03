@@ -6,11 +6,12 @@
 import { TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
 import { of, throwError } from 'rxjs'
-import { PageEventOptions, WirelessConfig } from 'src/models/models'
+import { WirelessConfig } from 'src/models/models'
 import { AuthService } from '../auth.service'
 
 import { WirelessService } from './wireless.service'
 import { AuthenticationMethods, EncryptionMethods } from './wireless.constants'
+import { PageEvent } from '@angular/material/paginator'
 
 describe('WirelessService', () => {
   let service: WirelessService
@@ -63,10 +64,10 @@ describe('WirelessService', () => {
   })
 
   it('should load all the wifi configs when get all request fired with pageevent options', (done) => {
-    const pageEvent: PageEventOptions = {
-      count: 'true',
+    const pageEvent: PageEvent = {
       pageSize: 20,
-      startsFrom: 10,
+      pageIndex: 10,
+      length: 0,
       tags: []
     }
     httpClientSpy.get.and.returnValue(of(wifiResponse))
@@ -81,10 +82,10 @@ describe('WirelessService', () => {
   })
 
   it('should throw errors when get all request fired with pageevent options', (done) => {
-    const pageEvent: PageEventOptions = {
-      count: 'true',
+    const pageEvent: PageEvent = {
       pageSize: 20,
-      startsFrom: 10,
+      pageIndex: 10,
+      length: 0,
       tags: []
     }
 

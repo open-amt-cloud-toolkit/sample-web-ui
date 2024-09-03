@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
 import { finalize } from 'rxjs/operators'
-import { CIRAConfig, DataWithCount, PageEventOptions } from 'src/models/models'
+import { CIRAConfig, DataWithCount } from 'src/models/models'
 import { AreYouSureDialogComponent } from '../shared/are-you-sure/are-you-sure.component'
 import SnackbarDefaults from '../shared/config/snackBarDefault'
 import { ConfigsService } from './configs.service'
@@ -69,10 +69,10 @@ export class ConfigsComponent implements OnInit {
     'rootcert',
     'remove'
   ]
-  pageEvent: PageEventOptions = {
+  pageEvent: PageEvent = {
     pageSize: 25,
-    startsFrom: 0,
-    count: 'true'
+    pageIndex: 0,
+    length: 0
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator
@@ -88,7 +88,7 @@ export class ConfigsComponent implements OnInit {
     this.getData(this.pageEvent)
   }
 
-  getData(pageEvent: PageEventOptions): void {
+  getData(pageEvent: PageEvent): void {
     this.configsService
       .getData(pageEvent)
       .pipe(
@@ -148,7 +148,7 @@ export class ConfigsComponent implements OnInit {
     this.pageEvent = {
       ...this.pageEvent,
       pageSize: event.pageSize,
-      startsFrom: event.pageIndex * event.pageSize
+      pageIndex: event.pageIndex * event.pageSize
     }
     this.getData(this.pageEvent)
   }

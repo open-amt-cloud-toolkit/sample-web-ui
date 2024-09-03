@@ -6,11 +6,12 @@
 import { TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
 import { of, throwError } from 'rxjs'
-import { DataWithCount, IEEE8021xConfig, PageEventOptions } from 'src/models/models'
+import { DataWithCount, IEEE8021xConfig } from 'src/models/models'
 import { AuthService } from '../auth.service'
 
 import { IEEE8021xService } from './ieee8021x.service'
 import * as IEEE8021x from 'src/app/ieee8021x/ieee8021x.constants'
+import { PageEvent } from '@angular/material/paginator'
 
 describe('IEEE8021xService', () => {
   let service: IEEE8021xService
@@ -64,10 +65,10 @@ describe('IEEE8021xService', () => {
   })
 
   it('should load all the configs when get all request fired with pageevent options', (done) => {
-    const pageEvent: PageEventOptions = {
-      count: 'true',
+    const pageEvent: PageEvent = {
       pageSize: 20,
-      startsFrom: 10,
+      pageIndex: 10,
+      length : 0,
       tags: []
     }
     httpClientSpy.get.and.returnValue(of(ieee8021ConfigsResponse))
@@ -82,10 +83,10 @@ describe('IEEE8021xService', () => {
   })
 
   it('should throw errors when get all request fired with pageevent options', (done) => {
-    const pageEvent: PageEventOptions = {
-      count: 'true',
+    const pageEvent: PageEvent = {
       pageSize: 20,
-      startsFrom: 10,
+      pageIndex: 10,
+      length: 0,
       tags: []
     }
 
