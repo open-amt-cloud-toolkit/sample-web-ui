@@ -20,7 +20,7 @@ export const AuthorizeInterceptor: HttpInterceptorFn = (request, next) => {
     const headers: any = {
       Authorization: `Bearer ${authService.getLoggedUserToken()}`
     }
-    if ((request.body as any)?.version != null) {
+    if ((request.body as any)?.version != null && (request.body as any)?.version !== '') {
       headers['if-match'] = (request.body as any).version
     }
     request = request.clone({
