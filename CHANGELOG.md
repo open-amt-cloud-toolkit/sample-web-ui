@@ -1,3 +1,24 @@
+## [3.17.3](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.17.2...v3.17.3) (2024-09-09)
+
+
+### Bug Fixes
+
+* grammar in confirm dialog now reads correctly for multiple/single selection ([#2165](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2165)) ([96d5453](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/96d5453251f44d0953ca81104c00d3ef1e41e092))
+
+## [3.17.2](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.17.1...v3.17.2) (2024-09-05)
+
+
+### Bug Fixes
+
+* automatically clears explorer selection field on click ([#2167](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2167)) ([4324bae](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/4324bae360d15ccdc2d42bd5aff658104db7da6b))
+
+## [3.17.1](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.17.0...v3.17.1) (2024-09-05)
+
+
+### Bug Fixes
+
+* hides erroneous icon for deletion ([#2166](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2166)) ([0bea2df](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/0bea2dff4f7d8edc582fa36e200f59679136b308))
+
 # [3.17.0](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.16.1...v3.17.0) (2024-09-04)
 
 
