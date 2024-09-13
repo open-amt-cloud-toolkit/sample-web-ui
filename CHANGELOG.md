@@ -1,3 +1,24 @@
+## [3.20.2](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.20.1...v3.20.2) (2024-09-12)
+
+
+### Bug Fixes
+
+* handles empty values in DTO for network page ([#2190](https://github.com/open-amt-cloud-toolkit/sample-web-ui/issues/2190)) ([b4ae79c](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/b4ae79c9f84c441d040b44dc689289d152421b11))
+
+## [3.20.1](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.20.0...v3.20.1) (2024-09-12)
+
+
+### Bug Fixes
+
+* show success message on amt features update ([abbea4d](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/abbea4d2c0cf4fd6d55a400856420cdb923a7e43))
+
+# [3.20.0](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.19.0...v3.20.0) (2024-09-12)
+
+
+### Features
+
+* hide menu for console and update dashboard ([8575d89](https://github.com/open-amt-cloud-toolkit/sample-web-ui/commit/8575d89a21839e06cadf36bf9c9e11b12bcc7eff))
+
 # [3.19.0](https://github.com/open-amt-cloud-toolkit/sample-web-ui/compare/v3.18.1...v3.19.0) (2024-09-11)
 
 
