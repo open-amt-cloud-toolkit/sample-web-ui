@@ -47,7 +47,12 @@ export class GeneralComponent implements OnInit {
   public amtEnabledFeatures: FormGroup
   public isLoading = true
   public isDisabled = true
-  public amtVersion: any
+  public amtDHCPDNSSuffix: string | null = null
+  public amtTrustedDNSSuffix: string | null = null
+  public amtVersion: string | null = null
+  public amtBuild: string | null = null
+  public amtSKU: string | null = null
+  public amtProvisioningMode: string | null = null
   public cloudMode = environment.cloud
   public device: Device | null = null
   public userConsentValues = [
@@ -101,6 +106,14 @@ export class GeneralComponent implements OnInit {
         })
       )
       .subscribe((results: any) => {
+        this.amtDHCPDNSSuffix = (results.amtVersion?.AMT_SetupAndConfigurationService?.response.DhcpDNSSuffix ?? '')
+        this.amtTrustedDNSSuffix = (results.amtVersion?.AMT_SetupAndConfigurationService?.response.TrustedDNSSuffix ?? '')
+        this.amtVersion = (results.amtVersion?.CIM_SoftwareIdentity?.responses[10].VersionString ?? '')
+        this.amtBuild = (results.amtVersion?.CIM_SoftwareIdentity?.responses[6].VersionString ?? '')
+        this.amtSKU = this.skuLookup((results.amtVersion?.CIM_SoftwareIdentity?.responses[4].VersionString ?? ''))
+        this.amtProvisioningMode = this.parseProvisioningMode(
+          (results.amtVersion?.AMT_SetupAndConfigurationService?.response?.ProvisioningMode ?? 0)
+        )
         this.amtEnabledFeatures = this.fb.group({
           enableIDER: results.amtFeatures.IDER,
           enableKVM: results.amtFeatures.KVM,
@@ -110,7 +123,6 @@ export class GeneralComponent implements OnInit {
           redirection: results.amtFeatures.redirection
         })
         this.generalSettings = results.generalSettings
-        this.amtVersion = results.amtVersion
         this.isDisabled = results.amtVersion?.AMT_SetupAndConfigurationService?.response?.ProvisioningMode === 4
       })
   }
@@ -147,6 +159,17 @@ export class GeneralComponent implements OnInit {
         return 'Client Control Mode (CCM)'
       default:
         return 'Unknown'
+    }
+  }
+
+  skuLookup(sku: string): string {
+    switch (sku) {
+      case '16400':
+        return 'Intel® Standard Manageability'
+      case '16392':
+        return 'Intel® Active Management Technology'
+      default:
+        return sku
     }
   }
 }
