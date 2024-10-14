@@ -7,7 +7,7 @@ import { Component, Input, OnInit } from '@angular/core'
 import { catchError, finalize, switchMap } from 'rxjs/operators'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { Router } from '@angular/router'
-import { Observable, of } from 'rxjs'
+import { Observable, of, throwError } from 'rxjs'
 import { DevicesService } from '../devices.service'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { AMTFeaturesResponse, Device, UserConsentResponse } from 'src/models/models'
@@ -25,7 +25,7 @@ import { MatChipSet, MatChip } from '@angular/material/chips'
 import { MatToolbar } from '@angular/material/toolbar'
 import { DeviceCertDialogComponent } from '../device-cert-dialog/device-cert-dialog.component'
 import { UserConsentService } from '../user-consent.service'
-
+import {MatBadgeModule} from '@angular/material/badge'
 @Component({
   selector: 'app-device-toolbar',
   templateUrl: './device-toolbar.component.html',
@@ -42,7 +42,8 @@ import { UserConsentService } from '../user-consent.service'
     MatMenuTrigger,
     MatMenu,
     MatMenuItem,
-    MatProgressBar
+    MatProgressBar,
+    MatBadgeModule
   ]
 })
 export class DeviceToolbarComponent implements OnInit {
@@ -55,6 +56,7 @@ export class DeviceToolbarComponent implements OnInit {
   amtFeatures?: AMTFeaturesResponse
   public isCloudMode = environment.cloud
   public device: Device | null = null
+  public powerState: any
   public powerOptions = [
     {
       label: 'Hibernate',
@@ -107,6 +109,22 @@ export class DeviceToolbarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.devicesService
+    .getPowerState(this.deviceId)
+    .pipe(
+      catchError((err) => {
+        this.snackBar.open($localize`Error retrieving network settings`, undefined, SnackbarDefaults.defaultError)
+        return throwError(err)
+      }),
+      finalize(() => {
+        this.isLoading = false
+      })
+    )
+    .subscribe((results) => {
+      this.powerState = results.powerstate      
+      console.log('Power state', this.powerState)
+    })
+
     this.devicesService.getDevice(this.deviceId).subscribe((data) => {
       this.device = data
       this.devicesService.device.next(this.device)
