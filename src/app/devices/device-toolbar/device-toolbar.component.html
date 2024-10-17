@@ -35,6 +35,8 @@
       <mat-chip>{{ tag }}</mat-chip>
     }
   </mat-chip-set>
+  <div class="mat-caption"><span>Power State: {{this.powerState}}</span></div>
+  <mat-divider style="height: 40px" vertical="true"></mat-divider>
   <button mat-icon-button matTooltip="Edit device" (click)="editDevice()">
     <mat-icon>edit</mat-icon>
   </button>
