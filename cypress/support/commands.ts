@@ -247,7 +247,7 @@ Cypress.Commands.add(
 
     if (connection === 'CIRA (Cloud)') {
       cy.get('mat-select[formcontrolname=ciraConfigName]').click()
-    } else if (connection === 'TLS (Enterprise)') {
+    } else if (connection === 'TLS') {
       cy.get('mat-select[formcontrolname=tlsMode]').click()
     }
 
@@ -321,10 +321,12 @@ Cypress.Commands.add('enterProfileInfoV2', (formData: any) => {
   // selectors need string values so convert booleans
   cy.matRadioButtonChoose('[formControlName="dhcpEnabled"]', formData.dhcpEnabled ? 'true' : 'false')
   if (formData.ciraConfigName) {
-    cy.matRadioButtonChoose('[formControlName="connectionMode"]', 'CIRA')
+    //cy.matRadioButtonChoose('[formControlName="connectionMode"]', 'CIRA')
+    cy.get('[data-cy="radio-cira"]').click()
     cy.matSelectChoose('[formControlName="ciraConfigName"]', formData.ciraConfigName)
   } else if (formData.tlsMode) {
-    cy.matRadioButtonChoose('[formControlName="connectionMode"]', 'TLS')
+    //cy.matRadioButtonChoose('[formControlName="connectionMode"]', 'TLS')
+    cy.get('[data-cy="radio-tls"]').click()
 
     cy.matSelectChoose(
       '[formControlName="tlsMode"]',
