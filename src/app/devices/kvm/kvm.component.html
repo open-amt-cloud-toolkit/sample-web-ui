@@ -12,19 +12,21 @@
     </mat-form-field>
   </div>
   <div class="flex flex-50 justify-end">
-    @if (deviceState === 0 && isLoading === false) {
-    <button mat-flat-button color="primary" style="margin-right: 16px" (click)="connect()">
-      <mat-icon>tv_on</mat-icon>Connect KVM
-    </button>
-    }@else if (deviceState !== 2 && isLoading === true) {
-    <button mat-flat-button color="primary" style="margin-right: 16px" (click)="disconnect()" disabled>
-      <mat-icon>tv_off</mat-icon>Connecting KVM...
-    </button>
-    }
-    @else {
-    <button mat-flat-button color="primary" style="margin-right: 16px" (click)="disconnect()">
-      <mat-icon>tv_off</mat-icon>Disconnect KVM
-    </button>
+    @if(this.redirectionStatus?.isKVMConnected != null) {
+      @if (deviceState === 0 && isLoading === false) {
+      <button mat-flat-button color="primary" style="margin-right: 16px" (click)="connect()">
+        <mat-icon>tv_on</mat-icon>Connect KVM
+      </button>
+      }@else if (deviceState !== 2 && isLoading === true) {
+      <button mat-flat-button color="primary" style="margin-right: 16px" (click)="disconnect()" disabled>
+        <mat-icon>tv_off</mat-icon>Connecting KVM...
+      </button>
+      }
+      @else {
+      <button mat-flat-button color="primary" style="margin-right: 16px" (click)="disconnect()">
+        <mat-icon>tv_off</mat-icon>Disconnect KVM
+      </button>
+      }
     }
     <button mat-flat-button color="primary" (click)="fileInput.click()">
       <mat-icon>upload_file</mat-icon>Attach Disk Image (.iso)
