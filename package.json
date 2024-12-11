@@ -42,7 +42,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "~18.2.12",
     "@angular-eslint/builder": "~18.4.0",
-    "@angular-eslint/schematics": "~18.4.0",
+    "@angular-eslint/schematics": "~19.0.2",
     "@angular-eslint/template-parser": "~18.4.1",
     "@angular/cli": "~18.2.12",
     "@angular/compiler-cli": "~18.2.12",
