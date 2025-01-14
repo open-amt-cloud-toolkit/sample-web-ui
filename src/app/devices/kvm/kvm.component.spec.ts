@@ -109,9 +109,6 @@ describe('KvmComponent', () => {
 
       @Input()
       selectedEncoding = ''
-
-      @Output()
-      deviceStatus = new EventEmitter<number>()
     }
 
     @Component({
