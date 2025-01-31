@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-import { Component, Input, OnInit, inject, signal } from '@angular/core'
+import { Component, Input, AfterViewInit, ViewChild, inject, signal } from '@angular/core'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import {
   MatTableDataSource,
@@ -19,17 +19,16 @@ import {
   MatRow
 } from '@angular/material/table'
 import { of } from 'rxjs'
-import { catchError, finalize, take } from 'rxjs/operators'
+import { catchError, finalize } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
-import { EventLog } from 'src/models/models'
-import { DevicesService } from '../devices.service'
+import { EventLog, EventLogResponse } from 'src/models/models'
 import { MomentModule } from 'ngx-moment'
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
-import { MatToolbar } from '@angular/material/toolbar'
 import { environment } from 'src/environments/environment'
 import { MatButtonModule } from '@angular/material/button'
 import { DeviceLogService } from '../device-log.service'
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator'
 
 type EventTypeMap = Record<number, string>
 const EVENTTYPEMAP: EventTypeMap = {
@@ -60,15 +59,18 @@ const EVENTTYPEMAP: EventTypeMap = {
     MatHeaderRow,
     MatRowDef,
     MatRow,
-    MomentModule
+    MomentModule,
+    MatPaginatorModule
   ]
 })
-export class EventLogComponent implements OnInit {
+export class EventLogComponent implements AfterViewInit {
   snackBar = inject(MatSnackBar)
   private readonly deviceLogService = inject(DeviceLogService)
 
   @Input()
   public deviceId = ''
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator
 
   public isLoading = signal(true)
   public displayedColumns = [
@@ -80,6 +82,12 @@ export class EventLogComponent implements OnInit {
   public eventLogData: EventLog[] = []
   public isCloudMode: boolean = environment.cloud
   public dataSource = new MatTableDataSource(this.eventLogData)
+  public allEventLogs: EventLog[] = []
+  public hasMoreRecords = false
+  public pageSize = 120
+  public currentPageIndex = 0
+  public totalLength = 0
+
   constructor() {
     if (!this.isCloudMode) {
       this.displayedColumns = [
@@ -91,24 +99,75 @@ export class EventLogComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {
+  ngAfterViewInit(): void {
+    if (this.isCloudMode) {
+      this.isLoading.set(true)
+      this.deviceLogService
+        .getEventLog(this.deviceId)
+        .pipe(
+          catchError((err) => {
+            console.error(err)
+            this.snackBar.open($localize`Error retrieving event log`, undefined, SnackbarDefaults.defaultError)
+            return of({ eventLogs: [], hasMoreRecords: true })
+          }),
+          finalize(() => {
+            this.isLoading.set(false)
+          })
+        )
+        .subscribe((data) => {
+          this.eventLogData = data.eventLogs || []
+          this.dataSource.data = this.eventLogData
+        })
+    } else {
+      this.loadEventLogs(0)
+    }
+  }
+
+  handlePageEvent(e: PageEvent): void {
+    this.currentPageIndex = e.pageIndex
+    const startIndex = e.pageIndex * this.pageSize
+
+    if (startIndex + this.pageSize > this.allEventLogs.length && !this.hasMoreRecords) {
+      this.loadEventLogs(startIndex)
+    } else {
+      this.updateDisplayData(e.pageIndex)
+    }
+  }
+
+  loadEventLogs(startIndex: number): void {
     this.isLoading.set(true)
     this.deviceLogService
-      .getEventLog(this.deviceId)
+      .getEventLog(this.deviceId, startIndex, this.pageSize)
       .pipe(
         catchError((err) => {
-          console.error(err)
           this.snackBar.open($localize`Error retrieving event log`, undefined, SnackbarDefaults.defaultError)
-          return of(this.eventLogData)
+          return of({ eventLogs: [], hasMoreRecords: true })
         }),
         finalize(() => {
           this.isLoading.set(false)
         })
       )
       .subscribe((data) => {
-        this.eventLogData = data || []
-        this.dataSource.data = this.eventLogData
+        this.processEventLogsData(data, startIndex)
       })
+  }
+
+  processEventLogsData(data: EventLogResponse, startIndex: number): void {
+    const newLogs = data.eventLogs || []
+    this.allEventLogs = startIndex === 0 ? newLogs : [...this.allEventLogs, ...newLogs]
+    this.hasMoreRecords = data.hasMoreRecords
+    this.updateDisplayData(this.currentPageIndex)
+    this.totalLength = this.allEventLogs.length
+    if (!this.hasMoreRecords && newLogs.length === this.pageSize) {
+      this.totalLength += this.pageSize
+    }
+  }
+
+  updateDisplayData(pageIndex: number): void {
+    const startIndex = pageIndex * this.pageSize
+    const endIndex = startIndex + this.pageSize
+    this.eventLogData = this.allEventLogs.slice(startIndex, endIndex)
+    this.dataSource.data = this.eventLogData
   }
 
   decodeEventType(eventType: number): string {

@@ -16,104 +16,107 @@ describe('EventLogComponent', () => {
   let fixture: ComponentFixture<EventLogComponent>
   let eventLogSpy: jasmine.Spy
 
+  const mockEventLogData = {
+    eventLogs: [
+      {
+        DeviceAddress: 255,
+        EventSensorType: 15,
+        EventType: 111,
+        EventOffset: 2,
+        EventSourceType: 104,
+        EventSeverity: 8,
+        SensorNumber: 255,
+        Entity: 34,
+        EntityInstance: 0,
+        EventData: [
+          64,
+          19,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        EntityStr: 'BIOS',
+        Desc: 'Starting operating system boot process'
+      },
+      {
+        DeviceAddress: 255,
+        EventSensorType: 15,
+        EventType: 10,
+        EventOffset: 2,
+        EventSourceType: 104,
+        EventSeverity: 8,
+        SensorNumber: 255,
+        Entity: 34,
+        EntityInstance: 0,
+        EventData: [
+          64,
+          19,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        EntityStr: 'BIOS',
+        Desc: 'PCI resource configuration'
+      },
+      {
+        DeviceAddress: 255,
+        EventSensorType: 15,
+        EventType: 7,
+        EventOffset: 2,
+        EventSourceType: 104,
+        EventSeverity: 8,
+        SensorNumber: 255,
+        Entity: 34,
+        EntityInstance: 0,
+        EventData: [
+          64,
+          19,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        EntityStr: 'BIOS',
+        Desc: 'PCI resource configuration'
+      },
+      {
+        DeviceAddress: 255,
+        EventSensorType: 15,
+        EventType: 1,
+        EventOffset: 2,
+        EventSourceType: 104,
+        EventSeverity: 8,
+        SensorNumber: 255,
+        Entity: 34,
+        EntityInstance: 0,
+        EventData: [
+          64,
+          19,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        EntityStr: 'BIOS',
+        Desc: 'PCI resource configuration'
+      }
+    ],
+    hasMoreRecords: true
+  }
+
   beforeEach(async () => {
     const devicesService = jasmine.createSpyObj('DeviceLogService', ['getEventLog'])
-    eventLogSpy = devicesService.getEventLog.and.returnValue(
-      of([
-        {
-          DeviceAddress: 255,
-          EventSensorType: 15,
-          EventType: 111,
-          EventOffset: 2,
-          EventSourceType: 104,
-          EventSeverity: 8,
-          SensorNumber: 255,
-          Entity: 34,
-          EntityInstance: 0,
-          EventData: [
-            64,
-            19,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
-          EntityStr: 'BIOS',
-          Desc: 'Starting operating system boot process'
-        },
-        {
-          DeviceAddress: 255,
-          EventSensorType: 15,
-          EventType: 10,
-          EventOffset: 2,
-          EventSourceType: 104,
-          EventSeverity: 8,
-          SensorNumber: 255,
-          Entity: 34,
-          EntityInstance: 0,
-          EventData: [
-            64,
-            19,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
-          EntityStr: 'BIOS',
-          Desc: 'PCI resource configuration'
-        },
-        {
-          DeviceAddress: 255,
-          EventSensorType: 15,
-          EventType: 7,
-          EventOffset: 2,
-          EventSourceType: 104,
-          EventSeverity: 8,
-          SensorNumber: 255,
-          Entity: 34,
-          EntityInstance: 0,
-          EventData: [
-            64,
-            19,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
-          EntityStr: 'BIOS',
-          Desc: 'PCI resource configuration'
-        },
-        {
-          DeviceAddress: 255,
-          EventSensorType: 15,
-          EventType: 1,
-          EventOffset: 2,
-          EventSourceType: 104,
-          EventSeverity: 8,
-          SensorNumber: 255,
-          Entity: 34,
-          EntityInstance: 0,
-          EventData: [
-            64,
-            19,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
-          EntityStr: 'BIOS',
-          Desc: 'PCI resource configuration'
-        }
-      ])
-    )
+    eventLogSpy = devicesService.getEventLog.and.returnValue(of(mockEventLogData))
 
     await TestBed.configureTestingModule({
       imports: [

@@ -1,8 +1,11 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
-import { catchError, Observable } from 'rxjs'
+import { catchError, Observable, tap, map } from 'rxjs'
 import { environment } from 'src/environments/environment'
-import { AuditLogResponse, EventLog } from 'src/models/models'
+import { AuditLogResponse, EventLog, EventLogResponse } from 'src/models/models'
+
+const DEFAULT_TOP = 0
+const DEFAULT_SKIP = 120
 
 @Injectable({
   providedIn: 'root'
@@ -32,8 +35,24 @@ export class DeviceLogService {
     })
   }
 
-  getEventLog(deviceId: string): Observable<EventLog[]> {
-    return this.http.get<EventLog[]>(`${environment.mpsServer}/api/v1/amt/log/event/${deviceId}`).pipe(
+  getEventLog(
+    deviceId: string,
+    startIndex: number = DEFAULT_TOP,
+    maxReadRecords: number = DEFAULT_SKIP
+  ): Observable<EventLogResponse> {
+    const url = `${environment.mpsServer}/api/v1/amt/log/event/${deviceId}?startIndex=${startIndex}&maxReadRecords=${maxReadRecords}`
+
+    return this.http.get<any>(url).pipe(
+      map((response) => ({
+        hasMoreRecords: response.NoMoreRecords,
+        eventLogs: response.EventLogs
+      })),
+      tap((response) => {
+        if (environment.cloud) {
+          response = { hasMoreRecords: false, eventLogs: response as unknown as EventLog[] }
+        }
+        return response
+      }),
       catchError((err) => {
         throw err
       })
