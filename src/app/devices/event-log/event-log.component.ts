@@ -5,30 +5,19 @@
 
 import { Component, Input, AfterViewInit, ViewChild, inject, signal } from '@angular/core'
 import { MatSnackBar } from '@angular/material/snack-bar'
-import {
-  MatTableDataSource,
-  MatTable,
-  MatColumnDef,
-  MatHeaderCellDef,
-  MatHeaderCell,
-  MatCellDef,
-  MatCell,
-  MatHeaderRowDef,
-  MatHeaderRow,
-  MatRowDef,
-  MatRow
-} from '@angular/material/table'
+import { MatTableDataSource, MatTableModule } from '@angular/material/table'
 import { of } from 'rxjs'
 import { catchError, finalize } from 'rxjs/operators'
 import SnackbarDefaults from 'src/app/shared/config/snackBarDefault'
 import { EventLog, EventLogResponse } from 'src/models/models'
 import { MomentModule } from 'ngx-moment'
-import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card'
+import { MatCard, MatCardContent, MatCardHeader, MatCardModule, MatCardTitle } from '@angular/material/card'
 import { MatProgressBar } from '@angular/material/progress-bar'
 import { environment } from 'src/environments/environment'
 import { MatButtonModule } from '@angular/material/button'
 import { DeviceLogService } from '../device-log.service'
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator'
+import { MatIconModule } from '@angular/material/icon'
 
 type EventTypeMap = Record<number, string>
 const EVENTTYPEMAP: EventTypeMap = {
@@ -44,23 +33,12 @@ const EVENTTYPEMAP: EventTypeMap = {
   styleUrls: ['./event-log.component.scss'],
   imports: [
     MatProgressBar,
-    MatCard,
-    MatCardHeader,
-    MatCardTitle,
-    MatCardContent,
-    MatTable,
-    MatColumnDef,
+    MatCardModule,
+    MatTableModule,
     MatButtonModule,
-    MatHeaderCellDef,
-    MatHeaderCell,
-    MatCellDef,
-    MatCell,
-    MatHeaderRowDef,
-    MatHeaderRow,
-    MatRowDef,
-    MatRow,
     MomentModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatIconModule
   ]
 })
 export class EventLogComponent implements AfterViewInit {
@@ -79,14 +57,12 @@ export class EventLogComponent implements AfterViewInit {
     'timestamp'
   ]
 
-  public eventLogData: EventLog[] = []
   public isCloudMode: boolean = environment.cloud
-  public dataSource = new MatTableDataSource(this.eventLogData)
-  public allEventLogs: EventLog[] = []
+
+  public dataSource = new MatTableDataSource<EventLog>([])
   public hasMoreRecords = false
-  public pageSize = 120
+  public pageSize = 10
   public currentPageIndex = 0
-  public totalLength = 0
 
   constructor() {
     if (!this.isCloudMode) {
@@ -106,31 +82,18 @@ export class EventLogComponent implements AfterViewInit {
         .getEventLog(this.deviceId)
         .pipe(
           catchError((err) => {
-            console.error(err)
             this.snackBar.open($localize`Error retrieving event log`, undefined, SnackbarDefaults.defaultError)
-            return of({ eventLogs: [], hasMoreRecords: true })
+            return of({ records: [], hasMoreRecords: true })
           }),
           finalize(() => {
             this.isLoading.set(false)
           })
         )
         .subscribe((data) => {
-          this.eventLogData = data.eventLogs || []
-          this.dataSource.data = this.eventLogData
+          this.dataSource.data = data.records
         })
     } else {
       this.loadEventLogs(0)
-    }
-  }
-
-  handlePageEvent(e: PageEvent): void {
-    this.currentPageIndex = e.pageIndex
-    const startIndex = e.pageIndex * this.pageSize
-
-    if (startIndex + this.pageSize > this.allEventLogs.length && !this.hasMoreRecords) {
-      this.loadEventLogs(startIndex)
-    } else {
-      this.updateDisplayData(e.pageIndex)
     }
   }
 
@@ -141,41 +104,32 @@ export class EventLogComponent implements AfterViewInit {
       .pipe(
         catchError((err) => {
           this.snackBar.open($localize`Error retrieving event log`, undefined, SnackbarDefaults.defaultError)
-          return of({ eventLogs: [], hasMoreRecords: true })
+          return of({ records: [], hasMoreRecords: true })
         }),
         finalize(() => {
           this.isLoading.set(false)
         })
       )
       .subscribe((data) => {
-        this.processEventLogsData(data, startIndex)
+        this.hasMoreRecords = data.hasMoreRecords
+        this.dataSource.data = data.records
       })
-  }
-
-  processEventLogsData(data: EventLogResponse, startIndex: number): void {
-    const newLogs = data.eventLogs || []
-    this.allEventLogs = startIndex === 0 ? newLogs : [...this.allEventLogs, ...newLogs]
-    this.hasMoreRecords = data.hasMoreRecords
-    this.updateDisplayData(this.currentPageIndex)
-    this.totalLength = this.allEventLogs.length
-    if (!this.hasMoreRecords && newLogs.length === this.pageSize) {
-      this.totalLength += this.pageSize
-    }
-  }
-
-  updateDisplayData(pageIndex: number): void {
-    const startIndex = pageIndex * this.pageSize
-    const endIndex = startIndex + this.pageSize
-    this.eventLogData = this.allEventLogs.slice(startIndex, endIndex)
-    this.dataSource.data = this.eventLogData
   }
 
   decodeEventType(eventType: number): string {
     return EVENTTYPEMAP[eventType]
   }
 
+  nextPage(): void {
+    this.loadEventLogs(++this.currentPageIndex * this.pageSize)
+  }
+
+  lastPage(): void {
+    this.loadEventLogs(--this.currentPageIndex * this.pageSize)
+  }
+
   isNoData(): boolean {
-    return this.isLoading() || this.eventLogData?.length === 0
+    return this.isLoading() || this.dataSource.data.length === 0
   }
   download(): void {
     this.isLoading.set(true)

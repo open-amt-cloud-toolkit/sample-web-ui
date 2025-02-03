@@ -98,7 +98,7 @@ export interface AuditLogResponse {
 
 export interface EventLogResponse {
   hasMoreRecords: boolean
-  eventLogs: EventLog[]
+  records: EventLog[]
 }
 
 export interface EventLog {
